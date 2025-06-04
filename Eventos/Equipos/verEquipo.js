@@ -6,7 +6,10 @@ const {
   EmbedBuilder,
   ButtonBuilder,
   ButtonStyle,
+  StringSelectMenuBuilder,
 } = require('discord.js');
+
+const colors = require('../../utils/colors.js')
 
 const schema = require('../../Esquemas/SchemaEquipos.js');
 
@@ -230,20 +233,28 @@ module.exports = {
         }
 
         if (interaction.customId === 'equipo_cambiar_color') {
-          const modal = new ModalBuilder()
-            .setCustomId(`form_color_equipo::${channelId}`)
-            .setTitle('Cambiar Color del Equipo')
-            .addComponents(
-              new ActionRowBuilder().addComponents(
-                new TextInputBuilder()
-                  .setCustomId('nuevo_color')
-                  .setLabel('Nuevo Color (hexadecimal)')
-                  .setPlaceholder('#1bfc62')
-                  .setStyle(TextInputStyle.Short)
-                  .setRequired(true)
-              )
-            );
-          return interaction.showModal(modal);
+          // const modal = new ModalBuilder()
+          //   .setCustomId(`form_color_equipo::${channelId}`)
+          //   .setTitle('Cambiar Color del Equipo')
+          //   .addComponents(
+          //     new ActionRowBuilder().addComponents(
+          //       new TextInputBuilder()
+          //         .setCustomId('nuevo_color')
+          //         .setLabel('Nuevo Color (hexadecimal)')
+          //         .setPlaceholder('#1bfc62')
+          //         .setStyle(TextInputStyle.Short)
+          //         .setRequired(true)
+          //     )
+          //   );
+          // return interaction.showModal(modal);
+
+          // Crear el select menu
+        const select = new ActionRowBuilder().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId('menu_color_equipo')
+            .setPlaceholder('Selecciona un color para el equipo')
+            .addOptions(colors)
+          )
         }
 
         if (interaction.customId === 'equipo_cambiar_codigo') {
@@ -302,18 +313,6 @@ module.exports = {
         return interaction.reply({ ephemeral: true, content: '✅ Icono del equipo cambiado correctamente.' });
       }
 
-      if (form === 'form_color_equipo') {
-        let nuevoColor = interaction.fields.getTextInputValue('nuevo_color').trim();
-        // Validar que sea un color hexadecimal válido
-        if (!/^#?[0-9A-Fa-f]{6}$/.test(nuevoColor)) {
-          return interaction.reply({ ephemeral: true, content: '❌ Color inválido. Debe ser un código hexadecimal (ejemplo: #1bfc62).' });
-        }
-        if (!nuevoColor.startsWith('#')) nuevoColor = '#' + nuevoColor;
-        data.Color = nuevoColor;
-        await data.save();
-        return interaction.reply({ ephemeral: true, content: `✅ Color del equipo cambiado a \`${nuevoColor}\`.` });
-      }
-
       if (form === 'form_codigo_equipo') {
         const nuevoCodigo = interaction.fields.getTextInputValue('nuevo_codigo').trim();
         if (nuevoCodigo.length < 3 || nuevoCodigo.length > 10) {
@@ -321,8 +320,37 @@ module.exports = {
         }
         data.Codigo = nuevoCodigo;
         await data.save();
-        return interaction.reply({ ephemeral: true, content: `✅ Código del equipo cambiado a **${nuevoCodigo}**.` });
+        return interaction.reply({ ephemeral: true, content: `✅ Nuevo código del equipo: \`${nuevoCodigo}\`.` });
       }
     }
+
+        if (interaction.isStringSelectMenu()) {
+
+          const data = await schema.findOne({ "Jugadores.discordId": interaction.user.id });
+          if (!data) {
+            return interaction.reply({ ephemeral: true, content: '❌ No se encontró tu equipo.' });
+          }
+
+          const jugador = data.Jugadores.find(j => j.discordId === interaction.user.id);
+          const esLider = jugador?.jerarquia === 'lider';
+          const esSublider = jugador?.jerarquia === 'sublider';
+
+          if (!esLider && !esSublider) {
+            return interaction.reply({ ephemeral: true, content: '❌ Solo el líder o sublíder pueden editar el equipo.' });
+          }
+
+          if (interaction.customId === 'menu_color_equipo') {
+              const colorSeleccionado = interaction.values[0]
+
+              data.Color = colorSeleccionado
+
+              await data.save()
+
+              const nuevoColor = colors.find(color => color.value === colorSeleccionado)
+
+              return interaction.reply({ ephemeral: true, content: `✅ Nuevo color del equipo: \`${nuevoColor.label}\`.` })
+          }
+
+        }
   },
 }

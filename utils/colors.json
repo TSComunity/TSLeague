@@ -1,0 +1,29 @@
+[
+  { "label": "Azul claro", "value": "LightBlue" },
+  { "label": "Azul", "value": "Blue" },
+  { "label": "Azul oscuro", "value": "DarkBlue" },
+  
+  { "label": "Rojo claro", "value": "LightCoral" },
+  { "label": "Rojo", "value": "Red" },
+  { "label": "Rojo oscuro", "value": "DarkRed" },
+  
+  { "label": "Verde claro", "value": "LightGreen" },
+  { "label": "Verde", "value": "Green" },
+  { "label": "Verde oscuro", "value": "DarkGreen" },
+  
+  { "label": "Amarillo claro", "value": "LightYellow" },
+  { "label": "Amarillo", "value": "Yellow" },
+  { "label": "Amarillo oscuro", "value": "GoldenRod" },
+  
+  { "label": "Naranja claro", "value": "Moccasin" },
+  { "label": "Naranja", "value": "Orange" },
+  { "label": "Naranja oscuro", "value": "DarkOrange" },
+  
+  { "label": "Púrpura claro", "value": "Orchid" },
+  { "label": "Púrpura", "value": "Purple" },
+  { "label": "Púrpura oscuro", "value": "DarkMagenta" },
+  
+  { "label": "Gris claro", "value": "LightGrey" },
+  { "label": "Gris", "value": "Grey" },
+  { "label": "Gris oscuro", "value": "DarkGrey" }
+]
