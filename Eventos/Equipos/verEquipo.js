@@ -55,10 +55,10 @@ module.exports = {
               let emoji = '👤';
               if (j.jerarquia === 'lider') emoji = '👑';
               else if (j.jerarquia === 'sublider') emoji = '🥈';
-              const rolFormateado = j.jerarquia ? capitalizar(j.jerarquia) : 'Miembro';
-              return `• **${nombre}** — ${tag} (${emoji} ${rolFormateado})`;
+              const rolFormateado = j.jerarquia ? capitalizar(j.jerarquia) : 'Miembro'
+              return `- **${emoji} ${nombre}** — ${tag} (${rolFormateado})`
             }).join('\n')
-          : 'No hay jugadores';
+          : 'No hay jugadores'
 
         let embed;
         let componentes;
@@ -73,7 +73,7 @@ module.exports = {
               { name: '🎨 Color', value: data.Color ? `✅ \`${data.Color}\`` : '❌ \`Por defecto\`', inline: true },
               { name: '👥 Jugadores', value: valorJugadores, inline: false },
             )
-            .setFooter({ name: `Codigo del Equipo: ${data.Codigo}` })
+            .setFooter({ text: `Codigo del Equipo: ${data.Codigo}` })
 
           componentes = [
             new ActionRowBuilder().addComponents(
@@ -113,12 +113,12 @@ module.exports = {
           ];
         } else {
           embed = new EmbedBuilder()
-            .setTitle(`⚔️ Equipo: ${data.Nombre}`)
-            .setColor(data.Color ? parseInt(data.Color.replace('#', ''), 16) : COLOR_DEFECTO)
+            .setDescription(`### ${data.Nombre}`)
+            .setColor(data.Color ? capitalizar(data.Color) : COLOR_DEFECTO)
             .setThumbnail(data.Icono || ICONO_DEFECTO)
             .addFields(
-              { name: '👥 Jugadores', value: valorJugadores, inline: false }
-            );
+              { name: '👥 Jugadores', value: valorJugadores, inline: false },
+            )
 
           componentes = [
             new ActionRowBuilder().addComponents(
