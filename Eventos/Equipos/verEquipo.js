@@ -11,11 +11,11 @@ const {
 const schema = require('../../Esquemas/SchemaEquipos.js');
 
 const ICONO_DEFECTO = 'https://images-ext-1.discordapp.net/external/93Clk3YKdTqFCB64y3DEwNsEyB2NQwL9VJU5vZFCTXo/%3Fsize%3D128/https/cdn.discordapp.com/icons/1093864130030612521/0525f2dce5dd5a3bff36fdaa833c71c6.png?format=webp&quality=lossless';
-const COLOR_DEFECTO = 0x1bfc62;
+const COLOR_DEFECTO = 0x1bfc62
 
 function capitalizar(str) {
-  if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1);
+  if (!str) return ''
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 module.exports = {
@@ -25,25 +25,27 @@ module.exports = {
     if (interaction.isButton()) {
       // Botón para abrir info equipo
       if (interaction.customId === 'equipo') {
-        const data = await schema.findOne({ "Jugadores.discordId": interaction.user.id });
+        const data = await schema.findOne({ "Jugadores.discordId": interaction.user.id })
+
         if (!data) {
           return interaction.reply({ ephemeral: true, content: '❌ No estás registrado en ningún equipo.' });
         }
 
-        const jugador = data.Jugadores.find(j => j.discordId === interaction.user.id);
+        const jugador = data.Jugadores.find(j => j.discordId === interaction.user.id)
+
         if (!jugador) {
-          return interaction.reply({ ephemeral: true, content: '❌ No estás en el equipo.' });
+          return interaction.reply({ ephemeral: true, content: '❌ No estás en el equipo.' })
         }
 
         const esLider = jugador.jerarquia === 'lider';
-        const esSublider = jugador.jerarquia === 'sublider';
+        const esSublider = jugador.jerarquia === 'sublider'
 
-        const ordenJerarquia = { 'lider': 1, 'sublider': 2, 'miembro': 3 };
+        const ordenJerarquia = { 'lider': 1, 'sublider': 2, 'miembro': 3 }
         const jugadoresOrdenados = data.Jugadores.slice().sort((a, b) => {
-          const jerarquiaA = a.jerarquia || 'miembro';
-          const jerarquiaB = b.jerarquia || 'miembro';
-          return (ordenJerarquia[jerarquiaA] || 3) - (ordenJerarquia[jerarquiaB] || 3);
-        });
+          const jerarquiaA = a.jerarquia || 'miembro'
+          const jerarquiaB = b.jerarquia || 'miembro'
+          return (ordenJerarquia[jerarquiaA] || 3) - (ordenJerarquia[jerarquiaB] || 3)
+        })
 
         const valorJugadores = jugadoresOrdenados.length > 0
           ? jugadoresOrdenados.map(j => {
@@ -63,8 +65,8 @@ module.exports = {
 
         if (esLider || esSublider) {
           embed = new EmbedBuilder()
-            .setDescription(`## ⚔️​​ Configuración del equipo: ${data.Nombre}`)
-            .setColor(data.Color ? parseInt(data.Color.replace('#', ''), 16) : COLOR_DEFECTO)
+            .setDescription(`### ${data.Nombre}`)
+            .setColor(data.Color ? capitalizar(data.Color) : COLOR_DEFECTO)
             .setThumbnail(data.Icono || ICONO_DEFECTO)
             .setAuthor({ name: `Codigo del Equipo: ${data.Codigo}` })
             .addFields(
@@ -127,10 +129,10 @@ module.exports = {
                 .setStyle(ButtonStyle.Danger)
                 .setEmoji('🚪')
             )
-          ];
+          ]
         }
 
-        return interaction.reply({ embeds: [embed], components: componentes, ephemeral: true });
+        return interaction.reply({ embeds: [embed], components: componentes, ephemeral: true })
       }
 
       // Botón para salir del equipo
@@ -324,4 +326,4 @@ module.exports = {
       }
     }
   },
-};
+}
