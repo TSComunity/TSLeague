@@ -68,13 +68,12 @@ module.exports = {
             .setDescription(`### ${data.Nombre}`)
             .setColor(data.Color ? capitalizar(data.Color) : COLOR_DEFECTO)
             .setThumbnail(data.Icono || ICONO_DEFECTO)
-            .setAuthor({ name: `Codigo del Equipo: ${data.Codigo}` })
             .addFields(
-              { name: '📝 Nombre', value: data.Nombre || 'No definido', inline: true },
-              { name: '🖼️ Icono', value: data.Icono ? '✅ Personalizado' : '❌ Por defecto', inline: true },
-              { name: '🎨 Color', value: data.Color ? `✅ \`${data.Color}\`` : '❌ Por defecto', inline: true },
+              { name: '🖼️ Icono', value: data.Icono ? '✅ \`Personalizado\`' : '❌ \`Por defecto\`', inline: true },
+              { name: '🎨 Color', value: data.Color ? `✅ \`${data.Color}\`` : '❌ \`Por defecto\`', inline: true },
               { name: '👥 Jugadores', value: valorJugadores, inline: false },
-            );
+            )
+            .setFooter({ name: `Codigo del Equipo: ${data.Codigo}` })
 
           componentes = [
             new ActionRowBuilder().addComponents(
