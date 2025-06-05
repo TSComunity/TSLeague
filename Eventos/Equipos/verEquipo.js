@@ -348,7 +348,7 @@ module.exports = {
 
               const nuevoColor = colors.find(color => color.value === colorSeleccionado)
 
-              return interaction.reply({ ephemeral: true, content: `✅ Nuevo color del equipo: \`${nuevoColor.label}\`.` })
+              return interaction.reply({ content: `✅ Nuevo color del equipo: \`${nuevoColor.label}\`.` })
           }
 
         }
