@@ -9,7 +9,7 @@ const {
   StringSelectMenuBuilder,
 } = require('discord.js');
 
-const colors = require('../../utils/colors.js')
+const colors = require('../../utils/colors.json')
 
 const schema = require('../../Esquemas/SchemaEquipos.js');
 
