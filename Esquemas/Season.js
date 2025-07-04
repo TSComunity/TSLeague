@@ -24,17 +24,31 @@ const SeasonSchema = new Schema({
             {
               teamA: { type: Types.ObjectId, ref: 'Team', required: true },
               teamB: { type: Types.ObjectId, ref: 'Team', required: true },
-              scoreA: { type: Number, default: 0 },
-              scoreB: { type: Number, default: 0 },
+              
+              scoreA: { type: Number, default: 0 },  // sets ganados
+              scoreB: { type: Number, default: 0 },  // sets ganados
+
               scheduledAt: { type: Date, required: true },
+
               status: {
                 type: String,
                 enum: ['scheduled', 'played', 'cancelled'],
                 default: 'scheduled'
               },
-              mode: { type: String, required: true },  // Ej: "Balón Brawl"
-              map: { type: String, required: true },    // Ej: "Campo de juego"
-              imageURL: { type: String }
+
+              imageURL: { type: String },  // imagen general del partido
+
+              sets: [
+                {
+                  mode: { type: String, required: true },
+                  map: { type: String, required: true },
+                  winner: {
+                    type: String,
+                    enum: ['A', 'B', 'draw', null],
+                    default: null
+                  }
+                }
+              ]
             }
           ]
         }

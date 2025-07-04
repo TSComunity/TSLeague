@@ -1,13 +1,19 @@
+const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
+
+const { match } = require('../configs/configs.json')
+const { defaultStartDay, defaultStartHour } = match
+
 /**
  * Devuelve información aleatoria para un partido.
  * @return {Object} matchData - Data del partido.
  */
 
 const getRandomMatchData = () => {
+
   return {
-    scheduledAt,
-    mode,
-    map,
+    scheduledAt: getNextDayAndHour({ day: defaultStartDay, hour: defaultStartHour }), // fecha futura aleatoria
+    imageURL, // Poner aqui o fuera dependiendo de si necesita los sets
+    sets
   }
 }
 
@@ -32,9 +38,9 @@ const generateMatches = ({ existingMatches, teamsIds }) => {
   for (let i = 0; i < teamsIds.length; i++) {
     for (let j = i + 1; j < teamsIds.length; j++) {
       const key = [teamsIds[i].toString(), teamsIds[j].toString()].sort().join('-')
-      if (alreadyPlayed.has(key)) continue // evitar repetidos
+      if (alreadyPlayed.has(key)) continue
 
-      const { scheduledAt, mode, map} = getRandomMatchData()
+      const { scheduledAt, imageURL, sets } = getRandomMatchData()
 
       matches.push({
         teamA: teamsIds[i],
@@ -43,9 +49,8 @@ const generateMatches = ({ existingMatches, teamsIds }) => {
         scoreB: 0,
         scheduledAt,
         status: 'scheduled',
-        mode,
-        map,
-        imageURL // TODO: usar funcion para crear la imagen
+        imageURL, // TODO: crear imagen con canvas
+        sets // array de sets con mode y map
       })
     }
   }

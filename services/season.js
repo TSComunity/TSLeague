@@ -2,7 +2,10 @@ const Season = require('../Esquemas/Season.js')
 const Division = require('../Esquemas/Division.js')
 const Team = require('../Esquemas/Team.js')
 
-const { getNextMonday } = require('../utils/getNextMonday.js')
+const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
+
+const { season } = require('../configs/configs.json')
+const { startDay, startHour } = season
 
 /**
  * Crea una nueva temporada con todas las divisiones existentes.
@@ -42,7 +45,7 @@ const createSeason = async () => {
   // Crear la nueva temporada con las divisiones completas
   const newSeason = new Season({
     seasonIndex: newIndex,
-    startDate: getNextMonday(),
+    startDate: getNextDayAndHour({ day: startDay, hour: startHour }),
     active: true,
     divisions: divisionsData
   })
