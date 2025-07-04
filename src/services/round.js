@@ -1,4 +1,4 @@
-const Season = require('../Esquemas/Season.js')
+const Season = require('../../Esquemas/Season.js')
 
 const { generateMatches } = require('./matchmaking.js')
 

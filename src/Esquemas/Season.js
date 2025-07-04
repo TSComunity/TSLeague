@@ -13,6 +13,7 @@ const SeasonSchema = new Schema({
         {
           team: { type: Types.ObjectId, ref: 'Team', required: true },
           points: { type: Number, default: 0 },
+          rank: { type: Number, default: null },
           playedGames: { type: Number, default: 0 }
         }
       ],

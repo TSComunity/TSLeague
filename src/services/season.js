@@ -1,10 +1,10 @@
-const Season = require('../Esquemas/Season.js')
-const Division = require('../Esquemas/Division.js')
-const Team = require('../Esquemas/Team.js')
+const Season = require('../../Esquemas/Season.js')
+const Division = require('../../Esquemas/Division.js')
+const Team = require('../../Esquemas/Team.js')
 
 const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
 
-const { season } = require('../configs/configs.json')
+const { season } = require('../../configs/configs.json')
 const { startDay, startHour } = season
 
 /**

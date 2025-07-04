@@ -1,47 +1,48 @@
+const process = require('node:process')
+
+const { Client, GatewayIntentBits, Partials, Collection, AttachmentBuilder } = require('discord.js')
+
+const { loadEvents } = require('./Handlers/handlerEventos.js')
+const { loadCommands } = require('./Handlers/handlerComandos.js')
+const { loadPrefix } = require('./Handlers/handlerComandosPrefix.js')
+
+const { createChampionsGroupsImage } = require('./utils/crearCanva.js')
+const { getUpdatedDivisions } = require('./utils/updDivisiones.js')
+
 require('dotenv').config()
-const {
-  Client,
-  GatewayIntentBits,
-  Partials,
-  Collection,
-} = require("discord.js");
+const TOKEN = process.env.TOKEN
 
-const { loadEvents } = require("./Handlers/handlerEventos");
-const { loadCommands } = require("./Handlers/handlerComandos");
-const { loadPrefix } = require('./Handlers/handlerComandosPrefix');
-const process = require('node:process');
-const token = process.env.TOKEN;
+const wait = require('node:timers/promises').setTimeout
 
-const wait = require('node:timers/promises').setTimeout; // Usable para muchas cosas
-const { createChampionsGroupsImage } = require('./utils/crearCanva.js');
-const { AttachmentBuilder } = require('discord.js');
-const actualizarMensajeDivisiones = require('./utils/updDivisiones.js');
 process.on('unhandledRejection', async (reason, promise) => {
-console.log('Unhandled Rejection error at:', promise, 'reason', reason);
+console.log('Unhandled Rejection error at:', promise, 'reason', reason)
 })
 process.on('uncaughtException', (err) => {
-  console.log('Uncaught Exception', err);
+  console.log('Uncaught Exception', err)
 })
 process.on('uncaughtExceptionMonitor', (err, origin) => {
-  console.log('Uncaught Exception Monitor', err, origin);
+  console.log('Uncaught Exception Monitor', err, origin)
 })
+
 const client = new Client({
   intents: [Object.keys(GatewayIntentBits)],
   partials: [Object.keys(Partials)],
   allowedMentions: {
       parse: ["users"]
     },
-});
-client.commands = new Collection();
-client.prefixs = new Collection();
-client.aliases = new Collection();
+})
 
-client.login(token).then(() => {
-  loadEvents(client);
-  loadCommands(client);
+client.commands = new Collection()
+client.prefixs = new Collection()
+client.aliases = new Collection()
+
+client.login(TOKEN).then(() => {
+  loadEvents(client)
+  loadCommands(client)
   loadPrefix(client)
-});
-module.exports = client;
+})
+
+module.exports = client
 
 client.on('messageCreate', async (message) => {
     // Ignorar mensajes del propio bot
@@ -67,8 +68,8 @@ const mensajeId = '1375016276988002346';
 
 setInterval(async () => {
   try {
-    await actualizarMensajeDivisiones(client, canalId, mensajeId);
+    await actualizarMensajeDivisiones(client, canalId, mensajeId)
   } catch (error) {
-    console.error('❌ Error al actualizar divisiones:', error);
+    console.error('❌ Error al actualizar divisiones:', error)
   }
-}, 10000);
+}, 10000)

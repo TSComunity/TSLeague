@@ -1,6 +1,6 @@
 const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
 
-const { match } = require('../configs/configs.json')
+const { match } = require('../../configs/configs.json')
 const { defaultStartDay, defaultStartHour } = match
 
 /**
