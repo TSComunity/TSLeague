@@ -13,9 +13,9 @@ const process = require('node:process');
 const token = process.env.TOKEN;
 
 const wait = require('node:timers/promises').setTimeout; // Usable para muchas cosas
-const { createChampionsGroupsImage } = require('./Funciones/crearCanva.js');
+const { createChampionsGroupsImage } = require('./utils/crearCanva.js');
 const { AttachmentBuilder } = require('discord.js');
-const actualizarMensajeDivisiones = require('./Funciones/updDivisiones.js');
+const actualizarMensajeDivisiones = require('./utils/updDivisiones.js');
 process.on('unhandledRejection', async (reason, promise) => {
 console.log('Unhandled Rejection error at:', promise, 'reason', reason);
 })
