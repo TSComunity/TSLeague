@@ -13,13 +13,13 @@ let TeamSchema = new Schema({
             {
                 discordId: { type: String, required: true },
                 brawlId: { type: String },
-                role: { type: String, enum: ['jugador', 'lider', 'sub-lider', 'coach'], default: 'jugador' },
+                rol: { type: String, enum: ['lider', 'sub-lider', 'jugador' ], default: 'jugador' },
             }
         ],
         default: []
     },
 
-    active: { type: Boolean, default: false },
+    isEligible: { type: Boolean, default: false }  // Tiene al menos 3 miembros
 })
 
 module.exports = model("Team", TeamSchema)

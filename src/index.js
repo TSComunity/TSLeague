@@ -7,7 +7,6 @@ const { loadCommands } = require('./Handlers/handlerComandos.js')
 const { loadPrefix } = require('./Handlers/handlerComandosPrefix.js')
 
 const { createChampionsGroupsImage } = require('./utils/crearCanva.js')
-const { getUpdatedDivisions } = require('./utils/updDivisiones.js')
 
 require('dotenv').config()
 const TOKEN = process.env.TOKEN
@@ -60,7 +59,19 @@ client.on('messageCreate', async (message) => {
             message.channel.send('Hubo un error al generar los grupos. Inténtalo de nuevo más tarde.');
         }
     }
-});
+})
+
+
+// Logica de la liga
+
+const { updateAllTeamsEligibility, deleteEmptyTeams } = require('./services/team.js')
+
+setInterval(() => {
+  updateAllTeamsEligibility().catch(err => console.error('Error en updateAllTeamsEligibility:', err))
+  deleteEmptyTeams().catch(err => console.error('Error en dleteEmptyTeams:', err))
+}, 1000 * 60 * 10)
+
+
 
 // IDs reales de canal y mensaje
 const canalId = '1364999474564436068';

@@ -4,7 +4,7 @@ const Team = require('../../Esquemas/Team.js')
 
 const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
 
-const { season } = require('../../configs/configs.json')
+const { season } = require('../../configs/league.js')
 const { startDay, startHour } = season
 
 /**
@@ -54,4 +54,25 @@ const createSeason = async () => {
   return newSeason
 }
 
-module.exports = { createSeason }
+/**
+ * Termina una temporada (solo si esta activa).
+ * @returns {Object} season - La temporada terminada.
+ */
+
+const endSeason = async (season) => {
+  if (!season || !season._id) {
+    throw new Error('❌ Temporada no válida para finalizar')
+  }
+
+  if (!season.active) {
+    throw new Error(`⚠️ La temporada ${season.seasonIndex} ya está finalizada`)
+  }
+
+  season.active = false
+  season.endDate = new Date() 
+
+  await season.save()
+  return season
+}
+
+module.exports = { createSeason, endSeason }

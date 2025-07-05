@@ -9,53 +9,104 @@ const { defaultStartDay, defaultStartHour } = match
  */
 
 const getRandomMatchData = () => {
-
   return {
-    scheduledAt: getNextDayAndHour({ day: defaultStartDay, hour: defaultStartHour }), // fecha futura aleatoria
-    imageURL, // Poner aqui o fuera dependiendo de si necesita los sets
+    scheduledAt: getNextDayAndHour(defaultStartDay, defaultStartHour),
+    imageURL,
     sets
   }
 }
 
 /**
- * Genera partidos round-robin evitando repeticiones.
- * @param {Array} existingMatches - Partidos ya existentes para evitar repeticiones.
- * @param {Array} teamsIds - IDs de los equipos que participan.
- * @returns {Array} matches - Partidos nuevos generados.
+ * Genera los partidos para una ronda en una división, evitando repeticiones y permitiendo descansos.
+ * - Asegura que cada equipo solo juegue un partido por ronda.
+ * - Evita que un equipo juegue contra sí mismo o contra equipos ya eliminados (null).
+ * - Registra qué equipos descansan esa ronda.
+ *
+ * @param {Object} options
+ * @param {Array} options.existingMatches - Partidos ya jugados en la temporada/división.
+ * @param {Array<ObjectId>} options.teamsIds - Lista de IDs de equipos activos en la división.
+ * @param {ObjectId} options.seasonId - ID de la temporada.
+ * @param {String} options.divisionId - ID de la división.
+ * @param {Number} options.roundIndex - Número de la ronda actual.
+ * @returns {Object} resultado - Resultados de la generación.
+ * @returns {Array} resultado.matches - Lista de nuevos partidos generados.
+ * @returns {Array} resultado.resting - IDs de los equipos que descansan esta ronda.
  */
 
-const generateMatches = ({ existingMatches, teamsIds }) => {
+const generateMatches = ({ existingMatches, teamsIds, seasonId, divisionId, roundIndex }) => {
   const alreadyPlayed = new Set()
-
-  // Rellenar set con partidos ya jugados o programados (sin importar orden)
-  existingMatches.forEach(({ teamA, teamB }) => {
-    const key = [teamA.toString(), teamB.toString()].sort().join('-')
-    alreadyPlayed.add(key)
-  })
-
   const matches = []
 
-  for (let i = 0; i < teamsIds.length; i++) {
-    for (let j = i + 1; j < teamsIds.length; j++) {
-      const key = [teamsIds[i].toString(), teamsIds[j].toString()].sort().join('-')
-      if (alreadyPlayed.has(key)) continue
+  if (!Array.isArray(teamsIds) || teamsIds.length < 2) {
+    console.warn('⛔ No hay suficientes equipos válidos para generar partidos')
+    return { matches: [], resting: teamsIds.filter(Boolean) }
+  }
 
+  // Evitar errores por equipos eliminados/null
+  const validTeams = teamsIds.filter(id => id != null)
+
+  // Marcar combinaciones ya jugadas anteriormente
+  for (const match of existingMatches) {
+    if (!match.teamA || !match.teamB) continue
+    const key = [match.teamA.toString(), match.teamB.toString()].sort().join('-')
+    alreadyPlayed.add(key)
+  }
+
+  const usedThisRound = new Set()
+  const restingThisRound = []
+
+  // Intentar emparejar equipos disponibles
+  for (let i = 0; i < validTeams.length; i++) {
+    const idA = validTeams[i]
+    if (usedThisRound.has(idA)) continue
+
+    for (let j = i + 1; j < validTeams.length; j++) {
+      const idB = validTeams[j]
+      if (usedThisRound.has(idB)) continue
+      if (idA.toString() === idB.toString()) continue // evitar partido contra sí mismo
+
+      const key = [idA.toString(), idB.toString()].sort().join('-')
+      if (alreadyPlayed.has(key)) continue // evitar duplicados
+
+      // Emparejamiento válido
       const { scheduledAt, imageURL, sets } = getRandomMatchData()
 
       matches.push({
-        teamA: teamsIds[i],
-        teamB: teamsIds[j],
+        season: seasonId,
+        division: divisionId,
+        roundIndex,
+        teamA: idA,
+        teamB: idB,
         scoreA: 0,
         scoreB: 0,
         scheduledAt,
         status: 'scheduled',
-        imageURL, // TODO: crear imagen con canvas
-        sets // array de sets con mode y map
+        imageURL,
+        sets
       })
+
+      usedThisRound.add(idA)
+      usedThisRound.add(idB)
+      alreadyPlayed.add(key)
+
+      // TODO: avisar al md y que puedan cambiar horario
+
+      break // idA ya emparejado, pasamos al siguiente
     }
   }
 
-  return matches
+  // Registrar equipos que no jugaron esta ronda (descansan)
+  for (const id of validTeams) {
+    if (!usedThisRound.has(id)) {
+      restingThisRound.push(id)
+      // TODO: avisar que les toca descansar
+    }
+  }
+
+  return {
+    matches,
+    resting: restingThisRound
+  }
 }
 
 module.exports = { generateMatches }
