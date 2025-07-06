@@ -1,12 +1,12 @@
 const { model, Schema, Types } = require('mongoose')
 
 const MatchSchema = new Schema({
-  season: { type: Types.ObjectId, ref: 'Season', required: true },
-  division: { type: Types.ObjectId, ref: 'Division', required: true },
+  seasonId: { type: Types.ObjectId, ref: 'Season', required: true },
+  divisionId: { type: Types.ObjectId, ref: 'Division', required: true },
   roundIndex: { type: Number, required: true },
 
-  teamA: { type: Types.ObjectId, ref: 'Team' },
-  teamB: { type: Types.ObjectId, ref: 'Team' },
+  teamAId: { type: Types.ObjectId, ref: 'Team' },
+  teamBId: { type: Types.ObjectId, ref: 'Team' },
 
   scoreA: { type: Number, default: 0 },
   scoreB: { type: Number, default: 0 },

@@ -68,7 +68,7 @@ const { updateAllTeamsEligibility, deleteEmptyTeams } = require('./services/team
 
 setInterval(() => {
   updateAllTeamsEligibility().catch(err => console.error('Error en updateAllTeamsEligibility:', err))
-  deleteEmptyTeams().catch(err => console.error('Error en dleteEmptyTeams:', err))
+  deleteEmptyTeams().catch(err => console.error('Error en deleteEmptyTeams:', err))
 }, 1000 * 60 * 10)
 
 

@@ -2,9 +2,46 @@ const Season = require('../Esquemas/Season.js')
 const Match = require('../Esquemas/Match.js')
 const Team = require('../Esquemas/Team.js')
 
+const { sendTeamDM } = require('../discord/send.js')
+
+const { getMatchCancelledEmbeds } = require('../discord/embeds/match.js')
+
 /**
  * Actualiza la elegiblidad de un equipo dependiendo de si tiene mas de 3 miembros o menos y devuelve su elegiblidad.
+ * @param {Object} team - Equipo a checkear.
  * @returns {Boolean} isEligible - Si es elegible o no.
+ */
+
+const checkTeamEligibility = async ({ team }) => {
+  if (!team) {
+    throw new Error('Faltan datos: team')
+  }
+
+  const isEligible = (team.players && team.players.length >= 3)
+  team.isEligible = isEligible
+
+  await team.save()
+  return isEligible
+}
+
+/**
+ * Actualiza la elegibilidad de todos los equipos en la base de datos.
+ * Recorre todos los equipos, actualiza su propiedad isEligible y guarda los cambios.
+ */
+
+const updateAllTeamsEligibility = async () => {
+  const teams = await Team.find({})
+
+  for (const team of teams) {
+    const isEligible = (team.players && team.players.length >= 3)
+    team.isEligible = isEligible
+    await team.save()
+  }
+}
+
+/**
+ * Elimina todos los equipos vacíos de la base de datos y sus referencias.
+ * Un equipo se considera vacío si no tiene jugadores.
  */
 
 const deleteEmptyTeams = async () => {
@@ -35,7 +72,11 @@ const deleteEmptyTeams = async () => {
 
         // Notificar al equipo rival
         if (opponentId) {
-          logMatchInfo(opponentId, `El partido contra el equipo eliminado ha sido cancelado. Descansas esta ronda.`)
+          const opponent = Team.findOne({ _id: opponentId })
+          sendTeamDM({
+            team: opponent,
+            embeds: getMatchCancelledEmbeds({ team: opponent, match })
+          })
         }
       } else {
         // Para partidos ya jugados o cancelados, solo poner teamA/teamB a null si es necesario
@@ -81,4 +122,4 @@ const deleteEmptyTeams = async () => {
   }
 }
 
-module.exports = { updateTeamEligibility, updateAllTeamsEligibility, deleteEmptyTeams }
+module.exports = { checkTeamEligibility, updateAllTeamsEligibility, deleteEmptyTeams }

@@ -1,4 +1,5 @@
-const { model, Schema, Types } = require('mongoose');
+const { model, Schema, Types } = require('mongoose')
+const { useReducer } = require('react')
 
 let TeamSchema = new Schema({
     name: { type: String, required: true, unique: true },
@@ -6,18 +7,16 @@ let TeamSchema = new Schema({
     color: { type: String },
     code: { type: String, required: true, unique: true },
 
-    division: { type: Types.ObjectId, ref: 'Division', required: true }, // Usar ./id de la division
+    divisionId: { type: Types.ObjectId, ref: 'Division', required: true }, // Usar ./id de la division
 
-    players: {
-        type: [
-            {
-                discordId: { type: String, required: true },
-                brawlId: { type: String },
-                rol: { type: String, enum: ['lider', 'sub-lider', 'jugador' ], default: 'jugador' },
-            }
-        ],
-        default: []
-    },
+    members: [
+        {
+            userId: { type: Types.ObjectId, ref: 'User', required: true },
+            rol: { type: String, enum: ['leader', 'sub-leader', 'member' ], default: 'member' }
+        }
+    ],
+
+    // Aquí se pueden añadir stats totales como total de partidas jugadas, total de puntos en ligas, racha...
 
     isEligible: { type: Boolean, default: false }  // Tiene al menos 3 miembros
 })

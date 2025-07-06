@@ -4,26 +4,34 @@ const SeasonSchema = new Schema({
   seasonIndex: { type: Number, required: true, unique: true },
   startDate: { type: Date, required: true },
   endData: { type: Date },
-  active: { type: Boolean, default: true },
+  status: { type: String, enum: ['active', 'ended'], default: 'active' },
 
   divisions: [
     {
-      division: { type: Types.ObjectId, ref: 'Division', required: true },
+      divisionId: { type: Types.ObjectId, ref: 'Division', required: true },
+      status: { type: String, enum: ['active', 'ended'], default: 'active' },
 
-      teams: [
+      teams: [  
         {
-          team: { type: Types.ObjectId, ref: 'Team', required: true },
+          teamId: { type: Types.ObjectId, ref: 'Team', required: true },
           points: { type: Number, default: 0 },
           rank: { type: Number, default: null },
-          playedGames: { type: Number, default: 0 }
         }
       ],
 
       rounds: [
         {
           roundIndex: { type: Number, required: true }, // ej: 1 = primer finde
-          matches: [{ type: Types.ObjectId, ref: 'Match' }],
-          resting: [{ type: Schema.Types.ObjectId, ref: 'Team' }] // equipos que descansan esa ronda
+          matches: [
+            {
+              matchId: { type: Types.ObjectId, ref: 'Match' }
+            }
+          ],
+          resting: [
+            {
+              teamId: { type: Schema.Types.ObjectId, ref: 'Team' } // Equipos que descansan esa ronda
+            }
+          ]
         }
       ]
     }
