@@ -1,0 +1,40 @@
+[
+  {
+    "id": "gemGrab",
+    "name": "Atrapagemas",
+    "weight": 3,
+    "maps": [
+      {
+        "id": "minecartMadness",
+        "name": "Mina Rocosa",
+        "imageURL": "https://cdn.brawlify.com/map/minecartmadness.png",
+        "weight": 2
+      },
+      {
+        "id": "crystalArcade",
+        "name": "Arcada de cristal",
+        "imageURL": "https://cdn.brawlify.com/map/crystalarcade.png",
+        "weight": 1
+      }
+    ]
+  },
+  {
+    "id": "brawlBall",
+    "name": "Balon Brawl",
+    "weight": 2,
+    "maps": [
+      {
+        "id": "superStadium",
+        "name": "Superestadio",
+        "imageURL": "https://cdn.brawlify.com/map/superstadium.png",
+        "weight": 3
+      },
+      {
+        "id": "penaltyKick",
+        "name": "Tiro penal",
+        "imageURL": "https://cdn.brawlify.com/map/penaltykick.png",
+        "weight": 1
+      }
+    ]
+  }
+]

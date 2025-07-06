@@ -23,7 +23,9 @@ const createMatch = async ({ seasonId, divisionId, roundIndex, idA, idB }) => {
         scheduledAt: getNextDayAndHour(defaultStartDay, defaultStartHour),
         status: 'scheduled',
         imageURL,
-        sets
+        set1: null,
+        set2: null,
+        set3: null
     })
 
     await match.save()

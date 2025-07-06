@@ -21,17 +21,9 @@ const MatchSchema = new Schema({
 
   imageURL: { type: String },
 
-  sets: [
-    {
-      mode: { type: String, required: true },
-      map: { type: String, required: true },
-      winner: {
-        type: String,
-        enum: ['A', 'B', 'draw', null],
-        default: null
-      }
-    }
-  ]
+  set1: { winner: { type: String, enum: ['A', 'B', 'draw', null], default: null } },
+  set2: { winner: { type: String, enum: ['A', 'B', 'draw', null], default: null } },
+  set3: { winner: { type: String, enum: ['A', 'B', 'draw', null], default: null } }
 })
 
 module.exports = model('Match', MatchSchema)

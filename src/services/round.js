@@ -4,6 +4,7 @@ const Team = require('../Esquemas/Team.js')
 
 
 const { generateMatchmaking } = require('./matchmaking.js')
+const { generateRandomSets } = require('./sets.js')
 const { endSeason } = require('./season.js')
 
 const { sendAnnouncement } = require('../discord/send.js')
@@ -85,9 +86,14 @@ const addRound = async () => {
     // 8. Guardar los nuevos documentos de partido en la base de datos
     const savedMatches = await Match.insertMany(newMatchesDocs)
 
+    const { set1, set2, set3 } = generateRandomSets()
+
     // 9. Crear el objeto de la nueva ronda
     const newRound = {
       roundIndex: nextRoundIndex,
+      set1,
+      set2,
+      set3
       matches: savedMatches.map((match) => match._id), // Guarda solo los _id de los partidos
       resting: newRestingTeamsDocs.map(team => team._id),
     }
