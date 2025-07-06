@@ -79,6 +79,12 @@ const createSeason = async () => {
 
 const endSeason = async () => {
   const season = await Season.findOne({ status: 'active' })
+    .populate([
+      { path: 'divisions.divisionId' },
+      { path: 'divisions.teams.teamId' },
+      { path: 'divisions.rounds.matches.matchId' },
+      { path: 'divisions.rounds.resting.teamId' }
+    ])
 
   if (!season || !season._id) throw new Error('Temporada no válida para finalizar.')
 

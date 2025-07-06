@@ -21,7 +21,7 @@ const MatchSchema = new Schema({
 
   imageURL: { type: String },
 
-  set1: { winner: { type: String, enum: ['A', 'B', 'draw', null], default: null } },
+  set1: { winner: { type: String, enum: ['A', 'B', 'draw', null], default: null } },//aqui se pueden añadir los star players
   set2: { winner: { type: String, enum: ['A', 'B', 'draw', null], default: null } },
   set3: { winner: { type: String, enum: ['A', 'B', 'draw', null], default: null } }
 })

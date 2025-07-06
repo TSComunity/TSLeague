@@ -2,13 +2,13 @@ const Season = require('../Esquemas/Season.js')
 const Match = require('../Esquemas/Match.js')
 const Team = require('../Esquemas/Team.js')
 
-
 const { generateMatchmaking } = require('./matchmaking.js')
 const { generateRandomSets } = require('./sets.js')
 const { endSeason } = require('./season.js')
 
 const { sendAnnouncement } = require('../discord/send.js')
-const { getRoundAddedEmbeds } = require('../discord/embeds/round.js') // Recuerda actualizar esta función también
+const { getRoundAddedEmbeds } = require('../discord/embeds/round.js')
+const { getSeasonDivisionEndedEmbeds } = require('../discord/embeds/season.js')
 
 const { season } = require('../configs/league.js')
 const { maxRounds } = season
@@ -22,7 +22,9 @@ const { maxRounds } = season
 
 const addRound = async () => {
   // 1. Obtener la temporada activa y poblar los datos de las divisiones para acceder a sus nombres
-  const season = await Season.findOne({ status: 'active' }).populate('divisions.divisionId')
+  const season = await Season.findOne({ status: 'active' })
+    .populate('divisions.divisionId')         // Pone los datos de la división (name, tier, etc.)
+    .populate('divisions.teams.teamId')       // Pone los datos de cada equipo (name, icon, etc.)
   if (!season) throw new Error('Ninguna temporada activa encontrada')
 
   const seasonId = season._id
@@ -80,6 +82,11 @@ const addRound = async () => {
       divisionsSkipped.push({
         divisionDoc
       })
+
+      await sendAnnouncement({
+        content: '@everyone',
+        embeds: getSeasonDivisionEndedEmbeds({ division }),
+      })
       continue
     }
 
@@ -93,7 +100,7 @@ const addRound = async () => {
       roundIndex: nextRoundIndex,
       set1,
       set2,
-      set3
+      set3,
       matches: savedMatches.map((match) => match._id), // Guarda solo los _id de los partidos
       resting: newRestingTeamsDocs.map(team => team._id),
     }

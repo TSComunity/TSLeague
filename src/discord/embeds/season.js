@@ -16,4 +16,12 @@ const getSeasonEndedEmbeds = ({ season }) =>  {
     ]
 }
 
-module.exports = { getSeasonCreatedEmbeds, getSeasonEndedEmbeds }
+const getSeasonDivisionEndedEmbeds = ({ division }) =>  {
+    return [
+        new EmbedBuilder()
+            .setColor('Blue')
+            .setDescription('Mantenimiento')
+    ]
+}
+
+module.exports = { getSeasonCreatedEmbeds, getSeasonEndedEmbeds, getSeasonDivisionEndedEmbeds }
