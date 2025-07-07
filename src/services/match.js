@@ -34,8 +34,11 @@ const createMatch = ({ seasonId, divisionId, roundIndex, teamAId, teamBId  }) =>
   return match
 }
 
-// dpendiendo de como vamos a verificar quien gana crear funciones para q actualizen eso
+// TODO:
+// dependiendo de como vamos a verificar quien gana crear funciones para q actualizen eso
 
 // luego funciones como para ponerlo en status cancelled o played o igual cambiar equipo, cosas asi
+
+// importante tambien una funcion para cambiar la hora q use getNextDayAndHour, asi los equipos pueden cambiar la hora de su partido el problema es como hacer q los 2 equipos esten de acuerdo
 
 module.exports = { createMatch }
