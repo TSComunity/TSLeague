@@ -65,11 +65,16 @@ client.on('messageCreate', async (message) => {
 // Logica de la liga
 
 const { updateAllTeamsEligibility, deleteEmptyTeams } = require('./services/team.js')
+const { executeDueScheduledFunctions } = require('./services/scheduledFunction.js')
 
 setInterval(() => {
-  updateAllTeamsEligibility().catch(err => console.error('Error en updateAllTeamsEligibility:', err))
-  deleteEmptyTeams().catch(err => console.error('Error en deleteEmptyTeams:', err))
+  updateAllTeamsEligibility().catch(error => console.error(error))
+  deleteEmptyTeams().catch(error => console.error(error))
+  executeDueScheduledFunctions().catch(error => console.error(error))
 }, 1000 * 60 * 10)
+
+
+
 
 
 

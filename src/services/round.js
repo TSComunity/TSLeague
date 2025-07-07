@@ -5,14 +5,15 @@ const Team = require('../Esquemas/Team.js')
 const { generateMatchmaking } = require('./matchmaking.js')
 const { generateRandomSets } = require('./sets.js')
 const { getActiveSeason, endSeason } = require('./season.js')
+const { addScheduledFunction } = require('./scheduledFunction.js')
 
 const { sendAnnouncement } = require('../discord/send.js')
 const { getRoundAddedEmbeds } = require('../discord/embeds/round.js')
 const { getSeasonDivisionEndedEmbeds } = require('../discord/embeds/season.js')
 
-const { season } = require('../configs/league.js')
+const { season, round } = require('../configs/league.js')
 const { maxRounds } = season
-
+const { startDay, startHour } = round
 
 /**
  * Procesa una división dentro de una temporada para generar una nueva ronda o marcarla como finalizada.
@@ -154,5 +155,13 @@ const addRound = async () => {
     }),
   })
 
+  await addScheduledFunction({
+    functionName: 'addRound',
+    day: startDay,
+    hour: startHour
+  })
+
   return season
 }
+
+module.exports = { addRound }

@@ -1,14 +1,12 @@
-const Season = require('../../Esquemas/Season.js')
-const Division = require('../../Esquemas/Division.js')
-const Team = require('../../Esquemas/Team.js')
+const Season = require('../Esquemas/Season.js')
+const Division = require('../Esquemas/Division.js')
+const Team = require('../Esquemas/Team.js')
 
 const { sendAnnouncement } = require('../discord/send.js')
 const { getSeasonCreatedEmbeds, getSeasonEndedEmbeds } = require('../discord/embeds/season.js')
 
-const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
-
-const { season } = require('../../configs/league.js')
-const { startDay, startHour } = season
+const { round } = require('../configs/league.js')
+const { startDay, startHour } = round
 
 /**
  * Obtiene la temporada activa de la base de datos con todos sus datos relacionados poblados.
@@ -81,8 +79,9 @@ const createSeason = async () => {
   // Crear la nueva temporada con las divisiones completas
   const season = new Season({
     seasonIndex: newIndex,
-    startDate: getNextDayAndHour({ day: startDay, hour: startHour }),
-    active: true,
+    startDate: new Date(),
+    endDate: null,
+    status: 'active',
     divisions: divisionsData
   })
 
@@ -91,6 +90,12 @@ const createSeason = async () => {
   await sendAnnouncement({
     content: '@everyone',
     embeds: getSeasonCreatedEmbeds({ season })
+  })
+
+  await addScheduledFunction({
+      functionName: 'addRound',
+      day: startDay,
+      hour: startHour
   })
 
   return season
