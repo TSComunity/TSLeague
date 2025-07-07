@@ -19,10 +19,17 @@ const getActiveSeason = async () => {
   const season = await Season.findOne({ status: 'active' })
     .populate('divisions.divisionId')
     .populate('divisions.teams.teamId')
-    .populate('divisions.rounds.matches.matchId')
+    .populate({
+      path: 'divisions.rounds.matches.matchId',
+      populate: [
+        { path: 'teamA', model: 'Team' },
+        { path: 'teamB', model: 'Team' }
+      ]
+    })
     .populate('divisions.rounds.resting.teamId')
 
-  if (!season) throw new Error('Ninguna temporada activa encontrada')
+  if (!season) throw new Error('Ninguna temporada activa encontrada.')
+
   return season
 }
 
@@ -55,7 +62,7 @@ const createSeason = async () => {
   const divisionsData = await Promise.all(
     divisions.map(async (div) => {
       // Equipos que pertenecen a esta división
-      const teams = await Team.find({ division: div._id }).select('_id')
+      const teams = await Team.find({ divisionId: div._id }).select('_id')
       const teamsStats = teams.map((team, index) => ({
         teamId: team._id,
         points: 0,
