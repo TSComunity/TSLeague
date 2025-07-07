@@ -34,4 +34,8 @@ const createMatch = ({ seasonId, divisionId, roundIndex, teamAId, teamBId  }) =>
   return match
 }
 
+// dpendiendo de como vamos a verificar quien gana crear funciones para q actualizen eso
+
+// luego funciones como para ponerlo en status cancelled o played o igual cambiar equipo, cosas asi
+
 module.exports = { createMatch }
