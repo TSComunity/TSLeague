@@ -11,6 +11,23 @@ const { season } = require('../../configs/league.js')
 const { startDay, startHour } = season
 
 /**
+ * Obtiene la temporada activa de la base de datos con todos sus datos relacionados poblados.
+ * Incluye divisiones, equipos, partidos y equipos en descanso.
+ * @returns {Object} season - Documento de la temporada activa
+ */
+
+const getActiveSeason = async () => {
+  const season = await Season.findOne({ status: 'active' })
+    .populate('divisions.divisionId')
+    .populate('divisions.teams.teamId')
+    .populate('divisions.rounds.matches.matchId')
+    .populate('divisions.rounds.resting.teamId')
+
+  if (!season) throw new Error('Ninguna temporada activa encontrada')
+  return season
+}
+
+/**
  * Crea una nueva temporada con todas las divisiones existentes.
  * @returns {Object} season - La temporada creada.
  */
@@ -78,17 +95,7 @@ const createSeason = async () => {
  */
 
 const endSeason = async () => {
-  const season = await Season.findOne({ status: 'active' })
-    .populate([
-      { path: 'divisions.divisionId' },
-      { path: 'divisions.teams.teamId' },
-      { path: 'divisions.rounds.matches.matchId' },
-      { path: 'divisions.rounds.resting.teamId' }
-    ])
-
-  if (!season || !season._id) throw new Error('Temporada no válida para finalizar.')
-
-  if (!season.active) throw new Error(`La temporada ${season.seasonIndex} ya está finalizada.`)
+  const season = await getActiveSeason()
 
   season.status = 'ended'
   season.endDate = new Date() 
@@ -107,4 +114,4 @@ const endSeason = async () => {
   return season
 }
 
-module.exports = { createSeason, endSeason }
+module.exports = { getActiveSeason, createSeason, endSeason }

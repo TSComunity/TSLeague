@@ -11,19 +11,18 @@ const { createMatch } = require('./match.js')
  * @param {ID} seasonId - ID de la temporada.
  * @param {ID} divisionId - ID de la división.
  * @param {Number} nextRoundIndex - Indice de la ronda a generar.
- * @returns {Array} matches - Lista de nuevos partidos generados.
- * @returns {Array} resting - IDs de los equipos que descansan esta ronda.
+ * @returns {Array} newMatchesDocs - Lista de nuevos partidos generados.
+ * @returns {Array} newRestingTeamsDocs - IDs de los equipos que descansan esta ronda.
  */
 
 const generateMatchmaking = ({ matchesDocs, teamsDocs, seasonId, divisionId, nextRoundIndex }) => {
-
   // Evitar errores por equipos eliminados/null
   const validTeams = teamsDocs.filter(teamDoc => teamDoc != null)
   const validTeamsIds = validTeams.map(teamDoc => teamDoc._id)
 
   if (validTeamsIds.length < 2) {
     console.warn('No hay suficientes equipos válidos para generar partidos.')
-    return { matches: [], resting: validTeamsIds }
+    return { newMatchesDocs: [], newRestingTeamsDocs: validTeams }
   }
 
   const alreadyPlayed = new Set()
@@ -42,33 +41,32 @@ const generateMatchmaking = ({ matchesDocs, teamsDocs, seasonId, divisionId, nex
 
   // Intentar emparejar equipos disponibles
   for (let i = 0; i < validTeamsIds.length; i++) {
-    const idA = validTeamsIds[i]
-    if (usedThisRound.has(idA)) continue
+    const teamAId = validTeamsIds[i]
+    if (usedThisRound.has(teamAId)) continue
 
     for (let j = i + 1; j < validTeamsIds.length; j++) {
-      const idB = validTeamsIds[j]
-      if (usedThisRound.has(idB)) continue
-      if (idA.toString() === idB.toString()) continue // evitar partido contra sí mismo
+      const teamBId = validTeamsIds[j]
+      if (usedThisRound.has(teamBId)) continue
+      if (teamAId.toString() === teamBId.toString()) continue // evitar partido contra sí mismo
 
-      const key = [idA.toString(), idB.toString()].sort().join('-')
+      const key = [teamAId.toString(), teamBId.toString()].sort().join('-')
       if (alreadyPlayed.has(key)) continue // evitar duplicados
 
       // Emparejamiento válido
       const matchInstance = createMatch({
-        teamA: idA, // El ID del primer equipo
-        teamB: idB, // El ID del segundo equipo
-        season: seasonId, // El ID de la temporada
-        division: divisionId, // El ID de la división
+        seasonId, // El ID de la temporada
+        division, // El ID de la división
         roundIndex: nextRoundIndex, // El índice de la ronda
+        teamAId, // El ID del primer equipo
+        teamBId // El ID del segundo equipo
       })
 
       newMatchesDocs.push(matchInstance)
-
-      usedThisRound.add(idA)
-      usedThisRound.add(idB)
+      usedThisRound.add(teamAId)
+      usedThisRound.add(teamBId)
       alreadyPlayed.add(key)
 
-      break // idA ya emparejado, pasamos al siguiente
+      break // teamAId ya emparejado, pasamos al siguiente
     }
   }
 
@@ -80,10 +78,7 @@ const generateMatchmaking = ({ matchesDocs, teamsDocs, seasonId, divisionId, nex
     }
   }
 
-  return {
-    newMatchesDocs,
-    newRestingTeamsDocs
-  }
+  return { newMatchesDocs, newRestingTeamsDocs }
 }
 
 module.exports = { generateMatchmaking }
