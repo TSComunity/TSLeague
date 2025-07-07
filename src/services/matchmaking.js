@@ -55,7 +55,7 @@ const generateMatchmaking = ({ matchesDocs, teamsDocs, seasonId, divisionId, nex
       // Emparejamiento válido
       const matchInstance = createMatch({
         seasonId, // El ID de la temporada
-        division, // El ID de la división
+        divisionId, // El ID de la división
         roundIndex: nextRoundIndex, // El índice de la ronda
         teamAId, // El ID del primer equipo
         teamBId // El ID del segundo equipo

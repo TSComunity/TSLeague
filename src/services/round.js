@@ -79,7 +79,7 @@ const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
 
   // Insertar nuevos partidos y sets aleatorios
   const savedMatches = await Match.insertMany(newMatchesDocs)
-  const { set1, set2, set3 } = generateRandomSets()
+  const { set1, set2, set3 } = await generateRandomSets()
 
   // Crear y añadir nueva ronda a la división
   const newRound = {

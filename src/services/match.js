@@ -7,11 +7,11 @@ const { defaultStartDay, defaultStartHour } = match
 /**
  * Crea una instancia de partido (Match) sin guardarla.
  * @param {Object} params
- * @param {ObjectId} params.teamA - ID del equipo A
- * @param {ObjectId} params.teamB - ID del equipo B
- * @param {ObjectId} params.season - ID de la temporada
- * @param {ObjectId} params.division - ID de la división
- * @param {Number} params.roundIndex - Número de ronda
+ * @param {ObjectId} seasonId - ID de la temporada
+ * @param {ObjectId} divisionId - ID de la division
+ * @param {Number} roundIndex - Numero de la ronda
+ * @param {ObjectId} teamAId - ID del equipo A
+ * @param {ObjectId} teamBId - ID del equipo B
  * @returns {Match} Instancia de partido (sin guardar)
  */
 
