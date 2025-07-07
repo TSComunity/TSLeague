@@ -18,7 +18,7 @@ module.exports = {
         // IDs de PM2
         const pm2Ids = {
             comunity: 1,
-            league: 8
+            league: 10
         };
 
         if (subcommand === "reiniciar") {

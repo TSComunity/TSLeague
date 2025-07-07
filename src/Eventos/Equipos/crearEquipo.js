@@ -7,7 +7,7 @@ const {
   ButtonStyle
 } = require('discord.js');
 
-const schema = require('../../Esquemas/SchemaEquipos.js');
+const schema = require('../../Esquemas/Team.js');
 
 function generarCodigoEquipo() {
   const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

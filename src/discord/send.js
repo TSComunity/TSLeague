@@ -32,7 +32,7 @@ const sendAnnouncement = async ({ content = '', files = [], embeds = [], compone
  * @param {Client} options.client - Instancia de Discord.js
  */
 
-const sendTeamsDM = async ({ teamDoc, rol = 'jugador', content = '', files = [], embeds = [], components = [], client }) => {
+const sendTeamDM = async ({ teamDoc, rol = 'jugador', content = '', files = [], embeds = [], components = [], client }) => {
   if (!team?.members || team.members.length === 0) throw new Error('El equipo no tiene jugadores')
 
   const members = (() => {

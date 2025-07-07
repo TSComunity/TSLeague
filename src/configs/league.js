@@ -1,12 +1,12 @@
 function calcMaxRounds(maxTeams) {
-  if (numEquipos < 2) return 0 // menos de 2 equipos no hay rondas
+  if (maxTeams < 2) return 0 // menos de 2 equipos no hay rondas
 
-  if (numEquipos % 2 === 0) {
+  if (maxTeams % 2 === 0) {
     // número par de equipos
-    return numEquipos - 1;
+    return maxTeams - 1;
   } else {
     // número impar de equipos, uno descansa cada ronda
-    return numEquipos
+    return maxTeams
   }
 }
 

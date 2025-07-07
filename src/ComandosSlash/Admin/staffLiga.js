@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const equiposData = require('../../Esquemas/SchemaEquipos'); // Ajusta según tu estructura
+const equiposData = require('../../Esquemas/Team.js'); // Ajusta según tu estructura
 
 module.exports = {
     data: new SlashCommandBuilder()

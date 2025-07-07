@@ -1,5 +1,4 @@
 const { model, Schema, Types } = require('mongoose')
-const { useReducer } = require('react')
 
 let TeamSchema = new Schema({
     name: { type: String, required: true, unique: true },

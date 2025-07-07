@@ -9,7 +9,7 @@ const {
   ActionRowBuilder: RowBuilder,
 } = require('discord.js');
 
-const schema = require('../../Esquemas/SchemaEquipos.js');
+const schema = require('../../Esquemas/Team.js');
 
 const ICONO_DEFECTO = 'https://images-ext-1.discordapp.net/external/93Clk3YKdTqFCB64y3DEwNsEyB2NQwL9VJU5vZFCTXo/%3Fsize%3D128/https/cdn.discordapp.com/icons/1093864130030612521/0525f2dce5dd5a3bff36fdaa833c71c6.png?format=webp&quality=lossless';
 const COLOR_DEFECTO = 0x1bfc62;

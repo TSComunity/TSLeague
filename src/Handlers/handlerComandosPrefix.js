@@ -6,7 +6,7 @@ async function loadPrefix(client) {
     await client.prefixs.clear();
 
     // Ruta del directorio que contiene los comandos
-    const dirName = path.join(process.cwd(), 'ComandosPrefix');
+    const dirName = path.join(process.cwd(), '/src/ComandosPrefix');
 
     // Obtener todos los archivos .js dentro del directorio y subdirectorios
     const getAllFiles = (dir, fileList = []) => {
