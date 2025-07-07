@@ -3,23 +3,18 @@ const Match = require('../Esquemas/Match.js')
 const Team = require('../Esquemas/Team.js')
 
 const { sendTeamDM } = require('../discord/send.js')
-
 const { getMatchCancelledEmbeds } = require('../discord/embeds/match.js')
 
 /**
- * Actualiza la elegiblidad de un equipo dependiendo de si tiene mas de 3 miembros o menos y devuelve su elegiblidad.
+ * Actualiza la elegibilidad de un equipo dependiendo de si tiene al menos 3 miembros y devuelve su elegibilidad.
  * @param {Object} team - Equipo a checkear.
  * @returns {Boolean} isEligible - Si es elegible o no.
  */
-
 const checkTeamEligibility = async ({ team }) => {
-  if (!team) {
-    throw new Error('Faltan datos: team')
-  }
+  if (!team) throw new Error('Faltan datos: team.')
 
-  const isEligible = (team.players && team.players.length >= 3)
+  const isEligible = (team.members && team.members.length >= 3)
   team.isEligible = isEligible
-
   await team.save()
   return isEligible
 }
@@ -28,12 +23,10 @@ const checkTeamEligibility = async ({ team }) => {
  * Actualiza la elegibilidad de todos los equipos en la base de datos.
  * Recorre todos los equipos, actualiza su propiedad isEligible y guarda los cambios.
  */
-
 const updateAllTeamsEligibility = async () => {
   const teams = await Team.find({})
-
   for (const team of teams) {
-    const isEligible = (team.players && team.players.length >= 3)
+    const isEligible = (team.members && team.members.length >= 3)
     team.isEligible = isEligible
     await team.save()
   }
@@ -41,11 +34,10 @@ const updateAllTeamsEligibility = async () => {
 
 /**
  * Elimina todos los equipos vacíos de la base de datos y sus referencias.
- * Un equipo se considera vacío si no tiene jugadores.
+ * Un equipo se considera vacío si no tiene miembros.
  */
-
 const deleteEmptyTeams = async () => {
-  const emptyTeams = await Team.find({ Jugadores: { $size: 0 } })
+  const emptyTeams = await Team.find({ members: { $size: 0 } })
 
   for (const team of emptyTeams) {
     const teamId = team._id
@@ -62,9 +54,7 @@ const deleteEmptyTeams = async () => {
         const opponentId = match.teamA.equals(teamId) ? match.teamB : match.teamA
 
         // Actualizar el partido
-        const update = {
-          status: 'cancelled'
-        }
+        const update = { status: 'cancelled' }
         if (match.teamA.equals(teamId)) update.teamA = null
         if (match.teamB.equals(teamId)) update.teamB = null
 
@@ -72,11 +62,13 @@ const deleteEmptyTeams = async () => {
 
         // Notificar al equipo rival
         if (opponentId) {
-          const opponent = Team.findOne({ _id: opponentId })
-          sendTeamDM({
-            team: opponent,
-            embeds: getMatchCancelledEmbeds({ team: opponent, match })
-          })
+          const opponent = await Team.findOne({ _id: opponentId })
+          if (opponent) {
+            await sendTeamDM({
+              team: opponent,
+              embeds: getMatchCancelledEmbeds({ team: opponent, match })
+            })
+          }
         }
       } else {
         // Para partidos ya jugados o cancelados, solo poner teamA/teamB a null si es necesario
@@ -95,20 +87,19 @@ const deleteEmptyTeams = async () => {
       {},
       {
         $pull: {
-          'divisions.$[].teams': { team: teamId }
+          'divisions.$[].teams': { teamId: teamId }
         }
       }
     )
 
-    // Eliminar referencias del equipo en descansos de rondas
-    // Como MongoDB no soporta dos $[] anidados, haremos esta lógica manualmente:
+    // Eliminar referencias del equipo en descansos de rondas manualmente
     const seasons = await Season.find({})
     for (const season of seasons) {
       let modified = false
       for (const division of season.divisions) {
         for (const round of division.rounds) {
-          const originalLength = round.resting.length
-          round.resting = round.resting.filter(id => !id.equals(teamId))
+          const originalLength = round.resting?.length || 0
+          round.resting = (round.resting || []).filter(id => !id.equals(teamId))
           if (round.resting.length !== originalLength) modified = true
         }
       }

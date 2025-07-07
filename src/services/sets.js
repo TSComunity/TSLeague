@@ -1,17 +1,14 @@
-const Season = require('../Esquemas/Season')
+const { getActiveSeason } = require('./season.js')
 
 const gameModes = require('../configs/gameModes.json')
 
 /**
  * Selecciona 3 sets aleatorios (modo + mapa) que aún no se han jugado en la temporada activa.
  * Usa los pesos de modos y mapas definidos en el JSON.
- * @returns {Object} sets - los sets elejidos.
+ * @returns {Object} sets - los sets elegidos.
  */
-
-
 const generateRandomSets = async () => {
-  const season = await Season.findOne({ status: 'active' })
-  if (!season) throw new Error('No se ha encontrado ninguna temporada activa.')
+  const season = await getActiveSeason()
 
   // Mapas ya usados
   const playedMapIds = new Set()
@@ -71,7 +68,7 @@ const generateRandomSets = async () => {
     const map = weightedMaps[Math.floor(Math.random() * weightedMaps.length)]
     sets[`set${i + 1}`] = {
       mode: mode.id,
-      map: map.id,
+      map: map.id
     }
   }
 

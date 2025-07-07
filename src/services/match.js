@@ -14,7 +14,6 @@ const { defaultStartDay, defaultStartHour } = match
  * @param {ObjectId} teamBId - ID del equipo B
  * @returns {Match} Instancia de partido (sin guardar)
  */
-
 const createMatch = ({ seasonId, divisionId, roundIndex, teamAId, teamBId  }) => {
   const match = new Match({
     seasonId,

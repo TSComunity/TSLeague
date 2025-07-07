@@ -6,7 +6,6 @@ const Division = require('../Esquemas/Division.js')
  * @param {number} tier - Tier numérico (prioridad).
  * @returns {Object} newDivision - La división creada.
  */
-
 const createDivision = async ({ name, tier }) => {
   if (!name || !tier) {
     throw new Error('Faltan datos: name o tier.')
@@ -35,7 +34,6 @@ const createDivision = async ({ name, tier }) => {
  * @param {string} name - Nombre de la división.
  * @returns {Object} division - División eliminada.
  */
-
 const deleteDivision = async ({ name }) => {
     if (!name) {
     throw new Error('Debes proporcionar un nombre.')
@@ -58,7 +56,6 @@ const deleteDivision = async ({ name }) => {
  * @param {number} newTier - Nuevo tier (opcional).
  * @returns {Object} division - División actualizada.
  */
-
 const updateDivision = async ({ name, newName, newTier }) => {
     if (!name) {
         throw new Error('Debes proporcionar un nombre.')

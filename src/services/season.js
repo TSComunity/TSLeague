@@ -15,7 +15,6 @@ const { startDay, startHour } = season
  * Incluye divisiones, equipos, partidos y equipos en descanso.
  * @returns {Object} season - Documento de la temporada activa
  */
-
 const getActiveSeason = async () => {
   const season = await Season.findOne({ status: 'active' })
     .populate('divisions.divisionId')
@@ -31,7 +30,6 @@ const getActiveSeason = async () => {
  * Crea una nueva temporada con todas las divisiones existentes.
  * @returns {Object} season - La temporada creada.
  */
-
 const createSeason = async () => {
   // Desactivar temporadas y divisiones activas previas
   await Season.updateMany(
@@ -50,6 +48,8 @@ const createSeason = async () => {
 
   // Obtener todas las divisiones
   const divisions = await Division.find().select('_id')
+
+  if (!divisions.length) throw new Error('No existen divisiones activas para crear una temporada. Agrega divisiones primero.')
 
   // Para cada división, obtener sus equipos y preparar la estructura
   const divisionsData = await Promise.all(
@@ -93,7 +93,6 @@ const createSeason = async () => {
  * Termina una temporada (solo si esta activa).
  * @returns {Object} season - La temporada terminada.
  */
-
 const endSeason = async () => {
   const season = await getActiveSeason()
 

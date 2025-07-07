@@ -21,7 +21,6 @@ const { maxRounds } = season
  * @param {ObjectId} seasonId - ID de la temporada activa
  * @returns {Promise<Object>} Objeto con información sobre si se generó ronda o se terminó la división
  */
-
 const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
   const { divisionId: divisionDoc, status, teams, rounds } = division
 
@@ -52,7 +51,8 @@ const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
 
   const teamsDocs = teams.map((team) => team.teamId)
 
-  const nextRoundIndex = rounds.length + 1
+  const indices = division.rounds.map(r => r.roundIndex || 0)
+  const nextRoundIndex = (indices.length ? Math.max(...indices) : 0) + 1
 
   const { newMatchesDocs, newRestingTeamsDocs } = generateMatchmaking({
     matchesDocs,
@@ -108,7 +108,6 @@ const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
  * También envía anuncios según lo que ocurra.
  * @returns {Promise<Object>} Documento actualizado de la temporada
  */
-
 const addRound = async () => {
   const season = await getActiveSeason()
   const seasonId = season._id

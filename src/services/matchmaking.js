@@ -14,7 +14,6 @@ const { createMatch } = require('./match.js')
  * @returns {Array} newMatchesDocs - Lista de nuevos partidos generados.
  * @returns {Array} newRestingTeamsDocs - IDs de los equipos que descansan esta ronda.
  */
-
 const generateMatchmaking = ({ matchesDocs, teamsDocs, seasonId, divisionId, nextRoundIndex }) => {
   // Evitar errores por equipos eliminados/null
   const validTeams = teamsDocs.filter(teamDoc => teamDoc != null)
@@ -29,7 +28,7 @@ const generateMatchmaking = ({ matchesDocs, teamsDocs, seasonId, divisionId, nex
 
   // Marcar combinaciones ya jugadas anteriormente
   for (const matchDoc of matchesDocs) {
-    if (!matchDoc.teamA || !matchDoc  .teamB) continue
+    if (!matchDoc.teamA || !matchDoc.teamB) continue
     const key = [matchDoc.teamA.toString(), matchDoc.teamB.toString()].sort().join('-')
     alreadyPlayed.add(key)
   }
