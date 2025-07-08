@@ -7,7 +7,7 @@ const { generateRandomSets } = require('./sets.js')
 const { getActiveSeason, endSeason } = require('./season.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
 
-const { sendAnnouncement } = require('../discord/send.js')
+const { sendAnnouncement } = require('../discord/send/general.js')
 const { getRoundAddedEmbed } = require('../discord/embeds/round.js')
 const { getDivisionEndedEmbed } = require('../discord/embeds/division.js')
 

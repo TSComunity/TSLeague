@@ -16,14 +16,4 @@ const getMatchCancelledEmbed = ({ match }) => {
     )
 }
 
-const getRestingEmbed = ({ team }) => {
-    return (
-        new EmbedBuilder()
-            .setColor('Blue')
-            .setDescription('Mantenimiento')
-    )
-}
-
-
-
-module.exports = { getMatchScheduledEmbed, getMatchCancelledEmbed, getRestingEmbed }
+module.exports = { getMatchScheduledEmbed, getMatchCancelledEmbed }

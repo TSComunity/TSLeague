@@ -2,7 +2,7 @@ const Season = require('../Esquemas/Season.js')
 const Division = require('../Esquemas/Division.js')
 const Team = require('../Esquemas/Team.js')
 
-const { sendAnnouncement } = require('../discord/send.js')
+const { sendAnnouncement } = require('../discord/send/general.js')
 const { getSeasonCreatedEmbed, getSeasonEndedEmbed } = require('../discord/embeds/season.js')
 
 const { round } = require('../configs/league.js')

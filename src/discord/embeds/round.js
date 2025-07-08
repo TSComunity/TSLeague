@@ -22,3 +22,5 @@ const getRoundAddedEmbed = ({ divisionsWithNewRounds, seasonIndex, nextRoundInde
 }
 
 module.exports = { getRoundAddedEmbed }
+
+// verificar esto, porrito, q le pase toda la season o q ostise

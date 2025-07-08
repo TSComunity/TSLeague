@@ -2,7 +2,7 @@ const Season = require('../Esquemas/Season')
 const Match = require('../Esquemas/Match')
 const Team = require('../Esquemas/Team')
 
-const { sendTeamDM } = require('../discord/send.js')
+const { sendTeamDM } = require('../discord/send/team.js')
 const { getMatchCancelledEmbed } = require('../discord/embeds/match.js')
 
 const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
@@ -130,14 +130,14 @@ const cancelMatch = async ({ match, reason = 'Partido cancelado', removeTeamId =
   // Enviar DM solo si quedan equipos válidos
   if (match.teamAId?.members) {
     await sendTeamDM({
-      teamDoc: match.teamAId,
+      team: match.teamAId,
       embeds: [getMatchCancelledEmbed({ match })]
     })
   }
 
   if (match.teamBId?.members) {
     await sendTeamDM({
-      teamDoc: match.teamBId,
+      team: match.teamBId,
       embeds: [getMatchCancelledEmbed({ match })]
     })
   }
