@@ -72,20 +72,3 @@ setInterval(() => {
   deleteEmptyTeams().catch(error => console.error(error))
   executeDueScheduledFunctions().catch(error => console.error(error))
 }, 1000 * 60 * 10)
-
-
-
-
-
-
-// IDs reales de canal y mensaje
-const canalId = '1364999474564436068';
-const mensajeId = '1375016276988002346';
-
-setInterval(async () => {
-  try {
-    await actualizarMensajeDivisiones(client, canalId, mensajeId)
-  } catch (error) {
-    console.error('❌ Error al actualizar divisiones:', error)
-  }
-}, 10000)
