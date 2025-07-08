@@ -125,4 +125,26 @@ const endSeason = async () => {
   return season
 }
 
-module.exports = { getActiveSeason, createSeason, endSeason }
+const updateDivisionsEmbed = async () => {
+  const season = await getActiveSeason()
+  const seasonIndex = season.seasonIndex
+
+  // 1. Generar embed resumen de la temporada
+  const summaryEmbed = getSeasonSummaryEmbed(season)
+
+  // 2. Generar un embed por división
+  const divisionEmbeds = season.divisions.map(getDivisionEmbed)
+
+  // 3. Actualizar canal (puedes guardar IDs de mensajes en DB o editar siempre los fijos)
+  const channel = await client.channels.fetch('ID_DEL_CANAL_DIVISIONES')
+  await channel.bulkDelete(50) // Ojo con esto, depende de cómo lo quieras gestionar
+
+  await channel.send({ embeds: [summaryEmbed] })
+  for (const embed of divisionEmbeds) {
+    await channel.send({ embeds: [embed] })
+  }
+}
+
+// se podria hacer algo para pausar la temporada (mantenimiento)
+
+module.exports = { getActiveSeason, createSeason, endSeason, updateDivisionsEmbed }
