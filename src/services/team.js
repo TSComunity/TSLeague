@@ -2,6 +2,8 @@ const Season = require('../Esquemas/Season.js')
 const Match = require('../Esquemas/Match.js')
 const Team = require('../Esquemas/Team.js')
 
+const { cancelMatch } = require('./match.js')
+
 const { sendTeamDM } = require('../discord/send.js')
 const { getMatchCancelledEmbeds } = require('../discord/embeds/match.js')
 
@@ -50,26 +52,11 @@ const deleteEmptyTeams = async () => {
     for (const match of matches) {
       // Si el partido está programado, cancelarlo y avisar al rival
       if (match.status === 'scheduled') {
-        // Identificar el equipo rival
-        const opponentId = match.teamA.equals(teamId) ? match.teamB : match.teamA
-
-        // Actualizar el partido
-        const update = { status: 'cancelled' }
-        if (match.teamA.equals(teamId)) update.teamA = null
-        if (match.teamB.equals(teamId)) update.teamB = null
-
-        await Match.updateOne({ _id: match._id }, update)
-
-        // Notificar al equipo rival
-        if (opponentId) {
-          const opponent = await Team.findOne({ _id: opponentId })
-          if (opponent) {
-            await sendTeamDM({
-              team: opponent,
-              embeds: getMatchCancelledEmbeds({ team: opponent, match })
-            })
-          }
-        }
+        await cancelMatch({
+          match,
+          reason: 'Un equipo se ha retirado del partido.',
+          removeTeamId: teamId
+        })
       } else {
         // Para partidos ya jugados o cancelados, solo poner teamA/teamB a null si es necesario
         const update = {}

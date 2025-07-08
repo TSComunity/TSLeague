@@ -8,7 +8,7 @@ const getMatchScheduledEmbeds = ({ match }) => {
     ]
 }
 
-const getMatchCancelledEmbeds = ({ team, match }) => {
+const getMatchCancelledEmbeds = ({ match }) => {
     return [
         new EmbedBuilder()
             .setColor('Blue')

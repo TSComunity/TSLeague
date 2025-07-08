@@ -1,9 +1,11 @@
 const { model, Schema, Types } = require('mongoose')
 
 const MatchSchema = new Schema({
+  matchIndex: { type: Number, required: true}
+  roundIndex: { type: Number, required: true },
+  
   seasonId: { type: Types.ObjectId, ref: 'Season', required: true },
   divisionId: { type: Types.ObjectId, ref: 'Division', required: true },
-  roundIndex: { type: Number, required: true },
 
   teamAId: { type: Types.ObjectId, ref: 'Team' },
   teamBId: { type: Types.ObjectId, ref: 'Team' },
@@ -18,6 +20,7 @@ const MatchSchema = new Schema({
     enum: ['scheduled', 'played', 'cancelled'],
     default: 'scheduled'
   },
+  reason: { type: String },
 
   set1: { winner: { type: String, enum: ['A', 'B', 'draw', null], default: null } },//aqui se pueden añadir los star players
   set2: { winner: { type: String, enum: ['A', 'B', 'draw', null], default: null } },

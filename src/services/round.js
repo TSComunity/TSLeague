@@ -55,7 +55,7 @@ const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
   const indices = division.rounds.map(r => r.roundIndex || 0)
   const nextRoundIndex = (indices.length ? Math.max(...indices) : 0) + 1
 
-  const { newMatchesDocs, newRestingTeamsDocs } = generateMatchmaking({
+  const { newMatchesDocs, newRestingTeamsDocs } = await generateMatchmaking({
     matchesDocs,
     teamsDocs,
     seasonId,
