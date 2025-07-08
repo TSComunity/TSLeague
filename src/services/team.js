@@ -4,9 +4,6 @@ const Team = require('../Esquemas/Team.js')
 
 const { cancelMatch } = require('./match.js')
 
-const { sendTeamDM } = require('../discord/send.js')
-const { getMatchCancelledEmbeds } = require('../discord/embeds/match.js')
-
 /**
  * Actualiza la elegibilidad de un equipo dependiendo de si tiene al menos 3 miembros y devuelve su elegibilidad.
  * @param {Object} team - Equipo a checkear.

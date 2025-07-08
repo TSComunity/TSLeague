@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js')
 
-const getRoundAddedEmbeds = ({ divisionsWithNewRounds, seasonIndex, nextRoundIndex }) => {
+const getRoundAddedEmbed = ({ divisionsWithNewRounds, seasonIndex, nextRoundIndex }) => {
   const embed = new EmbedBuilder()
     .setColor('Blue')
     .setTitle(`🌀 Ronda ${nextRoundIndex} añadida`)
@@ -18,7 +18,7 @@ const getRoundAddedEmbeds = ({ divisionsWithNewRounds, seasonIndex, nextRoundInd
     })
   }
 
-  return [embed]
+  return embed
 }
 
-module.exports = { getRoundAddedEmbeds }
+module.exports = { getRoundAddedEmbed }

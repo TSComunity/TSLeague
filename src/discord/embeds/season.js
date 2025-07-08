@@ -1,27 +1,27 @@
 const { EmbedBuilder } = require('discord.js')
 
-const getSeasonCreatedEmbeds = ({ season }) =>  {
-    return [
+const getSeasonCreatedEmbed = ({ season }) =>  {
+    return (
         new EmbedBuilder()
             .setColor('Blue')
             .setDescription('Mantenimiento')
-    ]
+    )
 }
 
-const getSeasonEndedEmbeds = ({ season }) =>  {
-    return [
+const getSeasonEndedEmbed = ({ season }) =>  {
+    return (
         new EmbedBuilder()
             .setColor('Blue')
             .setDescription('Mantenimiento')
-    ]
+    )
 }
 
-const getSeasonDivisionEndedEmbeds = ({ division }) =>  {
-    return [
+const getSeasonDivisionEndedEmbed = ({ division }) =>  {
+    return (
         new EmbedBuilder()
             .setColor('Blue')
             .setDescription('Mantenimiento')
-    ]
+    )
 }
 
-module.exports = { getSeasonCreatedEmbeds, getSeasonEndedEmbeds, getSeasonDivisionEndedEmbeds }
+module.exports = { getSeasonCreatedEmbed, getSeasonEndedEmbed, getSeasonDivisionEndedEmbed }

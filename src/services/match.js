@@ -21,7 +21,7 @@ const { defaultStartDay, defaultStartHour } = match
  */
 const createMatchInstance = async ({ seasonId, divisionId, roundIndex, teamAId, teamBId  }) => {
   const lastIndex = await Match.countDocuments()
-  const matchIndex = lastIndex + 
+  const matchIndex = lastIndex + 1
   
   const match = new Match({
     matchIndex,
@@ -131,14 +131,14 @@ const cancelMatch = async ({ match, reason = 'Partido cancelado', removeTeamId =
   if (match.teamAId?.members) {
     await sendTeamDM({
       teamDoc: match.teamAId,
-      embeds: getMatchCancelledEmbeds({ match })
+      embeds: [getMatchCancelledEmbed({ match })]
     })
   }
 
   if (match.teamBId?.members) {
     await sendTeamDM({
       teamDoc: match.teamBId,
-      embeds: getMatchCancelledEmbeds({ match })
+      embeds: [getMatchCancelledEmbed({ match })]
     })
   }
 

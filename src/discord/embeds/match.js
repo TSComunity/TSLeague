@@ -1,29 +1,29 @@
 const { EmbedBuilder } = require('discord.js')
 
-const getMatchScheduledEmbeds = ({ match }) => {
-    return [
+const getMatchScheduledEmbed = ({ match }) => {
+    return (
         new EmbedBuilder()
             .setColor('Blue')
             .setDescription('Mantenimiento')
-    ]
+    )
 }
 
-const getMatchCancelledEmbeds = ({ match }) => {
-    return [
+const getMatchCancelledEmbed = ({ match }) => {
+    return (
         new EmbedBuilder()
             .setColor('Blue')
             .setDescription('Mantenimiento')
-    ]
+    )
 }
 
-const getRestingEmbeds = ({ team }) => {
-    return [
+const getRestingEmbed = ({ team }) => {
+    return (
         new EmbedBuilder()
             .setColor('Blue')
             .setDescription('Mantenimiento')
-    ]
+    )
 }
 
 
 
-module.exports = { getMatchScheduledEmbeds, getMatchCancelledEmbeds, getRestingEmbeds }
+module.exports = { getMatchScheduledEmbed, getMatchCancelledEmbed, getRestingEmbed }

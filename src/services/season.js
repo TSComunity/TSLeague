@@ -3,7 +3,7 @@ const Division = require('../Esquemas/Division.js')
 const Team = require('../Esquemas/Team.js')
 
 const { sendAnnouncement } = require('../discord/send.js')
-const { getSeasonCreatedEmbeds, getSeasonEndedEmbeds } = require('../discord/embeds/season.js')
+const { getSeasonCreatedEmbed, getSeasonEndedEmbed } = require('../discord/embeds/season.js')
 
 const { round } = require('../configs/league.js')
 const { startDay, startHour } = round
@@ -89,7 +89,7 @@ const createSeason = async () => {
 
   await sendAnnouncement({
     content: '@everyone',
-    embeds: getSeasonCreatedEmbeds({ season })
+    embeds: [getSeasonCreatedEmbed({ season })]
   })
 
   await addScheduledFunction({
@@ -119,7 +119,7 @@ const endSeason = async () => {
 
   await sendAnnouncement({
     content: '@everyone',
-    embeds: getSeasonEndedEmbeds({ season })
+    embeds: [getSeasonEndedEmbed({ season })]
   })
 
   return season

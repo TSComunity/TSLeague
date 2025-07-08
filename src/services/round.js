@@ -8,8 +8,8 @@ const { getActiveSeason, endSeason } = require('./season.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
 
 const { sendAnnouncement } = require('../discord/send.js')
-const { getRoundAddedEmbeds } = require('../discord/embeds/round.js')
-const { getSeasonDivisionEndedEmbeds } = require('../discord/embeds/season.js')
+const { getRoundAddedEmbed } = require('../discord/embeds/round.js')
+const { getSeasonDivisionEndedEmbed } = require('../discord/embeds/season.js')
 
 const { season, round } = require('../configs/league.js')
 const { maxRounds } = season
@@ -37,7 +37,7 @@ const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
       // Se envia cuando se llega al limite de rondas en una division pero no en todas
       await sendAnnouncement({
         content: '@everyone',
-        embeds: getSeasonDivisionEndedEmbeds({ division }),
+        embeds: [getSeasonDivisionEndedEmbed({ division })]
       })
     }
 
@@ -71,7 +71,7 @@ const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
       // Se envia cuando termina esta division pero no todas
       await sendAnnouncement({
         content: '@everyone',
-        embeds: getSeasonDivisionEndedEmbeds({ division }),
+        embeds: [getSeasonDivisionEndedEmbed({ division })]
       })
     }
 
@@ -148,11 +148,13 @@ const addRound = async () => {
 
   await sendAnnouncement({
     content: '@everyone',
-    embeds: getRoundAddedEmbeds({
-      divisionsWithNewRounds,
-      seasonIndex,
-      nextRoundIndex: latestRoundIndex
-    }),
+    embeds: [
+      getRoundAddedEmbed({
+        divisionsWithNewRounds,
+        seasonIndex,
+        nextRoundIndex: latestRoundIndex
+      })
+    ]
   })
 
   await addScheduledFunction({

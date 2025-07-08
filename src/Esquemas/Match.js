@@ -1,7 +1,7 @@
 const { model, Schema, Types } = require('mongoose')
 
 const MatchSchema = new Schema({
-  matchIndex: { type: Number, required: true}
+  matchIndex: { type: Number, required: true},
   roundIndex: { type: Number, required: true },
   
   seasonId: { type: Types.ObjectId, ref: 'Season', required: true },
