@@ -15,6 +15,15 @@ const { season, round } = require('../configs/league.js')
 const { maxRounds } = season
 const { startDay, startHour } = round
 
+
+const getCurrentRoundNumber = ({ season }) => {
+  const roundCounts = season.divisions.map(div => div.rounds?.length || 0)
+
+  if (!roundCounts.length) return 0 // No hay divisiones
+
+  return Math.max(...roundCounts)
+}
+
 /**
  * Procesa una división dentro de una temporada para generar una nueva ronda o marcarla como finalizada.
  * Si no hay emparejamientos posibles, marca la división como finalizada.
@@ -166,4 +175,4 @@ const addRound = async () => {
   return season
 }
 
-module.exports = { addRound }
+module.exports = { getCurrentRoundNumber, addRound }

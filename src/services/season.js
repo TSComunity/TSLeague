@@ -3,7 +3,8 @@ const Division = require('../Esquemas/Division.js')
 const Team = require('../Esquemas/Team.js')
 
 const { sendAnnouncement } = require('../discord/send/general.js')
-const { getSeasonCreatedEmbed, getSeasonEndedEmbed } = require('../discord/embeds/season.js')
+const { getSeasonCreatedEmbed, getSeasonEndedEmbed, getSeasonSummaryEmbed } = require('../discord/embeds/season.js')
+const { getDivisionRankingEmbed } = require('../discord/embeds/division.js')
 
 const { round } = require('../configs/league.js')
 const { startDay, startHour } = round
@@ -32,10 +33,33 @@ const getActiveSeason = async () => {
 }
 
 /**
+ * Obtiene la ultima temporda de la base de datos con todos sus datos relacionados poblados.
+ * Incluye divisiones, equipos, partidos y equipos en descanso.
+ * @returns {Object} season - Documento de la temporada activa
+ */
+const getLastSeason = async () => {
+  const season = await Season.findOne({})
+    .sort({ startDate: -1 })
+    .populate('divisions.divisionId')
+    .populate('divisions.teams.teamId')
+    .populate({
+      path: 'divisions.rounds.matches.matchId',
+      populate: [
+        { path: 'teamA', model: 'Team' },
+        { path: 'teamB', model: 'Team' }
+      ]
+    })
+    .populate('divisions.rounds.resting.teamId')
+
+  if (!season) throw new Error('No se ha encontrado ninguna temporada finalizada.')
+  return season
+}
+
+/**
  * Crea una nueva temporada con todas las divisiones existentes.
  * @returns {Object} season - La temporada creada.
  */
-const createSeason = async () => {
+const createSeason = async ({ name }) => {
   // Desactivar temporadas y divisiones activas previas
   await Season.updateMany(
     { status: 'active' }, // Condición: busca temporadas con status 'active'
@@ -79,6 +103,7 @@ const createSeason = async () => {
   // Crear la nueva temporada con las divisiones completas
   const season = new Season({
     seasonIndex: newIndex,
+    name,
     startDate: new Date(),
     endDate: null,
     status: 'active',
@@ -125,26 +150,52 @@ const endSeason = async () => {
   return season
 }
 
-const updateDivisionsEmbed = async () => {
-  const season = await getActiveSeason()
-  const seasonIndex = season.seasonIndex
-
-  // 1. Generar embed resumen de la temporada
-  const summaryEmbed = getSeasonSummaryEmbed(season)
-
-  // 2. Generar un embed por división
-  const divisionEmbeds = season.divisions.map(getDivisionEmbed)
-
-  // 3. Actualizar canal (puedes guardar IDs de mensajes en DB o editar siempre los fijos)
-  const channel = await client.channels.fetch('ID_DEL_CANAL_DIVISIONES')
-  await channel.bulkDelete(50) // Ojo con esto, depende de cómo lo quieras gestionar
-
-  await channel.send({ embeds: [summaryEmbed] })
-  for (const embed of divisionEmbeds) {
-    await channel.send({ embeds: [embed] })
+const updateRankingsEmbed = async () => {
+  let season
+  try {
+    season = await getActiveSeason()
+  } catch {
+    season = await getLastSeason()
   }
+
+  if (!season) {
+    throw new Error('No hay temporadas activas ni pasadas.')
+  }
+
+  const channel = await client.channels.fetch('ID_DEL_CANAL_CLASIFICACIONES')
+  if (!channel || !channel.isTextBased()) {
+    throw new Error('Canal no encontrado o no es de texto.')
+  }
+
+  const message1 = await channel.messages.fetch('ID_MENSAJE_1')
+  if (!message1) {
+    throw new Error('Mensaje 1 no encontrado.')
+  }
+
+  const message2 = await channel.messages.fetch('ID_MENSAJE_2')
+  if (!message1) {
+    throw new Error('Mensaje 2 no encontrado.')
+  }
+
+  await message1.edit({
+    embeds: [getSeasonSummaryEmbed({ season })]
+  })
+
+  if (!season.divisions) {
+    throw new Error('No se han encontrado divisiones.')
+  }
+
+  let divisionsEmbeds = []
+
+  for (const division of season.divisions) {
+    divisionsEmbeds.push(getDivisionRankingEmbed({ division }))
+  }
+
+  await message2.edit({
+    embeds: divisionsEmbeds
+  })
 }
 
 // se podria hacer algo para pausar la temporada (mantenimiento)
 
-module.exports = { getActiveSeason, createSeason, endSeason, updateDivisionsEmbed }
+module.exports = { getActiveSeason, getLastSeason, createSeason, endSeason, updateRankingsEmbed }

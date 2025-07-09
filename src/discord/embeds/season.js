@@ -1,5 +1,7 @@
 const { EmbedBuilder } = require('discord.js')
 
+const { getCurrentRoundNumber } = require('../../services/round.js')
+
 const getSeasonCreatedEmbed = ({ season }) =>  {
     return (
         new EmbedBuilder()
@@ -17,20 +19,34 @@ const getSeasonEndedEmbed = ({ season }) =>  {
 }
 
 const getSeasonSummaryEmbed = ({ season }) => {
-    const activeDivisions = season.divisions.filter(d => d.status !== 'ended')
-    const endedDivisions = season.divisions.length - activeDivisions.length
+    const { seasonIndex, name, status, divisions } = season
+
+    const roundNumber = getCurrentRoundNumber({ season })
+    let teamsLength = 0
+    let matchesLength = 0
+
+    for (const division of divisions) {
+        const { teams, rounds } = division
+        teamsLength += teams.length
+
+        for (const round of rounds) {
+            matchesLength += round.matches.length
+        }
+    }
 
     return (
         new EmbedBuilder()
-        .setTitle(`Temporada ${season.seasonIndex}`)
-        .addFields(
-            { name: 'Divisiones activas', value: `${activeDivisions.length}`, inline: true },
-            { name: 'Divisiones terminadas', value: `${endedDivisions}`, inline: true },
-            { name: 'Rondas', value: `${Math.max(...season.divisions.map(d => d.rounds.length))}`, inline: true }
-        )
-        .setColor('Blue')
+            .setColor(status === 'active' ? 'Purple' : '#4f07f7')
+            .setDescription(`## Temporada ${name}`)
+            .addFields(
+                { name: 'Indice', value: `👆 \`${seasonIndex}\``, inline: true },
+                { name: 'Estado', value: `\`${status === 'active' ? '📅 En curso' : '📅 Finalizada'}\``, inline: true },
+                { name: 'Rondas', value: `🖇️ \`${roundNumber}\``, inline: true },
+                { name: 'Divisiones', value: `🧩 \`${divisions.length}\``, inline: true },
+                { name: 'Equipos', value: `👥 \`${teamsLength}\``, inline: true },
+                { name: 'Partidos', value: `🎯 \`${matchesLength}\``, inline: true }
+            )
     )
 }
-
 
 module.exports = { getSeasonCreatedEmbed, getSeasonEndedEmbed, getSeasonSummaryEmbed }

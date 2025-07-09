@@ -2,6 +2,7 @@ const { model, Schema, Types } = require('mongoose')
 
 const SeasonSchema = new Schema({
   seasonIndex: { type: Number, required: true, unique: true },
+  name: { type: String, required: true, unique: true },
   startDate: { type: Date, required: true },
   endData: { type: Date },
   status: { type: String, enum: ['active', 'ended'], default: 'active' },
@@ -14,8 +15,8 @@ const SeasonSchema = new Schema({
       teams: [  
         {
           teamId: { type: Types.ObjectId, ref: 'Team', required: true },
-          points: { type: Number, default: 0 },
-          rank: { type: Number, default: null },
+          points: { type: Number, default: 0 }
+          // aqui se pueden poner mas stats como partidos jugados o racha
         }
       ],
 

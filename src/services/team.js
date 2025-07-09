@@ -1,4 +1,5 @@
 const Season = require('../Esquemas/Season.js')
+const Division = require('../Esquemas/Division.js')
 const Match = require('../Esquemas/Match.js')
 const Team = require('../Esquemas/Team.js')
 
@@ -35,7 +36,7 @@ const updateAllTeamsEligibility = async () => {
  * Elimina todos los equipos vacíos de la base de datos y sus referencias.
  * Un equipo se considera vacío si no tiene miembros.
  */
-const deleteEmptyTeams = async () => {
+const deleteAllEmptyTeams = async () => {
   const emptyTeams = await Team.find({ members: { $size: 0 } })
 
   for (const team of emptyTeams) {
@@ -97,4 +98,17 @@ const deleteEmptyTeams = async () => {
   }
 }
 
-module.exports = { checkTeamEligibility, updateAllTeamsEligibility, deleteEmptyTeams }
+const updateTeamsEmbed = async () => {
+  const divisions = await Division.find().sort({ tier: 1 }).exec()
+
+  for (const division of divisions) {
+    const teams = await Team.find({ divisionId: division._id })
+      .populate('members.userId')
+      .sort({ name: 1 })
+      .exec()
+
+    // hacer con componentes v2, un embed para cada division y un separador para cada equipo
+  }
+}
+
+module.exports = { checkTeamEligibility, updateAllTeamsEligibility, deleteAllEmptyTeams }
