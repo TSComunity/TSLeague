@@ -1,7 +1,7 @@
 const { EmbedBuilder, PermissionsBitField, ChannelType } = require("discord.js");
 
 module.exports = {
-    name: "mensajes"
+    name: "mensajes",
     aliases: ["p", "pong"],
     args: false,
     run: async(message, client, args) => {
