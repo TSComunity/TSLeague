@@ -11,7 +11,7 @@ const {
 
 } = require('../../services/team.js')
 
-const { getErrorEmbed } = require('../../discord/embed/management.js')
+const { getErrorEmbed } = require('../../discord/embeds/management.js')
 
 const { config } = require('../../configs/league.js')
 const ROLES_WITH_PERMS = config.commands.perms

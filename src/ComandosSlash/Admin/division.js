@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js')
 const { createDivision, deleteDivision, updateDivision } = require('../../services/division.js')
-const { getErrorEmbed } = require('../../discord/embed/management.js')
+const { getErrorEmbed } = require('../../discord/embeds/management.js')
 
 module.exports = {
   data: new SlashCommandBuilder()
