@@ -6,7 +6,8 @@ const {
   changeMatchScheduledAt
 } = require('../../services/match.js')
 
-const { getErrorEmbed } = require('../../discord/embed/management.js')
+const { getMatchInfoEmbed } = require('../../discord/embeds/match.js')
+const { getErrorEmbed } = require('../../discord/embeds/management.js')
 
 const { config } = require('../../configs/league.js')
 const ROLES_WITH_PERMS = config.perms.commands
@@ -22,11 +23,11 @@ module.exports = {
         .setName('ver-datos')
         .setDescription('Ver los datos de un partido')
         .addStringOption(opt =>
-          opt.setName('nombre').setDescription('Nombre del equipo').setRequired(true))
+            opt.setName('indice-temporada').setDescription('El indice de la temporada').setRequired(true))
         .addAttachmentOption(opt =>
-            opt.setName('icono').setDescription('Ícono del equipo').setRequired(true))
+            opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
         .addStringOption(opt =>
-          opt.setName('color').setDescription('Color del equipo').setRequired(true))
+            opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
     )
 
     // /partido cancelar
@@ -35,13 +36,13 @@ module.exports = {
         .setName('cancelar')
         .setDescription('Cancela un partido')
         .addStringOption(opt =>
-          opt.setName('nombre').setDescription('Nombre actual del equipo').setRequired(true))
-        .addStringOption(opt =>
-          opt.setName('nuevo_nombre').setDescription('Nuevo nombre del equipo').setRequired(false))
+            opt.setName('indice-temporada').setDescription('El indice de la temporada').setRequired(true))
         .addAttachmentOption(opt =>
-            opt.setName('nuevo_icono').setDescription('Ícono del equipo').setRequired(true))
+            opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
         .addStringOption(opt =>
-          opt.setName('nuevo_color').setDescription('Nuevo color').setRequired(false))
+            opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
+        .addStringOption(opt =>
+            opt.setName('motivo').setDescription('Motivo del cancelamiento').setRequired(true))
     )
 
     // /partido terminar
@@ -50,18 +51,77 @@ module.exports = {
         .setName('terminar')
         .setDescription('Termina un partido')
         .addStringOption(opt =>
-          opt.setName('equipo').setDescription('Nombre del equipo').setRequired(true))
+            opt.setName('indice-temporada').setDescription('El indice de la temporada').setRequired(true))
+        .addAttachmentOption(opt =>
+            opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
         .addStringOption(opt =>
-          opt.setName('division').setDescription('Nombre de la división').setRequired(true))
+            opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
     )
 
     // /partido cambiar-horario
     .addSubcommand(sub =>
       sub
-        .setName('cambiar-horario')
-        .setDescription('Cambia el horario de un partido')
         .addStringOption(opt =>
-          opt.setName('equipo').setDescription('Nombre del equipo').setRequired(true))
+            opt.setName('indice-temporada').setDescription('El indice de la temporada').setRequired(true))
+        .addAttachmentOption(opt =>
+            opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
+        .addStringOption(opt =>
+            opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
+        .addIntegerOption(opt =>
+          opt.setName('dia').setDescription('Dia del partido').setRequired(true)
+            .addChoices(
+                { name: 'Lunes', value: 1 },
+                { name: 'Martesr', value: 2 },
+                { name: 'Miércoles', value: 3 },
+                { name: 'Jueves', value: 4 },
+                { name: 'Viernes', value: 5 },
+                { name: 'Sábado', value: 6 },
+                { name: 'Domingo', value: 0 }
+
+            ))
+        .addIntegerOption(opt =>
+            opt.setName('hora').setDescription('Hora del partido').setRequired(true)
+            .addChoices(
+                { name: '1', value: 1 },
+                { name: '2', value: 2 },
+                { name: '3', value: 3 },
+                { name: '4', value: 4 },
+                { name: '5', value: 5 },
+                { name: '6', value: 6 },
+                { name: '7', value: 7 },
+                { name: '8', value: 8 },
+                { name: '9', value: 9 },
+                { name: '10', value: 10 },
+                { name: '11', value: 11 },
+                { name: '12', value: 12 },
+                { name: '13', value: 13 },
+                { name: '14', value: 14 },
+                { name: '15', value: 15 },
+                { name: '16', value: 16 },
+                { name: '17', value: 17 },
+                { name: '18', value: 18 },
+                { name: '19', value: 19 },
+                { name: '20', value: 20 },
+                { name: '21', value: 21 },
+                { name: '22', value: 22 },
+                { name: '23', value: 23 }
+            ))
+        .addIntegerOption(opt =>
+            opt.setName('minuto').setDescription('Minuto del partido').setRequired(true)
+        .addChoices(
+        { name: '00', value: 00 },
+        { name: '05', value: 05 },
+        { name: '10', value: 10 },
+        { name: '15', value: 15 },
+        { name: '20', value: 20 },
+        { name: '25', value: 25 },
+        { name: '30', value: 30 },
+        { name: '35', value: 35 },
+        { name: '40', value: 40 },
+        { name: '45', value: 45 },
+        { name: '50', value: 50 },
+        { name: '55', value: 55 }
+        ))
     ),
 
   async execute(interaction) {
@@ -70,63 +130,49 @@ module.exports = {
     const hasPerms = member.roles.cache.some(role => ROLES_WITH_PERMS.includes(role.name))
 
     if (!hasPerms) {
-        const embed = getErrorEmbed({ error: 'No tienes permiso para usar este comando.' })
-        return await interaction.reply({ embeds: [embed]})
+        return await interaction.reply({ embeds: [getErrorEmbed({ error: 'No tienes permiso para usar este comando.' })]})
     }
 
     const sub = interaction.options.getSubcommand()
 
     try {
-      if (sub === 'crear') {
-        const name = interaction.options.getString('nombre')
-        const iconAttachment = interaction.options.getAttachment('icono')
-        const iconURL = iconAttachment.url
-        const color = interaction.options.getString('color')
-        const presidentDiscordId = interaction.user.id
-        const team = await createTeam({ name, iconURL, color, presidentDiscordId })
-        await interaction.reply(`Equipo **${team.name}** creado.`)
+      if (sub === 'ver-datos') {
+        const seasonIndex = interaction.options.getString('indice-temporada')
+        const teamAName = interaction.options.getString('nombre-equipo-a')
+        const teamBName = interaction.options.getString('nombre-equipo-b')
 
-      } else if (sub === 'actualizar') {
-        const oldName = interaction.options.getString('nombre')
-        const newName = interaction.options.getString('nuevo_nombre')
-        const iconAttachment = interaction.options.getAttachment('nuevo_icono')
-        const iconURL = iconAttachment.url
-        const color = interaction.options.getString('nuevo_color')
-        const team = await updateTeam({ oldName, newName, iconURL, color })
-        await interaction.reply(`Equipo **${oldName}** actualizado.`)
-
-      } else if (sub === 'añadir') {
-        const teamName = interaction.options.getString('equipo')
-        const divisionName = interaction.options.getString('division')
-        const team = await addTeamToDivision({ teamName, divisionName })
-        await interaction.reply(`Equipo **${team.name}** añadido a la división **${team.divisionId.name}**.`)
-
-      } else if (sub === 'eliminar') {
-        const teamName = interaction.options.getString('equipo')
-        const team = await removeTeamFromDivision({ teamName })
-        await interaction.reply(`Equipo **${team.name}** eliminado de su división.`)
-
-      } else if (sub === 'expulsar') {
-        const teamName = interaction.options.getString('equipo')
-        const discordId = interaction.options.getString('usuario')
-        const team = await removeMemberFromTeam({ teamName, discordId })
-        await interaction.reply(`Miembro <@${discordId}> expulsado de **${team.name}**.`)
-
-      } else if (sub === 'rol') {
-        const teamName = interaction.options.getString('equipo')
-        const discordId = interaction.options.getString('usuario')
-        const newRol = interaction.options.getString('rol')
-        const team = await changeMemberRole({ teamName, discordId, newRol })
-        await interaction.reply(`Rol del usuario <@${discordId}> actualizado en **${team.name}** a ${newRol}.`)
-
-      } else if (sub === 'regenerar_codigo') {
-        const teamName = interaction.options.getString('equipo')
-        const team = await updateTeamCode({ teamName })
-        await team.save()
+        const match = await getMatchInfo({ seasonIndex, teamAName, teamBName })
         await interaction.reply({
-            content: `Nuevo código generado para el equipo **${team.name}**: \`${team.code}\``,
-            ephemeral: true
+            embeds: [getMatchInfoEmbed({ match })]
         })
+
+      } else if (sub === 'cancelar') {
+        const seasonIndex = interaction.options.getString('indice-temporada')
+        const teamAName = interaction.options.getString('nombre-equipo-a')
+        const teamBName = interaction.options.getString('nombre-equipo-b')
+        const reason = interaction.options.getString('motivo')
+
+        const match = await cancelMatch({ seasonIndex, teamAName, teamBName, reason })
+        await interaction.reply(`Cancelado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.`)
+
+      } else if (sub === 'terminar') {
+        const seasonIndex = interaction.options.getString('indice-temporada')
+        const teamAName = interaction.options.getString('nombre-equipo-a')
+        const teamBName = interaction.options.getString('nombre-equipo-b')
+
+        const match = await endMatch({ seasonIndex, teamAName, teamBName })
+        await interaction.reply(`Terminado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.`)
+
+      } else if (sub === 'cambiar-horario') {
+        const seasonIndex = interaction.options.getString('indice-temporada')
+        const teamAName = interaction.options.getString('nombre-equipo-a')
+        const teamBName = interaction.options.getString('nombre-equipo-b')
+        const day = interaction.options.getInteger('dia')
+        const hour = interaction.options.getInteger('hora')
+        const minute = interaction.options.getInteger('minuto')
+
+        const match = await changeMatchScheduledAt({ seasonIndex, teamAName, teamBName, day, hour, minute })
+        await interaction.reply(`Cambiada la fecha del partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.`)
       }
 
     } catch (error) {

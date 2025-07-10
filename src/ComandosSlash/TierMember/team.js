@@ -49,48 +49,48 @@ module.exports = {
           opt.setName('nuevo_color').setDescription('Nuevo color').setRequired(false))
     )
 
-    // /equipo añadir
+    // /equipo añadir-division
     .addSubcommand(sub =>
       sub
-        .setName('añadir')
+        .setName('añadir-division')
         .setDescription('Añade un equipo a una división')
         .addStringOption(opt =>
-          opt.setName('equipo').setDescription('Nombre del equipo').setRequired(true))
+          opt.setName('nombre-equipo').setDescription('Nombre del equipo').setRequired(true))
         .addStringOption(opt =>
-          opt.setName('division').setDescription('Nombre de la división').setRequired(true))
+          opt.setName('nombre-division').setDescription('Nombre de la división').setRequired(true))
     )
 
-    // /equipo eliminar
+    // /equipo eliminar-division
     .addSubcommand(sub =>
       sub
-        .setName('eliminar')
+        .setName('eliminar-division')
         .setDescription('Elimina un equipo de su división')
         .addStringOption(opt =>
-          opt.setName('equipo').setDescription('Nombre del equipo').setRequired(true))
+          opt.setName('nombre_equipo').setDescription('Nombre del equipo').setRequired(true))
     )
 
-    // /equipo expulsar
+    // /equipo expulsar-miembro
     .addSubcommand(sub =>
       sub
-        .setName('expulsar')
+        .setName('expulsar-miembro')
         .setDescription('Expulsa a un miembro del equipo')
         .addStringOption(opt =>
-          opt.setName('equipo').setDescription('Nombre del equipo').setRequired(true))
+          opt.setName('nombre_equipo').setDescription('Nombre del equipo').setRequired(true))
         .addStringOption(opt =>
-          opt.setName('usuario').setDescription('ID de Discord del usuario').setRequired(true))
+          opt.setName('id-usuario').setDescription('ID de Discord del usuario').setRequired(true))
     )
 
-    // /equipo rol
+    // /equipo cambiar-rol-miembro
     .addSubcommand(sub =>
       sub
-        .setName('rol')
+        .setName('cambiar-rol-miembro')
         .setDescription('Cambia el rol de un miembro del equipo')
         .addStringOption(opt =>
-          opt.setName('equipo').setDescription('Nombre del equipo').setRequired(true))
+          opt.setName('nombre-equipo').setDescription('Nombre del equipo').setRequired(true))
         .addStringOption(opt =>
-          opt.setName('usuario').setDescription('ID de Discord del usuario').setRequired(true))
+          opt.setName('id-usuario').setDescription('ID de Discord del usuario').setRequired(true))
         .addStringOption(opt =>
-          opt.setName('rol').setDescription('Nuevo rol').setRequired(true)
+          opt.setName('nuevo-rol').setDescription('Nuevo rol').setRequired(true)
             .addChoices(
               { name: 'Líder', value: 'leader' },
               { name: 'Sub-líder', value: 'sub-leader' },
@@ -104,7 +104,7 @@ module.exports = {
         .setName('regenerar_codigo')
         .setDescription('Cambia el código de un equipo')
         .addStringOption(opt =>
-          opt.setName('equipo').setDescription('Nombre del equipo').setRequired(true))
+          opt.setName('nombre-equipo').setDescription('Nombre del equipo').setRequired(true))
     ),
 
   async execute(interaction) {
@@ -113,8 +113,7 @@ module.exports = {
     const hasPerms = member.roles.cache.some(role => ROLES_WITH_PERMS.includes(role.name))
 
     if (!hasPerms) {
-        const embed = getErrorEmbed({ error: 'No tienes permiso para usar este comando.' })
-        return await interaction.reply({ embeds: [embed]})
+        return await interaction.reply({ embeds: [getErrorEmbed({ error: 'No tienes permiso para usar este comando.' })]})
     }
 
     const sub = interaction.options.getSubcommand()
@@ -138,32 +137,32 @@ module.exports = {
         const team = await updateTeam({ oldName, newName, iconURL, color })
         await interaction.reply(`Equipo **${oldName}** actualizado.`)
 
-      } else if (sub === 'añadir') {
-        const teamName = interaction.options.getString('equipo')
-        const divisionName = interaction.options.getString('division')
+      } else if (sub === 'añadir-division') {
+        const teamName = interaction.options.getString('nombre-equipo')
+        const divisionName = interaction.options.getString('nombre-division')
         const team = await addTeamToDivision({ teamName, divisionName })
         await interaction.reply(`Equipo **${team.name}** añadido a la división **${team.divisionId.name}**.`)
 
-      } else if (sub === 'eliminar') {
-        const teamName = interaction.options.getString('equipo')
+      } else if (sub === 'eliminar-division') {
+        const teamName = interaction.options.getString('nombre-equipo')
         const team = await removeTeamFromDivision({ teamName })
         await interaction.reply(`Equipo **${team.name}** eliminado de su división.`)
 
-      } else if (sub === 'expulsar') {
-        const teamName = interaction.options.getString('equipo')
-        const discordId = interaction.options.getString('usuario')
+      } else if (sub === 'expulsar-miembro') {
+        const teamName = interaction.options.getString('nombre-equipo')
+        const discordId = interaction.options.getString('id-usuario')
         const team = await removeMemberFromTeam({ teamName, discordId })
         await interaction.reply(`Miembro <@${discordId}> expulsado de **${team.name}**.`)
 
-      } else if (sub === 'rol') {
-        const teamName = interaction.options.getString('equipo')
-        const discordId = interaction.options.getString('usuario')
-        const newRol = interaction.options.getString('rol')
-        const team = await changeMemberRole({ teamName, discordId, newRol })
+      } else if (sub === 'cambiar-rol-miembro') {
+        const teamName = interaction.options.getString('nombre-equipo')
+        const discordId = interaction.options.getString('id-usuario')
+        const newRole = interaction.options.getString('nuevo-rol')
+        const team = await changeMemberRole({ teamName, discordId, newRole })
         await interaction.reply(`Rol del usuario <@${discordId}> actualizado en **${team.name}** a ${newRol}.`)
 
       } else if (sub === 'regenerar_codigo') {
-        const teamName = interaction.options.getString('equipo')
+        const teamName = interaction.options.getString('nombre-equipo')
         const team = await updateTeamCode({ teamName })
         await team.save()
         await interaction.reply({

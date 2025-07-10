@@ -115,7 +115,8 @@ const getMatchInfo = async ({ seasonIndex, teamAName, teamBName }) => {
 /**
  * Cancela un partido (status = "cancelled")
  */
-const cancelMatch = async ({ match, reason = 'Partido cancelado', removeTeamId = null }) => {
+const cancelMatch = async ({ seasonIndex, teamAName, teamBName, reason = 'Partido cancelado', removeTeamId = null }) => {
+  const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
   // Si se quiere remover a un equipo del match
   if (removeTeamId) {
     if (match.teamAId?._id?.equals(removeTeamId)) match.teamAId = null
@@ -161,10 +162,10 @@ const endMatch = async ({ seasonIndex, teamAName, teamBName }) => {
 /**
  * cambia la fecha de un partido
  */
-const changeMatchScheduledAt = async ({ seasonIndex, teamAName, teamBName, day, hour }) => {
+const changeMatchScheduledAt = async ({ seasonIndex, teamAName, teamBName, day, hour, minute }) => {
   const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
 
-  match.scheduledAt = getNextDayAndHour({ day, hour })
+  match.scheduledAt = getNextDayAndHour({ day, hour, minute })
 
   await match.save()
   return match

@@ -16,4 +16,8 @@ const getMatchCancelledEmbed = ({ match }) => {
     )
 }
 
-module.exports = { getMatchScheduledEmbed, getMatchCancelledEmbed }
+const getMatchInfoEmbed = ({ match }) => {
+    return
+}
+
+module.exports = { getMatchScheduledEmbed, getMatchCancelledEmbed, getMatchInfoEmbed }

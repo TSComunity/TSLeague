@@ -160,7 +160,7 @@ const createTeam = async ({ name, iconURL, color, presidentDiscordId }) => {
     iconURL,
     color: colorValue,
     code: generateTeamCode(),
-    members: [{ userId: user._id, rol: 'leader' }],
+    members: [{ userId: user._id, role: 'leader' }],
     isEligible: false
   })
 
@@ -263,29 +263,39 @@ const removeMemberFromTeam = ({ teamName, discordId }) => {
 }
 
 /**
- * Cambia el rol de un miembro del equipo usando su Discord ID.
+ * Cambia el role de un miembro del equipo usando su Discord ID.
  * @param {Object} params
  * @param {String} params.teamName - Nombre del equipo.
  * @param {String} params.discordId - ID de Discord del usuario.
- * @param {'leader'|'sub-leader'|'member'} params.newRol - Nuevo rol a asignar.
+ * @param {'leader'|'sub-leader'|'member'} params.newRol - Nuevo role a asignar.
  * @returns {Object} equipo actualizado.
  */
-const changeMemberRole = ({ teamName, discordId, newRol }) => {
+const changeMemberRole = async ({ teamName, discordId, newRole }) => {
   const team = await Team.findOne({ name: teamName }).populate('members.userId')
   if (!team) throw new Error('Equipo no encontrado.')
 
   const member = team.members.find(m => m.userId?.discordId === discordId)
   if (!member) throw new Error('Miembro no encontrado.')
 
-  const currentLeaders = team.members.filter(m => m.rol === 'leader')
-  const isAlreadyLeader = member.rol === 'leader'
+  const isAlreadyLeader = member.role === 'leader'
 
-  // Si estamos intentando subir a líder y ya hay 2 líderes, lanzar error
-  if (newRol === 'leader' && !isAlreadyLeader && currentLeaders.length >= 2) {
-    throw new Error('No puede haber más de 2 líderes en el equipo.')
+  if (newRol === 'leader') {
+    if (isAlreadyLeader) throw new Error('Este miembro ya es líder.')
+
+    // Baja a sublíder al líder actual (si hay uno distinto)
+    const currentLeaders = team.members.filter(m => m.role === 'leader')
+    if (currentLeaders.length >= 1) {
+      const otherLeader = currentLeaders.find(m => m.userId?.discordId !== discordId)
+      if (otherLeader) otherLeader.role = 'subleader'
+    }
+
+    // Asigna líder al nuevo miembro
+    member.role = 'leader'
+  } else {
+    // Cambiar a cualquier otro rol (normal)
+    member.role = newRol
   }
 
-  member.rol = newRol
   await team.save()
   return team
 }

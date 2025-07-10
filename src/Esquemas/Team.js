@@ -11,7 +11,7 @@ let TeamSchema = new Schema({
     members: [
         {
             userId: { type: Types.ObjectId, ref: 'User', required: true },
-            rol: { type: String, enum: ['leader', 'sub-leader', 'member' ], default: 'member' }
+            role: { type: String, enum: ['leader', 'sub-leader', 'member' ], default: 'member' }
         }
     ],
 
