@@ -3,8 +3,7 @@ const Division = require('../Esquemas/Division.js')
 const Team = require('../Esquemas/Team.js')
 
 const { sendAnnouncement } = require('../discord/send/general.js')
-const { getSeasonCreatedEmbed, getSeasonEndedEmbed, getSeasonSummaryEmbed } = require('../discord/embeds/season.js')
-const { getDivisionRankingEmbed } = require('../discord/embeds/division.js')
+const { getSeasonCreatedEmbed, getSeasonEndedEmbed } = require('../discord/embeds/season.js')
 
 const { round } = require('../configs/league.js')
 const { startDay, startHour } = round
@@ -51,7 +50,7 @@ const getLastSeason = async () => {
     })
     .populate('divisions.rounds.resting.teamId')
 
-  if (!season) throw new Error('No se ha encontrado ninguna temporada finalizada.')
+  if (!season) throw new Error('No se ha encontrado ninguna temporada.')
   return season
 }
 
@@ -150,52 +149,8 @@ const endSeason = async () => {
   return season
 }
 
-const updateRankingsEmbed = async () => {
-  let season
-  try {
-    season = await getActiveSeason()
-  } catch {
-    season = await getLastSeason()
-  }
 
-  if (!season) {
-    throw new Error('No hay temporadas activas ni pasadas.')
-  }
-
-  const channel = await client.channels.fetch('ID_DEL_CANAL_CLASIFICACIONES')
-  if (!channel || !channel.isTextBased()) {
-    throw new Error('Canal no encontrado o no es de texto.')
-  }
-
-  const message1 = await channel.messages.fetch('ID_MENSAJE_1')
-  if (!message1) {
-    throw new Error('Mensaje 1 no encontrado.')
-  }
-
-  const message2 = await channel.messages.fetch('ID_MENSAJE_2')
-  if (!message1) {
-    throw new Error('Mensaje 2 no encontrado.')
-  }
-
-  await message1.edit({
-    embeds: [getSeasonSummaryEmbed({ season })]
-  })
-
-  if (!season.divisions) {
-    throw new Error('No se han encontrado divisiones.')
-  }
-
-  let divisionsEmbeds = []
-
-  for (const division of season.divisions) {
-    divisionsEmbeds.push(getDivisionRankingEmbed({ division }))
-  }
-
-  await message2.edit({
-    embeds: divisionsEmbeds
-  })
-}
 
 // se podria hacer algo para pausar la temporada (mantenimiento)
 
-module.exports = { getActiveSeason, getLastSeason, createSeason, endSeason, updateRankingsEmbed }
+module.exports = { getActiveSeason, getLastSeason, createSeason, endSeason }

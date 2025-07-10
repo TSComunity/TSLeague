@@ -79,9 +79,11 @@ module.exports = {
         await interaction.reply(`🔁 División actualizada: **${división.name}** (Tier ${división.tier})`)
       }
     } catch (error) {
-      await interaction.reply({
-        embeds: [getErrorEmbed({ error })]
-      })
+      await interaction.reply(
+        {
+          embeds: [getErrorEmbed({ error: error.message })]
+        }
+      )
     }
   }
 }

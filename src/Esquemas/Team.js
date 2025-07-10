@@ -2,7 +2,7 @@ const { model, Schema, Types } = require('mongoose')
 
 let TeamSchema = new Schema({
     name: { type: String, required: true, unique: true },
-    icon: { type: String },
+    iconURL: { type: String },
     color: { type: String },
     code: { type: String, required: true, unique: true },
 

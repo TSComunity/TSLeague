@@ -21,6 +21,26 @@ module.exports = {
       "id": '1374691378604277760'
     }
   },
+  "perms": {
+    "channels": [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ],
+    "commands": [
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      ''
+    ]
+  },
   "season": {
     "maxRounds": calcMaxRounds(maxTeams)
   },

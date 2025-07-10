@@ -1,40 +1,152 @@
 [
-  {
-    "id": "gemGrab",
-    "name": "Atrapagemas",
-    "weight": 3,
-    "maps": [
-      {
-        "id": "minecartMadness",
-        "name": "Mina Rocosa",
-        "imageURL": "https://cdn.brawlify.com/map/minecartmadness.png",
-        "weight": 2
-      },
-      {
-        "id": "crystalArcade",
-        "name": "Arcada de cristal",
-        "imageURL": "https://cdn.brawlify.com/map/crystalarcade.png",
-        "weight": 1
-      }
-    ]
-  },
-  {
-    "id": "brawlBall",
-    "name": "Balon Brawl",
-    "weight": 2,
-    "maps": [
-      {
-        "id": "superStadium",
-        "name": "Superestadio",
-        "imageURL": "https://cdn.brawlify.com/map/superstadium.png",
-        "weight": 3
-      },
-      {
-        "id": "penaltyKick",
-        "name": "Tiro penal",
-        "imageURL": "https://cdn.brawlify.com/map/penaltykick.png",
-        "weight": 1
-      }
-    ]
-  }
+   {
+      "id":"gemGrab",
+      "name":"Atrapagemas",
+      "weight":3,
+      "maps":[
+         {
+            "id":"minecartMadness",
+            "name":"Mina Rocosa",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000007.png",
+            "weight":1
+         },
+         {
+            "id":"crystalArcade",
+            "name":"Arcade de cristal",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000008.png",
+            "weight":1
+         },
+         {
+            "id":"brrrumbrrrumm",
+            "name":"Brrrumbrrrum",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000115.png",
+            "weight":1
+         }
+      ]
+   },
+   {
+      "id":"heist",
+      "name":"Atraco",
+      "weight":2,
+      "maps":[
+         {
+            "id":"safezone",
+            "name":"Refugio",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000019.png",
+            "weight":1
+         },
+         {
+            "id":"kaboomcanyon",
+            "name":"Cañón explosivo",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000018.png",
+            "weight":1
+         },
+         {
+            "id":"bridgetoofar",
+            "name":"Aguas turbulentas",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000072.png",
+            "weight":1
+         }
+      ]
+   },
+   {
+      "id":"bounty",
+      "name":"Caza estelar",
+      "weight":2,
+      "maps":[
+         {
+            "id":"layercake",
+            "name":"Crimen organizado",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000082.png",
+            "weight":1
+         },
+         {
+            "id":"shootingstar",
+            "name":"Tiroteo estelar",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000005.png",
+            "weight":1
+         },
+         {
+            "id":"dryseason",
+            "name":"Sequía sanguinaria",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000083.png",
+            "weight":1
+         }
+      ]
+   },
+   {
+      "id":"hotzone",
+      "name":"Zona restringida",
+      "weight":2,
+      "maps":[
+         {
+            "id":"duelingbeetles",
+            "name":"Duelo de escarabajos",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000306.png",
+            "weight":1
+         },
+         {
+            "id":"openbusiness",
+            "name":"Campo abierto",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000292.png",
+            "weight":1
+         },
+         {
+            "id":"ringoffire",
+            "name":"Pista ardiente",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000300.png",
+            "weight":1
+         }
+      ]
+   },
+   {
+      "id":"nockout",
+      "name":"Noqueo",
+      "weight":2,
+      "maps":[
+         {
+            "id":"bellesrock",
+            "name":"Roca de Belle",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000368.png",
+            "weight":1
+         },
+         {
+            "id":"goldarmgulch",
+            "name":"Barranco del Brazo de Oro",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000367.png",
+            "weight":1
+         },
+         {
+            "id":"newhorizonts",
+            "name":"Nuevos horizontes",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000703.png",
+            "weight":1
+         }
+      ]
+   },
+   {
+      "id":"brawlBall",
+      "name":"Balón Brawl",
+      "weight":3,
+      "maps":[
+         {
+            "id":"backyardbowl",
+            "name":"Estadio Brawl",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000024.png",
+            "weight":1
+         },
+         {
+            "id":"pinholepunt",
+            "name":"Cancha peleona",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000026.png",
+            "weight":1
+         },
+         {
+            "id":"centerstage",
+            "name":"Palco central",
+            "imageURL":"https://cdn.brawlify.com/maps/regular/15000132.png",
+            "weight":1
+         }
+      ]
+   }
 ]
