@@ -15,14 +15,12 @@ const maxTeams = 12
 module.exports = {
   "channels": {
     "announcements": {
-      "id": '1364999573495353437'
+      "id": '1364999573495353437',
     },
     "logs": {
       "id": '1374691378604277760'
-    }
-  },
-  "perms": {
-    "channels": [
+    },
+    "perms": [
       '',
       '',
       '',
@@ -30,8 +28,10 @@ module.exports = {
       '',
       '',
       ''
-    ],
-    "commands": [
+    ]
+  },
+  "commands": {
+    "perms": [
       '',
       '',
       '',

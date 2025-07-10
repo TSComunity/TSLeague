@@ -14,7 +14,7 @@ const {
 const { getErrorEmbed } = require('../../discord/embed/management.js')
 
 const { config } = require('../../configs/league.js')
-const ROLES_WITH_PERMS = config.perms.commands
+const ROLES_WITH_PERMS = config.commands.perms
 
 module.exports = {
   data: new SlashCommandBuilder()

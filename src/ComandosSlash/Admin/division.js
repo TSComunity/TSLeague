@@ -59,7 +59,7 @@ module.exports = {
       if (subcomand === 'crear') {
         const name = interaction.options.getString('nombre')
         const tier = interaction.options.getInteger('tier')
-        const división = await createDivision({ name: nombre, tier })
+        const división = await createDivision({ name, tier })
         await interaction.reply(`✅ División creada: **${división.name}** (Tier ${división.tier})`)
       }
 
