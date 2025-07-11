@@ -1,14 +1,14 @@
 const { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } = require('discord.js');
 
 module.exports = {
-  customId: 'team_create',
+  customId: 'teamCreate',
 
   /**
    * @param {import('discord.js').ButtonInteraction} interaction
    */
   async execute(interaction) {
     const modal = new ModalBuilder()
-      .setCustomId('formularioEquipo')
+      .setCustomId('teamCreateForm')
       .setTitle('Registro de Equipo')
 
     const nombreEquipoInput = new TextInputBuilder()

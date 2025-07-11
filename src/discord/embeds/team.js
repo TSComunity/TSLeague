@@ -1,5 +1,13 @@
 const { EmbedBuilder } = require('discord.js')
 
+const getTeamInfoEmbed = ({ team }) => {
+    return (
+        new EmbedBuilder()
+            .setColor(team.color)
+            .setDescription('Mantenimiento')
+    )
+}
+
 const getRestingTeamEmbed = ({ team }) => {
     return (
         new EmbedBuilder()
@@ -8,4 +16,4 @@ const getRestingTeamEmbed = ({ team }) => {
     )
 }
 
-module.exports = { getRestingTeamEmbed }
+module.exports = { getTeamInfoEmbed, getRestingTeamEmbed }

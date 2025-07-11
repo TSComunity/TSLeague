@@ -11,14 +11,37 @@ const config = require('../configs/league.js')
 const maxTeams = config.division.maxTeams
 const maxMembers = config.team.maxMembers
 
+const findTeamByDiscordId = async ({ discordId }) => {
+  const user = await User.findOne({ discordId })
+  if (!user || !user.teamId) throw new Error('No estás en ningún equipo.')
+
+  const team = await Team.findById(user.teamId).populate('members.userId')
+  if (!team) throw new Error('Equipo no encontrado.')
+
+  return team
+}
+
+const findTeamByTeamName = async ({ teamName }) => {
+  const team = await Team.findOne({ name: teamName }).populate('members.userId')
+  if (!team) throw new Error('Equipo no encontrado.')
+
+  return team
+}
+
+const findTeamByTeamCode = async ({ teamCode }) => {
+  const team = await Team.findOne({ code: teamCode }).populate('members.userId')
+  if (!team) throw new Error('Equipo no encontrado.')
+
+  return team
+}
+
 /**
  * Actualiza la elegibilidad de un equipo dependiendo de si tiene al menos 3 miembros y devuelve su elegibilidad.
  * @param {Object} team - Equipo a checkear.
  * @returns {Boolean} isEligible - Si es elegible o no.
  */
 const checkTeamEligibility = async ({ teamName }) => {
-  const team = await Team.findOne({ name: teamName })
-  if (!team) throw new Error('No se encontro el equipo.')
+  const team = await findTeamByTeamName({ teamName })
 
   const isEligible = (team.members && team.members.length >= 3)
   team.isEligible = isEligible
@@ -127,12 +150,13 @@ const generateTeamCode = async () => {
 
   return code
 }
+
 /**
  * Cambia el codigo de un equipo por uno random
  */
 const updateTeamCode = async ({ teamName }) => {
-  const team = await Team.findOne({ name: teamName })
-  if (!team) throw new Error('Equipo no encontrado.')
+  const team = await findTeamByTeamName({ teamName })
+
   team.code = await generateTeamCode()
 
   await team.save()
@@ -207,8 +231,7 @@ const addTeamToDivision = async ({ teamName, divisionName }) => {
   const division = await Division.findOne({ name: divisionName })
   if (!division) throw new Error('División no encontrada.')
 
-  const team = await Team.findOne({ name: teamName })
-  if (!team) throw new Error('Equipo no encontrado.')
+  const team = await findTeamByTeamName({ teamName })
 
   if (team.divisionId?.toString() === division._id.toString()) {
     throw new Error('El equipo ya está en esta división.')
@@ -247,11 +270,21 @@ const removeTeamFromDivision = async ({ teamName }) => {
  * @param {String} params.discordId - ID de Discord del usuario.
  * @returns {Object} equipo actualizado.
  */
-const addMemberToTeam = async ({ discordId, teamName }) => {
+const addMemberToTeam = async ({ discordId, teamName = null, teamCode = null  }) => {
+  if (!teamName && !teamCode) {
+    throw new Error('Faltan datos: teamName o code.')
+  }
+
   const user = await User.findOne({ discordId })
   if (user && user.teamId) throw new Error('El usuario ya esta en un equipo.')
+  
+  let team
+  if (teamName) {
+   team = await findTeamByTeamName({ teamName })
+  } else if (teamCode) {
+    team = await findTeamByTeamCode({ teamCode })
+  }
 
-  const team = await Team.findOne({ name: teamName }).populate('members.userId')
   if (!team) throw new Error('Equipo no encontrado.')
 
   if (team.members.length >= maxMembers) {
@@ -278,11 +311,7 @@ const addMemberToTeam = async ({ discordId, teamName }) => {
  * @returns {Object} equipo actualizado.
  */
 const removeMemberFromTeam = async ({ discordId }) => {
-  const user = await User.findOne({ discordId })
-  if (!user || !user.teamId) throw new Error('No estás en ningún equipo.')
-
-  const team = await Team.findById(user.teamId).populate('members.userId')
-  if (!team) throw new Error('Equipo no encontrado.')
+  cosnt team = await findTeamByDiscordId({ discordId })
 
   const memberToRemove = team.members.find(m => m.userId?.discordId === discordId)
   if (!memberToRemove) throw new Error('El miembro no estaba en el equipo.')
@@ -325,11 +354,7 @@ const removeMemberFromTeam = async ({ discordId }) => {
  * @returns {Object} equipo actualizado.
  */
 const changeMemberRole = async ({ discordId, newRole }) => {
-  const user = await User.findOne({ discordId });
-  if (!user || !user.teamId) throw new Error('No estás en ningún equipo.')
-
-  const team = await Team.findById(user.teamId).populate('members.userId')
-  if (!team) throw new Error('Equipo no encontrado.')
+  const team = findTeamByDiscordId({ discordId })
 
   const member = team.members.find(m => m.userId?.discordId === discordId)
   if (!member) throw new Error('Miembro no encontrado.')
@@ -358,6 +383,9 @@ const changeMemberRole = async ({ discordId, newRole }) => {
 }
 
 module.exports = {
+  findTeamByDiscordId,
+  findTeamByTeamName,
+  findTeamByTeamCode,
   checkTeamEligibility,
   updateAllTeamsEligibility,
   deleteAllEmptyTeams,
