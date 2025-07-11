@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js')
 const { createDivision, deleteDivision, updateDivision } = require('../../services/division.js')
-const { getErrorEmbed } = require('../../discord/embeds/management.js')
+const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -60,13 +60,17 @@ module.exports = {
         const name = interaction.options.getString('nombre')
         const tier = interaction.options.getInteger('tier')
         const división = await createDivision({ name, tier })
-        await interaction.reply(`✅ División creada: **${división.name}** (Tier ${división.tier})`)
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message: `División creada: **${división.name}** (Tier ${división.tier})` })]
+        })
       }
 
       else if (subcomand === 'eliminar') {
         const name = interaction.options.getString('nombre')
         const división = await deleteDivision({ name: nombre })
-        await interaction.reply(`🗑️ División eliminada: **${división.name}**`)
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message: `División eliminada: **${división.name}**` })]
+        })
       }
 
       else if (subcomand === 'actualizar') {
@@ -75,8 +79,9 @@ module.exports = {
         const newTier = interaction.options.getInteger('nuevo_tier')
 
         const división = await updateDivision({ name, newName, newTier })
-
-        await interaction.reply(`🔁 División actualizada: **${división.name}** (Tier ${división.tier})`)
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message: `División actualizada: **${división.name}** (Tier ${división.tier})` })]
+        })
       }
     } catch (error) {
       await interaction.reply(

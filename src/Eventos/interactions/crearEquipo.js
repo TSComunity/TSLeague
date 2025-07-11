@@ -7,16 +7,9 @@ const {
   ButtonStyle
 } = require('discord.js');
 
-const schema = require('../../Esquemas/Team.js');
+const { createTeam } = require('../../services/team.js')
 
-function generarCodigoEquipo() {
-  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let codigo = '';
-  for (let i = 0; i < 6; i++) {
-    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
-  }
-  return codigo;
-}
+const { getErrorEmbed } = require('../../discord/embeds/management.js')
 
 module.exports = {
   name: 'interactionCreate',
@@ -24,34 +17,26 @@ module.exports = {
   async execute(interaction, client) {
     try {
       // 📌 Inscripción - mostrar modal
-      if (interaction.isButton() && interaction.customId === 'inscribir') {
+      if (interaction.isButton() && interaction.customId === 'equipo-crear') {
         const data = await schema.findOne({ "Jugadores.discordId": interaction.user.id });
 
-        //if (data) {
           const verEquipoBtn = new ButtonBuilder()
-            .setCustomId('equipo')
+            .setCustomId('equipo-ver')
             .setLabel('Ver Equipo')
             .setEmoji('📋')
-            .setStyle(ButtonStyle.Secondary);
+            .setStyle(ButtonStyle.Secondary)
 
           const salirEquipoBtn = new ButtonBuilder()
             .setCustomId('equipo_salir')
             .setLabel('Salir del equipo')
             .setEmoji('🚪')
-            .setStyle(ButtonStyle.Danger);
+            .setStyle(ButtonStyle.Danger)
 
-          const row = new ActionRowBuilder().addComponents(verEquipoBtn, salirEquipoBtn);
-
-          //return interaction.reply({
-            //ephemeral: true,
-            //content: `❌ Ya estás en el **equipo** ${data.Nombre}.`,
-            //components: [row]
-          //});
-        //}
+          const row = new ActionRowBuilder().addComponents(verEquipoBtn, salirEquipoBtn)
 
         const modal = new ModalBuilder()
           .setCustomId('formularioEquipo')
-          .setTitle('Registro de Equipo');
+          .setTitle('Registro de Equipo')
 
         const nombreEquipoInput = new TextInputBuilder()
           .setCustomId('nombre_equipo')
@@ -165,15 +150,11 @@ module.exports = {
     } catch (error) {
       console.error('Error inesperado en interactionCreate:', error);
       if (interaction && !interaction.replied && !interaction.deferred) {
-        try {
-          await interaction.reply({
-            ephemeral: true,
-            content: '❌ Ocurrió un error inesperado. Intenta más tarde.'
-          });
-        } catch (err) {
-          console.error('Error al intentar enviar la respuesta de error:', err);
-        }
+        await interaction.reply({
+          ephemeral: true,
+          embeds: [getErrorEmbed({ error: error.message })]
+        })
       }
     }
   }
-};
+}

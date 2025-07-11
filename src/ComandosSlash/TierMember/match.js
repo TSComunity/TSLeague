@@ -7,7 +7,7 @@ const {
 } = require('../../services/match.js')
 
 const { getMatchInfoEmbed } = require('../../discord/embeds/match.js')
-const { getErrorEmbed } = require('../../discord/embeds/management.js')
+const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 
 const { config } = require('../../configs/league.js')
 const ROLES_WITH_PERMS = config.commands.perms
@@ -153,7 +153,9 @@ module.exports = {
         const reason = interaction.options.getString('motivo')
 
         const match = await cancelMatch({ seasonIndex, teamAName, teamBName, reason })
-        await interaction.reply(`Cancelado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.`)
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message: `Cancelado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.` })]
+        })
 
       } else if (sub === 'terminar') {
         const seasonIndex = interaction.options.getString('indice-temporada')
@@ -161,7 +163,9 @@ module.exports = {
         const teamBName = interaction.options.getString('nombre-equipo-b')
 
         const match = await endMatch({ seasonIndex, teamAName, teamBName })
-        await interaction.reply(`Terminado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.`)
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message: `Terminado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.` })]
+        })
 
       } else if (sub === 'cambiar-horario') {
         const seasonIndex = interaction.options.getString('indice-temporada')
@@ -172,7 +176,9 @@ module.exports = {
         const minute = interaction.options.getInteger('minuto')
 
         const match = await changeMatchScheduledAt({ seasonIndex, teamAName, teamBName, day, hour, minute })
-        await interaction.reply(`Cambiada la fecha del partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.`)
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message:`Cambiada la fecha del partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.` })]
+        })
       }
 
     } catch (error) {

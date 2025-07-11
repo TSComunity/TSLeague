@@ -4,8 +4,15 @@ const getErrorEmbed = ({ error = 'No se recibieron detalles del error.' }) => {
   return (
     new EmbedBuilder()
       .setColor('Red')
-      .setTitle('Se ha producido un error')
-      .setDescription(`### Se ha producido un error\n\n${error}`)
+      .setDescription(`### Se ha producido un error\n\n> ${error}`)
+  )
+}
+
+const getSuccesEmbed = ({ message = 'La operación ha sido completada sin errores.' }) => {
+  return (
+    new EmbedBuilder()
+      .setColor('Green')
+      .setDescription(`### Operación completada\n\n> ${message}`)
   )
 }
 

@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { ActivityType } = require('discord.js');
 const mongoose = require('mongoose');
-const mongodbURL = process.env.MONGODBURL;
+const { MONGODB_URL } = require('./configs/configs.js')
 const wait = require('node:timers/promises').setTimeout;
 var colors = require('colors');
 
@@ -15,7 +15,7 @@ module.exports = {
 
         mongoose.set('strictQuery', true);
 
-        mongoose.connect(mongodbURL || '', {
+        mongoose.connect(MONGODB_URL || '', {
             keepAlive: true,
             useNewUrlParser: true,
             useUnifiedTopology: true

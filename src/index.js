@@ -8,8 +8,7 @@ const { loadPrefix } = require('./Handlers/handlerComandosPrefix.js')
 
 const { createChampionsGroupsImage } = require('./utils/crearCanva.js')
 
-require('dotenv').config()
-const TOKEN = process.env.TOKEN
+const { TOKEN } = require('./configs/configs.js')
 
 const wait = require('node:timers/promises').setTimeout
 
