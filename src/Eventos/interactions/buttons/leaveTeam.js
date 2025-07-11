@@ -1,23 +1,23 @@
-const { removeMemberFromTeam } = require('../../services/team.js') // teamname, discordid
-const { getErrorEmbed } = require('../../discord/embeds/management.js')
+const { removeMemberFromTeam } = require('../../services/team.js')
+const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 
 module.exports = {
-  customId: 'equipo_salir',
+  customId: 'team_left',
 
   async execute(interaction) {
     try {
-      const team = await leaveTeam({ discordId: interaction.user.id })
+      const team = await removeMemberFromTeam({ discordId: interaction.user.id })
 
       return interaction.reply({
         ephemeral: true,
-        content: '✅ Has salido del equipo correctamente.'
-      });
+        embeds: [getSuccesEmbed({ message: `Has salido del equipo ${team.name}.`})]
+      })
     } catch (error) {
-      console.error('Error al salir del equipo:', error);
+      console.error(error)
       return interaction.reply({
         ephemeral: true,
         embeds: [getErrorEmbed({ error: error.message })]
-      });
+      })
     }
   }
 }

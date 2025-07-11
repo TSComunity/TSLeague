@@ -278,25 +278,41 @@ const addMemberToTeam = async ({ discordId, teamName }) => {
  * @returns {Object} equipo actualizado.
  */
 const removeMemberFromTeam = async ({ discordId }) => {
-  const user = await User.findOne({ discordId });
+  const user = await User.findOne({ discordId })
   if (!user || !user.teamId) throw new Error('No estás en ningún equipo.')
 
   const team = await Team.findById(user.teamId).populate('members.userId')
   if (!team) throw new Error('Equipo no encontrado.')
 
-  const initialLength = team.members.length
-  team.members = team.members.filter(m => m.userId?.discordId !== discordId)
+  const memberToRemove = team.members.find(m => m.userId?.discordId === discordId)
+  if (!memberToRemove) throw new Error('El miembro no estaba en el equipo.')
 
-  if (team.members.length === initialLength) {
-    throw new Error('El miembro no estaba en el equipo.')
+  // Si el que se va es el líder, se transfiere el rol
+  if (memberToRemove.role === 'leader') {
+    const subLeaders = team.members.filter(m => m.role === 'sub-leader' && m.userId?.discordId !== discordId);
+    const otherMembers = team.members.filter(m => m.userId?.discordId !== discordId);
+
+    let newLeader
+    if (subLeaders.length > 0) {
+      newLeader = subLeaders[Math.floor(Math.random() * subLeaders.length)]
+    } else if (otherMembers.length > 0) {
+      newLeader = otherMembers[Math.floor(Math.random() * otherMembers.length)]
+    } else {
+      throw new Error('No hay otros miembros para transferir el liderazgo.')
+    }
+
+    newLeader.role = 'leader'
   }
+
+  // Quitar al usuario del equipo
+  team.members = team.members.filter(m => m.userId?.discordId !== discordId)
 
   team.isEligible = team.members.length >= 3
   await team.save()
 
   user.teamId = null
-
   await user.save()
+
   return team
 }
 

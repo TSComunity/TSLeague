@@ -84,11 +84,10 @@ module.exports = {
         })
       }
     } catch (error) {
-      await interaction.reply(
-        {
+      console.error(error)
+      await interaction.reply({
           embeds: [getErrorEmbed({ error: error.message })]
-        }
-      )
+      })
     }
   }
 }
