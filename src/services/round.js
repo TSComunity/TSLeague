@@ -11,7 +11,7 @@ const { sendAnnouncement } = require('../discord/send/general.js')
 const { getRoundAddedEmbed } = require('../discord/embeds/round.js')
 const { getDivisionEndedEmbed } = require('../discord/embeds/division.js')
 
-const { season, round } = require('../configs/league.js')
+const { season, round, roles } = require('../configs/league.js')
 const { maxRounds } = season
 const { startDay, startHour } = round
 
@@ -45,7 +45,7 @@ const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
     if (!isSeasonEnding) {
       // Se envia cuando se llega al limite de rondas en una division pero no en todas
       await sendAnnouncement({
-        content: '@everyone',
+        content: `<@&${roles.ping.id}>`,
         embeds: [getDivisionEndedEmbed({ division })]
       })
     }
@@ -79,8 +79,8 @@ const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
     if (!isSeasonEnding) {
       // Se envia cuando termina esta division pero no todas
       await sendAnnouncement({
-        content: '@everyone',
-        embeds: [getSeasonDivisionEndedEmbed({ division })]
+        content: `<@&${roles.ping.id}>`,
+        embeds: [getDivisionEndedEmbed({ division })]
       })
     }
 
@@ -156,7 +156,7 @@ const addRound = async () => {
   )
 
   await sendAnnouncement({
-    content: '@everyone',
+    content: `<@&${roles.ping.id}>`,
     embeds: [
       getRoundAddedEmbed({
         divisionsWithNewRounds,
