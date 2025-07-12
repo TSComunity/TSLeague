@@ -308,8 +308,8 @@ const addMemberToTeam = async ({ teamName = null, teamCode = null, discordId }) 
  * @param {String} params.discordId - ID de Discord del usuario.
  * @returns {Object} equipo actualizado.
  */
-const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordId = null }) => {
-  cosnt team = await findTeam({ teamName, teamcode, discordId })
+const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordId }) => {
+  const team = await findTeam({ teamName, teamcode, discordId })
 
   const memberToRemove = team.members.find(m => m.userId?.discordId === discordId)
   if (!memberToRemove) throw new Error('El miembro no estaba en el equipo.')
@@ -317,7 +317,7 @@ const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordI
   // Si el que se va es el líder, se transfiere el rol
   if (memberToRemove.role === 'leader') {
     const subLeaders = team.members.filter(m => m.role === 'sub-leader' && m.userId?.discordId !== discordId);
-    const otherMembers = team.members.filter(m => m.userId?.discordId !== discordId);
+    const otherMembers = team.members.filter(m => m.userId?.discordId !== discordId)
 
     let newLeader
     if (subLeaders.length > 0) {
@@ -351,9 +351,9 @@ const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordI
  * @param {'leader'|'sub-leader'|'member'} params.newRol - Nuevo role a asignar.
  * @returns {Object} equipo actualizado.
  */
-const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, newRol }) => {
+const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, newRole }) => {
   if (!discordId || !newRol) {
-    throw new Error('Faltan datos: discordId o newRol.')
+    throw new Error('Faltan datos: discordId o newRole.')
   }
 
   const team = findTeam({ teamName, teamCode, discordId })
@@ -363,7 +363,7 @@ const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, n
 
   const isAlreadyLeader = member.role === 'leader'
 
-  if (newRol === 'leader') {
+  if (newRole === 'leader') {
     if (isAlreadyLeader) throw new Error('Este miembro ya es líder.')
 
     // Baja a sublíder al líder actual (si hay uno distinto)
@@ -377,7 +377,7 @@ const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, n
     member.role = 'leader'
   } else {
     // Cambiar a cualquier otro rol (normal)
-    member.role = newRol
+    member.role = newRole
   }
 
   await team.save()

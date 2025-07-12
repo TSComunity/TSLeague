@@ -24,4 +24,4 @@ const getMaintenanceEmbed = ({ reason = 'No se recibio ningun motivo.' }) => {
       )
 }
 
-module.exports = { getErrorEmbed, getMaintenanceEmbed }
+module.exports = { getErrorEmbed, getSuccesEmbed, getMaintenanceEmbed }

@@ -21,5 +21,22 @@ const getTeamChangeColorMenu = () => {
         )
     )
 }
+const getTeamKickMemberMenu = ({ options }) => {
+    return(
+        new StringSelectMenuBuilder()
+                .setCustomId('teamkickMemberMenu')
+                .setPlaceholder('Selecciona un miembro para expulsarlo')
+                .addOptions(options)
+    )
+}
+const getTeamChangeMemberRoleMenu = ({ options }) => {
+    return (
+        new StringSelectMenuBuilder()
+        .setCustomId('teamChangeMemberRole')
+        .setPlaceholder('Selecciona un miembro')
+        .addOptions(options)
+    )
+}
 
-module.exports = { getTeamChangeColorMenu }
+
+module.exports = { getTeamChangeColorMenu, getTeamKickMemberMenu, getTeamChangeMemberRoleMenu }

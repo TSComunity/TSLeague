@@ -13,6 +13,9 @@ function calcMaxRounds(maxTeams) {
 const maxTeams = 12
 
 module.exports = {
+  "guild": {
+    "id": '1093864130030612521'
+  },
   "channels": {
     "announcements": {
       "id": '1364999573495353437',

@@ -26,7 +26,7 @@ const getTeamChangeNameButton = () => {
             .setCustomId('teamChangeName')
             .setLabel('Cambiar Nombre')
             .setEmoji('📛')
-            .setStyle(ButtonStyle.Secondary),
+            .setStyle(ButtonStyle.Secondary)
     )
 }
 
@@ -36,7 +36,7 @@ const getTeamChangeIconButton = () => {
             .setCustomId('teamChangeIcon')
             .setLabel('Cambiar Icono')
             .setEmoji('🖼️')
-            .setStyle(ButtonStyle.Secondary),
+            .setStyle(ButtonStyle.Secondary)
     )
 }
 
@@ -46,7 +46,7 @@ const getTeamChangeColorButton = () => {
             .setCustomId('teamChangeColor')
             .setLabel('Cambiar Color')
             .setEmoji('🎨')
-            .setStyle(ButtonStyle.Secondary),
+            .setStyle(ButtonStyle.Secondary)
     )
 }
 
@@ -56,7 +56,7 @@ const getTeamManageMembersButton = () => {
         .setCustomId('teamManageMembers')
         .setLabel('Gestionar Jugadores')
         .setEmoji('🧑‍💼')
-        .setStyle(ButtonStyle.Secondary),
+        .setStyle(ButtonStyle.Secondary)
     )
 }
 
@@ -70,6 +70,63 @@ const getTeamReGenerateCodeButton = () => {
     )
 }
 
+const getTeamAddMemberButton = () => {
+    return (
+        new ButtonBuilder()
+            .setCustomId('teamAddMember')
+            .setLabel('Añadir miembro')
+            .setEmoji('➕')
+            .setStyle(ButtonStyle.Primary)
+    )
+}
+
+const getTeamChangeMemberRoleButton = () => {
+    return (
+        new ButtonBuilder()
+            .setCustomId('teamChangeRoleMember')
+            .setLabel('Gestionar Roles')
+            .setEmoji('🔄')
+            .setStyle(ButtonStyle.Secondary)
+    )
+}
+
+const getTeamKickMemberButton = () => {
+    return (
+        new ButtonBuilder()
+            .setCustomId('teamKickMember')
+            .setLabel('Expulsar miembro')
+            .setEmoji('❌')
+            .setStyle(ButtonStyle.Danger)
+    )
+}
+
+const getTeamChangeMemberRoleToLeader = () => {
+    return (
+        new ButtonBuilder()
+          .setCustomId(`teamChangeMemberRoleTo_leader_${discordId}`)
+          .setLabel('👑 Líder')
+          .setStyle(ButtonStyle.Danger)
+    )
+}
+
+const getTeamChangeMemberRoleToSubLeader = () => {
+    return (
+        new ButtonBuilder()
+          .setCustomId(`teamChangeMemberRoleTo_member_sub-leader_${discordId}`)
+          .setLabel('⭐ Sub-líder')
+          .setStyle(ButtonStyle.Primary)
+    )
+}
+
+const getTeamChangeMemberRoleToMember = () => {
+    return (
+        new ButtonBuilder()
+          .setCustomId(`teamChangeMemberRoleTo_member_${discordId}`)
+          .setLabel('👤 Miembro')
+          .setStyle(ButtonStyle.Secondary)
+    )
+}
+
 module.exports = {
     getTeamSeeButton,
     getTeamLeftButton,
@@ -77,5 +134,11 @@ module.exports = {
     getTeamChangeIconButton,
     getTeamChangeColorButton,
     getTeamManageMembersButton,
-    getTeamReGenerateCodeButton
+    getTeamReGenerateCodeButton,
+    getTeamAddMemberButton,
+    getTeamChangeMemberRoleButton,
+    getTeamKickMemberButton,
+    getTeamChangeMemberRoleToLeader,
+    getTeamChangeMemberRoleToSubLeader,
+    getTeamChangeMemberRoleToMember
 }
