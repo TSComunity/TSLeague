@@ -1,23 +1,23 @@
-const { ButtonBuilder, ButtonStyle, ActionRowBuilder } = require('discord.js')
+const { ActionRowBuilder } = require('discord.js')
 
-const { addMemberToTeam } = require('../../services/team.js')
+const { addMemberToTeam } = require('../../../services/team.js')
 
-const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
-const { getTeamSeeButton } = require('../../discord/buttons/team.js')
+const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
+const { getTeamSeeButton, getTeamLeftButton } = require('../../../discord/buttons/team.js')
 
 module.exports = {
   customId: 'teamJoinModal',
 
   async execute(interaction) {
     try {
-      const teamCode = interaction.fields.getTextInputValue('teamCode').trim()
+      const teamCode = interaction.fields.getTextInputValue('teamCodeInput').trim()
       const discordId = interaction.user.id
 
       const team = await addMemberToTeam({ discordId, teamCode })
 
-        const teamSeeButton = getTeamSeeButton()
-      const teamRow = new ActionRowBuilder().addComponents(
-        teamSeeButton
+        const teamRow = new ActionRowBuilder().addComponents(
+        getTeamSeeButton(),
+        getTeamLeftButton()
     )
 
       return interaction.reply({

@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js')
 
-const getTeamInfoEmbed = ({ team }) => {
+const getTeamInfoEmbed = ({ team, perms }) => {
     return (
         new EmbedBuilder()
             .setColor(team.color)

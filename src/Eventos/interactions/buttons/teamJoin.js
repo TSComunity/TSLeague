@@ -7,16 +7,21 @@ module.exports = {
   customId: 'teamJoin',
 
   async execute(interaction) {
+        const modal = getTeamJoinModal()
 
-    const teamJoinModal = getTeamJoinModal()
-    const teamCodeInput = getTeamCodeInput()
+        const modalRow = new ActionRowBuilder().addComponents(
+                getTeamCodeInputUI
+            )
 
-    const teamRow = new ActionRowBuilder().addComponents(
-            teamCodeInput
-        )
+        modal.addComponents(modalRow)
 
-    teamJoinModal.addComponents(teamRow)
-
-    await interaction.showModal(teamJoinModal)
+        await interaction.showModal(modal)
+    } catch (error) {
+      console.error(error)
+      return interaction.reply({
+        ephemeral: true,
+        embeds: [getErrorEmbed({ error: error.message })]
+      })
+    }
   }
 }

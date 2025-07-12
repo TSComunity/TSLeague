@@ -13,8 +13,8 @@ const getTeamSeeButton = () => {
 const getTeamLeftButton = () => {
     return (
         new ButtonBuilder()
-            .setCustomId('equipo_salir')
-            .setLabel('Salir del equipo')
+            .setCustomId('teamLeave')
+            .setLabel('Salir del Equipo')
             .setStyle(ButtonStyle.Danger)
             .setEmoji('🚪')
     )
@@ -23,7 +23,7 @@ const getTeamLeftButton = () => {
 const getTeamChangeNameButton = () => {
     return (
         new ButtonBuilder()
-            .setCustomId('equipo_cambiar_nombre')
+            .setCustomId('teamChangeName')
             .setLabel('Cambiar Nombre')
             .setEmoji('📛')
             .setStyle(ButtonStyle.Secondary),
@@ -33,7 +33,7 @@ const getTeamChangeNameButton = () => {
 const getTeamChangeIconButton = () => {
     return (
         new ButtonBuilder()
-            .setCustomId('equipo_cambiar_icono')
+            .setCustomId('teamChangeIcon')
             .setLabel('Cambiar Icono')
             .setEmoji('🖼️')
             .setStyle(ButtonStyle.Secondary),
@@ -43,7 +43,7 @@ const getTeamChangeIconButton = () => {
 const getTeamChangeColorButton = () => {
     return (
         new ButtonBuilder()
-            .setCustomId('equipo_cambiar_color')
+            .setCustomId('teamChangeColor')
             .setLabel('Cambiar Color')
             .setEmoji('🎨')
             .setStyle(ButtonStyle.Secondary),
@@ -53,7 +53,7 @@ const getTeamChangeColorButton = () => {
 const getTeamManageMembersButton = () => {
     return (
         new ButtonBuilder()
-        .setCustomId('equipo_gestionar_jugadores')
+        .setCustomId('teamManageMembers')
         .setLabel('Gestionar Jugadores')
         .setEmoji('🧑‍💼')
         .setStyle(ButtonStyle.Secondary),
@@ -63,8 +63,8 @@ const getTeamManageMembersButton = () => {
 const getTeamReGenerateCodeButton = () => {
     return (
         new ButtonBuilder()
-            .setCustomId('equipo_cambiar_codigo')
-            .setLabel('Cambiar Código')
+            .setCustomId('teamReGenerateCode')
+            .setLabel('Regenerar Código')
             .setEmoji('🔑')
             .setStyle(ButtonStyle.Secondary)
     )
