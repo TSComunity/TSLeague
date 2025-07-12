@@ -177,19 +177,19 @@ const updateTeamCode = async ({ teamName = null, teamCode = null, discordId = nu
  * @param {String} params.presidentDiscordId - ID de Discord del presidente.
  * @returns {Object} equipo creado.
  */
-const createTeam = async ({ name, iconURL, color, presidentDiscordId }) => {
-  const colorObj = colors.find(c => c.label === color)
-  const colorValue = colorObj ? colorObj.value : null
+const createTeam = async ({ name, iconURL, presidentDiscordId, color = 'Blue' }) => {
 
-  if (!colorValue) throw new Error('Color no válido.')
-
+  if (!name || !iconURL) {
+    throw new Error('Faltan datos: name o iconURL.')
+  }
+  
   const user = await User.findOne({ discordId: presidentDiscordId })
   if (!user) throw new Error('Usuario no encontrado.')
 
   const team = await Team.create({
     name,
     iconURL,
-    color: colorValue,
+    color,
     code: generateTeamCode(),
     members: [{ userId: user._id, role: 'leader' }],
     isEligible: false

@@ -16,7 +16,7 @@ module.exports = {
 
       return interaction.reply({
         ephemeral: true,
-        embeds: [getSuccesEmbed({ message: `Se ha actualizado el icono por:` })],
+        embeds: [getSuccesEmbed({ message: `Se ha actualizado el icono de ${team.name} por:` })],
         files: [{ attachment: team.iconURl, name: `Icono del equipo: ${team.name}` }]
       })
 

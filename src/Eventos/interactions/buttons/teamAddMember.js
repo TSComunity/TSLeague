@@ -3,7 +3,7 @@ const { ActionRowBuilder } = require('discord.js')
 const { findTeam } = require('../../../services/team.js')
 const { getErrorEmbed } = require('../../../discord/embeds/management.js')
 const { getAddMemberInfoEmbed } = require('../../../discord/embeds/team.js')
-
+const { getTeamReGenerateCodeButton } = require('../../../discord/buttons/team.js')
 module.exports = {
   customId: 'teamAddMember',
 
@@ -12,11 +12,14 @@ module.exports = {
       const team = await findTeam({ discordId })
       const code = team.code
 
+      const row = new ActionRowBuilder.addComponents(getTeamReGenerateCodeButton())
+
       await interaction.reply({
         ephemeral: true,
-        embeds: [getAddMemberInfoEmbed({ code })]
+        embeds: [getAddMemberInfoEmbed({ code })],
+        componentes: [row]
       })
-      
+
     } catch (error) {
       console.error(error)
       return interaction.reply({

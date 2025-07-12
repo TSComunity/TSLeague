@@ -13,7 +13,7 @@ module.exports = {
       const name = interaction.fields.getTextInputValue('teamNameInput').trim()
       const iconURL = interaction.fields.getTextInputValue('teamIconInput').trim()
 
-      const team = await createTeam({ name, iconURL })
+      const team = await createTeam({ name, iconURL, presidentDiscordId: interaction.user.id })
 
       return interaction.reply({
         ephemeral: true,
