@@ -13,17 +13,14 @@ const generateRandomSets = async () => {
   // Mapas ya usados
   const playedMapIds = new Set()
   for (const division of season.divisions) {
-    for (const round of division.rounds) {
+    const round = division.rounds[division.rounds.length - 1]
       if (round.set1?.map) playedMapIds.add(round.set1.map)
       if (round.set2?.map) playedMapIds.add(round.set2.map)
       if (round.set3?.map) playedMapIds.add(round.set3.map)
-    }
   }
 
   // Crear lista de modos con pesos (sin repetir modo)
-  const availableModes = gameModes.filter(mode =>
-    mode.maps.some(map => !playedMapIds.has(map.id))
-  )
+  const availableModes = gameModes
 
   const weightedModes = []
   for (const mode of availableModes) {

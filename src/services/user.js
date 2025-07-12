@@ -9,9 +9,9 @@ const checkUserVerification = async ({ discordId }) => {
     const user = await User.findOne({ discordId })
     if (!user) throw new Error('No se encontro el usuario.')
 
-    const isVerified = (team.brawlId)
-    team.isVerified = isVerified
-    await team.save()
+    const isVerified = (user.brawlId)
+    user.isVerified = isVerified
+    await user.save()
     return isVerified
 }
 

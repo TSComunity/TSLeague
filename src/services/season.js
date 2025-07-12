@@ -58,7 +58,24 @@ const getLastSeason = async () => {
  * Crea una nueva temporada con todas las divisiones existentes.
  * @returns {Object} season - La temporada creada.
  */
-const createSeason = async ({ name }) => {
+const startSeason = async ({ name }) => {
+
+  const season = await Season.findOne({ status: 'active' })
+    .populate('divisions.divisionId')
+    .populate('divisions.teams.teamId')
+    .populate({
+      path: 'divisions.rounds.matches.matchId',
+      populate: [
+        { path: 'teamA', model: 'Team' },
+        { path: 'teamB', model: 'Team' }
+      ]
+    })
+    .populate('divisions.rounds.resting.teamId')
+
+  if (season) {
+    return throw new Error('No se peude crear una temporada si ya hay una activa.')
+  }
+
   // Desactivar temporadas y divisiones activas previas
   await Season.updateMany(
     { status: 'active' }, // Condición: busca temporadas con status 'active'
@@ -153,4 +170,4 @@ const endSeason = async () => {
 
 // se podria hacer algo para pausar la temporada (mantenimiento)
 
-module.exports = { getActiveSeason, getLastSeason, createSeason, endSeason }
+module.exports = { getActiveSeason, getLastSeason, startSeason, endSeason }

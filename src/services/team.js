@@ -67,71 +67,71 @@ const updateAllTeamsEligibility = async () => {
   }
 }
 
-// /**
-//  * Elimina todos los equipos vacíos de la base de datos y sus referencias.
-//  * Un equipo se considera vacío si no tiene miembros.
-//  */
-// const deleteAllEmptyTeams = async () => {
-//   const emptyTeams = await Team.find({ members: { $size: 0 } })
+/**
+ * Elimina todos los equipos vacíos de la base de datos y sus referencias.
+ * Un equipo se considera vacío si no tiene miembros.
+ */
+const deleteAllEmptyTeams = async () => {
+  const emptyTeams = await Team.find({ members: { $size: 0 } })
 
-//   for (const team of emptyTeams) {
-//     const teamId = team._id
+  for (const team of emptyTeams) {
+    const teamId = team._id
 
-//     // Buscar partidos donde participa el equipo
-//     const matches = await Match.find({
-//       $or: [{ teamA: teamId }, { teamB: teamId }]
-//     })
+    // Buscar partidos donde participa el equipo
+    const matches = await Match.find({
+      $or: [{ teamA: teamId }, { teamB: teamId }]
+    })
 
-//     for (const match of matches) {
-//       // Si el partido está programado, cancelarlo y avisar al rival
-//       if (match.status === 'scheduled') {
-//         await cancelMatch({
-//           match,
-//           reason: 'Un equipo se ha retirado del partido.',
-//           removeTeamId: teamId
-//         })
-//       } else {
-//         // Para partidos ya jugados o cancelados, solo poner teamA/teamB a null si es necesario
-//         const update = {}
-//         if (match.teamA.equals(teamId)) update.teamA = null
-//         if (match.teamB.equals(teamId)) update.teamB = null
+    for (const match of matches) {
+      // Si el partido está programado, cancelarlo y avisar al rival
+      if (match.status === 'scheduled') {
+        await cancelMatch({
+          match,
+          reason: 'Un equipo se ha retirado del partido.',
+          removeTeamId: teamId
+        })
+      } else {
+        // Para partidos ya jugados o cancelados, solo poner teamA/teamB a null si es necesario
+        const update = {}
+        if (match.teamA.equals(teamId)) update.teamA = null
+        if (match.teamB.equals(teamId)) update.teamB = null
 
-//         if (Object.keys(update).length) {
-//           await Match.updateOne({ _id: match._id }, update)
-//         }
-//       }
-//     }
+        if (Object.keys(update).length) {
+          await Match.updateOne({ _id: match._id }, update)
+        }
+      }
+    }
 
-//     // Eliminar referencias del equipo en temporadas (teams)
-//     await Season.updateMany(
-//       {},
-//       {
-//         $pull: {
-//           'divisions.$[].teams': { teamId: teamId }
-//         }
-//       }
-//     )
+    // Eliminar referencias del equipo en temporadas (teams)
+    await Season.updateMany(
+      {},
+      {
+        $pull: {
+          'divisions.$[].teams': { teamId: teamId }
+        }
+      }
+    )
 
-//     // Eliminar referencias del equipo en descansos de rondas manualmente
-//     const seasons = await Season.find({})
-//     for (const season of seasons) {
-//       let modified = false
-//       for (const division of season.divisions) {
-//         for (const round of division.rounds) {
-//           const originalLength = round.resting?.length || 0
-//           round.resting = (round.resting || []).filter(id => !id.equals(teamId))
-//           if (round.resting.length !== originalLength) modified = true
-//         }
-//       }
-//       if (modified) {
-//         await season.save()
-//       }
-//     }
+    // Eliminar referencias del equipo en descansos de rondas manualmente
+    const seasons = await Season.find({})
+    for (const season of seasons) {
+      let modified = false
+      for (const division of season.divisions) {
+        for (const round of division.rounds) {
+          const originalLength = round.resting?.length || 0
+          round.resting = (round.resting || []).filter(id => !id.equals(teamId))
+          if (round.resting.length !== originalLength) modified = true
+        }
+      }
+      if (modified) {
+        await season.save()
+      }
+    }
 
-//     // Finalmente eliminar el equipo
-//     await Team.deleteOne({ _id: teamId })
-//   }
-// }
+    // Finalmente eliminar el equipo
+    await Team.deleteOne({ _id: teamId })
+  }
+}
 
 /**
  * Genera un codigo random y unico
