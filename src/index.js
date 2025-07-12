@@ -67,6 +67,7 @@ const { updateRankingsEmbed } = requrie('./discord/update/season.js')
 const { updateTeamsEmbed } = requrie('./discord/update/teams.js')
 const { updateAllTeamsEligibility, deleteAllEmptyTeams } = require('./services/team.js')
 const { executeDueScheduledFunctions } = require('./services/scheduledFunction.js')
+const { updateTeamsPingRole } = require('./utils/updateTeamsPingRole.js')
 
 setInterval(() => {
   updateRankingsEmbed().catch(error => console.error(error))
@@ -74,4 +75,5 @@ setInterval(() => {
   updateAllTeamsEligibility().catch(error => console.error(error))
   deleteAllEmptyTeams().catch(error => console.error(error))
   executeDueScheduledFunctions().catch(error => console.error(error))
+  updateTeamsPingRole({ client }).catch(error => console.error(error))
 }, 1000 * 60 * 10)
