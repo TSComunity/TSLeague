@@ -70,8 +70,8 @@ const { executeDueScheduledFunctions } = require('./services/scheduledFunction.j
 const { updateUsersPingRole } = require('./services/user.js')
 
 setInterval(() => {
-  updateRankingsEmbed().catch(error => console.error(error))
-  updateTeamsEmbed().catch(error => console.error(error))
+  updateRankingsEmbed({ client }).catch(error => console.error(error))
+  updateTeamsEmbed({ client }).catch(error => console.error(error))
   updateAllTeamsEligibility().catch(error => console.error(error))
   deleteAllEmptyTeams().catch(error => console.error(error))
   executeDueScheduledFunctions({ client }).catch(error => console.error(error))
