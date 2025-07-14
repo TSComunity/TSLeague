@@ -1,35 +1,29 @@
-const fs = require('fs');
-const path = require('path');
-
 async function loadCommands(client) {
-  let commandsArray = [];
-
-  // Suponiendo que este archivo está en src/Handlers/
-  const projectRoot = path.resolve(__dirname, '..', '..'); 
-  const commandsPath = path.join(projectRoot, 'src', 'ComandosSlash');
-
-  const commandFolders = fs.readdirSync(commandsPath, { withFileTypes: true })
-                           .filter(dirent => dirent.isDirectory())
-                           .map(dirent => dirent.name);
-
-  for (const folder of commandFolders) {
-    const folderPath = path.join(commandsPath, folder);
-    const commandFiles = fs.readdirSync(folderPath).filter(file => file.endsWith('.js'));
-
-    for (const file of commandFiles) {
-      const filePath = path.join(folderPath, file);
-      const command = require(filePath);
-
-      client.commands.set(command.data.name, command);
-      commandsArray.push(command.data.toJSON());
-
-      console.log(`[BOT-COMANDOS] Cargando ${command.data.name}`);
-
-      await new Promise(resolve => setTimeout(resolve, 10));
+    const fs = require("fs");
+    var colors = require('colors');
+  
+    let commandsArray = [];
+    
+    const commandsFolder = fs.readdirSync("./comandos");
+    for (const folder of commandsFolder) {
+      const commandFiles = fs
+        .readdirSync(`./comandos/${folder}`)
+        .filter((file) => file.endsWith(".js"));
+  
+      for (const file of commandFiles) {
+        const commandFile = require(`../comandos/${folder}/${file}`);
+  
+        const properties = { folder, ...commandFile };
+        client.commands.set(commandFile.data.name, commandFile);
+  
+        commandsArray.push(commandFile.data.toJSON());
+        console.log(`[   TS-CMDS      ]`.underline.cyan + " --- Cargando  ".cyan + `  ${commandFile.data.name}`.cyan);
+        await new Promise(resolve => setTimeout(resolve, 10)); // wait for 2 seconds
+        continue;
+      }
     }
+  
+    await client.guilds.cache.get('1093864130030612521').commands.set(commandsArray);
   }
-
-  await client.application.commands.set(commandsArray);
-}
-
-module.exports = { loadCommands };
+  
+  module.exports = { loadCommands };

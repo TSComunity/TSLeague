@@ -64,8 +64,8 @@ client.on('messageCreate', async (message) => {
 
 // Logica de la liga
 
-const { updateRankingsEmbed } = requrie('./discord/update/season.js')
-const { updateTeamsEmbed } = requrie('./discord/update/teams.js')
+const { updateRankingsEmbed } = require('./discord/update/season.js')
+const { updateTeamsEmbed } = require('./discord/update/teams.js')
 const { updateAllTeamsEligibility, deleteAllEmptyTeams } = require('./services/team.js')
 const { executeDueScheduledFunctions } = require('./services/scheduledFunction.js')
 
