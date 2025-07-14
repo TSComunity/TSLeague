@@ -4,7 +4,7 @@ const { findTeam, checkTeamUserHasPerms } = require('../../../services/team.js')
 const { getErrorEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamKickMemberMenu } = require('../../../discord/embeds/management.js')
 
-const { getMemberDisplayName } = require('../../../utils/discord.js');
+const { getUserDisplayName } = require('../../../services/user.js')
 
 module.exports = {
   customId: 'teamkickMember',
@@ -51,7 +51,7 @@ module.exports = {
 
         const options = await Promise.all(
         membersToKick.map(async m => ({
-            label: await getMemberDisplayName({ guild: interaction.guild, discordId: m.userId }),
+            label: await getUserDisplayName({ guild: interaction.guild, discordId: m.userId }),
             description: m.role,
             value: m.userId.discordId,
         }))

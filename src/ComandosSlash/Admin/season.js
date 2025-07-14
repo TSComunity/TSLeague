@@ -22,20 +22,20 @@ module.exports = {
         .setDescription('Cuidado con este comando')
     ),
 
-  async execute(interaction) {
+  async execute(interaction, client) {
     const subcomand = interaction.options.getSubcommand()
 
     try {
       if (subcomand === 'empezar') {
         const name = interaction.options.getString('nombre')
-        const season = await startSeason({ name })
+        const season = await startSeason({ name, client })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `Temporada ${season.seasonIndex} comenzada` })]
         })
       }
 
       else if (subcomand === 'terminar') {
-        const season = await endSeason()
+        const season = await endSeason({ client })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `Temporada ${season.seasonIndex} terminada` })]
         })

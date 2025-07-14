@@ -58,7 +58,7 @@ const getLastSeason = async () => {
  * Crea una nueva temporada con todas las divisiones existentes.
  * @returns {Object} season - La temporada creada.
  */
-const startSeason = async ({ name }) => {
+const startSeason = async ({ name, client }) => {
 
   const season = await Season.findOne({ status: 'active' })
     .populate('divisions.divisionId')
@@ -73,7 +73,7 @@ const startSeason = async ({ name }) => {
     .populate('divisions.rounds.resting.teamId')
 
   if (season) {
-    return throw new Error('No se peude crear una temporada si ya hay una activa.')
+    throw new Error('No se peude crear una temporada si ya hay una activa.')
   }
 
   // Desactivar temporadas y divisiones activas previas
@@ -129,6 +129,7 @@ const startSeason = async ({ name }) => {
   await season.save()
 
   await sendAnnouncement({
+    client,
     content: `<@&${roles.ping.id}>`,
     embeds: [getSeasonStartedEmbed({ season })]
   })
@@ -159,6 +160,7 @@ const endSeason = async () => {
   await season.save()
 
   await sendAnnouncement({
+    client,
     content: `<@&${roles.ping.id}>`,
     embeds: [getSeasonEndedEmbed({ season })]
   })

@@ -5,8 +5,6 @@ const { createTeam } = require('../../../services/team.js')
 const { getErrorEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
 
-const { addPingRoleToUser } = require('../../../utils/addPingRoleToUser.js')
-
 module.exports = {
   customId: 'teamCreateModal',
 
@@ -17,13 +15,11 @@ module.exports = {
 
       const team = await createTeam({ name, iconURL, presidentDiscordId: interaction.user.id })
 
-      await interaction.reply({
+      return await interaction.reply({
         ephemeral: true,
-        content: 'Equipo creado con exito.'
+        content: 'Equipo creado con exito.',
         embeds: [getTeamInfoEmbed({ team, perms = true })],
       })
-
-      return await addPingRoleToUser({ client, discordId: interaction.user.id })
 
     } catch (error) {
       console.error(error)

@@ -5,8 +5,6 @@ const { addMemberToTeam } = require('../../../services/team.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamSeeButton, getTeamLeftButton } = require('../../../discord/buttons/team.js')
 
-const { addPingRoleToUser } = require('../../../utils/addPingRoleToUser.js')
-
 module.exports = {
   customId: 'teamJoinModal',
 
@@ -22,14 +20,12 @@ module.exports = {
         getTeamLeftButton()
     )
 
-      await interaction.reply({
+      return await interaction.reply({
         ephemeral: true,
         embeds: [getSuccesEmbed({ message: `Te has unido al equipo ${team.name}.` })],
         components: [teamRow]
       })
-      
-      return await addPingRoleToUser({ client, discordId: interaction.user.id })
-    
+          
     } catch (error) {
       console.error(error)
       return interaction.reply({

@@ -3,7 +3,7 @@ const { findTeam, checkTeamUserHasPerms } = require('../../../services/team.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamChangeMemberRoleMenu } = require('../../../discord/menus/team.js')
 
-const { getMemberDisplayName } = require('../../../utils/discord.js');
+const { getUserDisplayName } = require('../../../services/user.js')
 
 module.exports = {
   customId: 'teamChangeMemberRole',
@@ -26,7 +26,7 @@ const options = await Promise.all(
   team.members
     .filter(m => m.userId.discordId !== discordId)
     .map(async m => ({
-      label: await getMemberDisplayName(interaction.guild, m.userId.discordId),
+      label: await getUserDisplayName({ guild: interaction.guild, discordId: m.userId.discordId}),
       description: m.role,
       value: m.userId.discordId,
     }))

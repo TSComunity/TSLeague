@@ -1,14 +1,147 @@
+const { ChannelType, PermissionsBitField } = require('discord.js')
+
 const Season = require('../Esquemas/Season')
 const Match = require('../Esquemas/Match')
 const Team = require('../Esquemas/Team')
 
-const { sendTeamDM } = require('../discord/send/team.js')
 const { getMatchCancelledEmbed } = require('../discord/embeds/match.js')
 
 const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
 
-const { match } = require('../configs/league.js')
+const { guild, categories, channels, match } = require('../configs/league.js')
 const { defaultStartDay, defaultStartHour } = match
+
+/**
+ * Crea un canal de Discord para un partido.
+ * 
+ * @param {Object} match - El documento del partido ya guardado en Mongo.
+ * @param {Client} client - El cliente de Discord.
+ */
+const createMatchChannel = async ({ match, client }) => {
+  try {
+    const teamA = await Team.findById(match.teamAId)
+    const teamB = await Team.findById(match.teamBId)
+
+    if (!teamA || !teamB) {
+      throw new Error('No se encontraron los equipos del partido')
+    }
+
+    // Extraer los IDs de los líderes (supongamos que en members hay un campo role y userId)
+    // Ajusta según tu esquema
+    const leaderA = teamA.members.find(m => m.role === 'leader')?.userId
+    const leaderB = teamB.members.find(m => m.role === 'leader')?.userId
+
+    const channelName = `「🎮」partido-${match.matchIndex}`
+    const guildToUse = await client.guilds.fetch(guild.id)
+    const categoryId = categories.matches.id
+
+    // Construimos permisos:
+    // - everyone: no ver
+    // - líderes: enviar mensajes, multimedia, enlaces, reacciones, leer mensajes
+    // - miembros normales: solo ver, leer mensajes y añadir reacciones (no enviar)
+    // - roles de mod: gestionar mensajes completo
+
+    // Roles de mod desde configuración
+    const modRoleIds = channels.perms
+
+    // Para miembros normales, todos los miembros de ambos equipos menos los líderes
+    const normalMembersA = teamA.members
+      .filter(m => m.role !== 'leader')
+      .map(m => m.userId)
+
+    const normalMembersB = teamB.members
+      .filter(m => m.role !== 'leader')
+      .map(m => m.userId)
+
+    // Define los permisos para líderes (permisos más amplios)
+    const leaderPermissions = [
+      PermissionsBitField.Flags.ViewChannel,
+      PermissionsBitField.Flags.SendMessages,
+      PermissionsBitField.Flags.SendMessagesInThreads,
+      PermissionsBitField.Flags.EmbedLinks,
+      PermissionsBitField.Flags.AttachFiles,
+      PermissionsBitField.Flags.ReadMessageHistory,
+      PermissionsBitField.Flags.AddReactions,
+      PermissionsBitField.Flags.UseExternalEmojis,
+      PermissionsBitField.Flags.UseExternalStickers,
+      PermissionsBitField.Flags.Connect,
+      PermissionsBitField.Flags.Speak,
+      PermissionsBitField.Flags.Stream,
+      PermissionsBitField.Flags.UseApplicationCommands,
+      PermissionsBitField.Flags.MentionEveryone
+    ]
+
+    // Permisos para miembros normales (solo ver, leer, añadir reacciones)
+    const normalPermissions = [
+      PermissionsBitField.Flags.ViewChannel,
+      PermissionsBitField.Flags.ReadMessageHistory,
+      PermissionsBitField.Flags.AddReactions,
+      PermissionsBitField.Flags.UseExternalEmojis,
+      PermissionsBitField.Flags.UseExternalStickers
+    ]
+
+    // Permisos para moderadores
+    const modPermissions = [
+      PermissionsBitField.Flags.ViewChannel,
+      PermissionsBitField.Flags.ManageMessages,
+      PermissionsBitField.Flags.MentionEveryone,
+      PermissionsBitField.Flags.ManageChannels,
+      PermissionsBitField.Flags.ReadMessageHistory
+    ]
+
+    // Construimos los permissionOverwrites
+    const permissionOverwrites = [
+      {
+        id: guildToUse.roles.everyone.id,
+        deny: [PermissionsBitField.Flags.ViewChannel]
+      },
+      // Líderes de equipo (permisos completos para interactuar)
+      ...(leaderA ? [{
+        id: leaderA,
+        allow: leaderPermissions
+      }] : []),
+      ...(leaderB && leaderB !== leaderA ? [{
+        id: leaderB,
+        allow: leaderPermissions
+      }] : []),
+
+      // Miembros normales (sin enviar mensajes)
+      ...normalMembersA.map(userId => ({
+        id: userId,
+        allow: normalPermissions,
+        deny: [PermissionsBitField.Flags.SendMessages]
+      })),
+      ...normalMembersB.map(userId => ({
+        id: userId,
+        allow: normalPermissions,
+        deny: [PermissionsBitField.Flags.SendMessages]
+      })),
+
+      // Roles de moderación (permisos elevados)
+      ...modRoleIds.map(roleId => ({
+        id: roleId,
+        allow: modPermissions
+      }))
+    ]
+
+    const channel = await guildToUse.channels.create({
+      name: channelName,
+      type: ChannelType.GuildText,
+      parent: categoryId,
+      permissionOverwrites
+    })
+
+    match.channelId = channel.id
+    await match.save()
+
+    await channel.send(`📢 ¡Bienvenidos al partido entre **${teamA.name}** y **${teamB.name}**! Ronda ${match.roundIndex + 1}. ¡Buena suerte!`)
+
+    return match
+  } catch (error) {
+    console.error('Error al crear canal del partido:', error)
+    throw error
+  }
+}
 
 /**
  * Crea una instancia de partido (Match) sin guardarla.
@@ -19,28 +152,43 @@ const { defaultStartDay, defaultStartHour } = match
  * @param {ObjectId} teamBId - ID del equipo B
  * @returns {Match} Instancia de partido (sin guardar)
  */
-const createMatchInstance = async ({ seasonId, divisionId, roundIndex, teamAId, teamBId  }) => {
-  const lastIndex = await Match.countDocuments()
-  const matchIndex = lastIndex + 1
-  
-  const match = new Match({
-    matchIndex,
-    seasonId,
-    divisionId,
-    roundIndex,
-    teamAId,
-    teamBId,
-    scoreA: 0,
-    scoreB: 0,
-    scheduledAt: getNextDayAndHour(defaultStartDay, defaultStartHour),
-    status: 'scheduled',
-    set1: { winner: null },
-    set2: { winner: null },
-    set3: { winner: null },
-    imageURL: null
-  })
+const createMatch = async ({ client, seasonId, divisionId, roundIndex, teamAId, teamBId }) => {
+  // Calcular matchIndex según los partidos existentes en la división y ronda
+  const existingMatchesCount = await Match.countDocuments()
 
-  return match
+  const matchIndex = existingMatchesCount + 1 // siguiente índice
+
+  // Crear el partido
+  let match
+  try {
+    match = await Match.create({
+      matchIndex,
+      roundIndex,
+      seasonId,
+      divisionId,
+      teamAId,
+      teamBId,
+      scoreA: 0,
+      scoreB: 0,
+      scheduledAt: getNextDayAndHour({ day: defaultStartDay, hour: defaultStartHour }),
+      status: 'scheduled',
+      set1: { winner: null },
+      set2: { winner: null },
+      set3: { winner: null },
+      imageURL: null
+    })
+
+    // Crear canal de Discord y actualizar el match con channelId
+    const updatedMatch = await createMatchChannel({ match, client })
+
+    return updatedMatch
+  } catch (error) {
+    // Si hubo error y ya se creó el match, borrarlo para no dejar basura
+    if (match && match._id) {
+      await Match.findByIdAndDelete(match._id)
+    }
+    throw error
+  }
 }
 
 const findMatchByNamesAndSeason = async ({ seasonIndex, teamAName, teamBName }) => {
@@ -128,21 +276,6 @@ const cancelMatch = async ({ seasonIndex, teamAName, teamBName, reason = 'Partid
 
   await match.save()
 
-  // Enviar DM solo si quedan equipos válidos
-  if (match.teamAId?.members) {
-    await sendTeamDM({
-      team: match.teamAId,
-      embeds: [getMatchCancelledEmbed({ match })]
-    })
-  }
-
-  if (match.teamBId?.members) {
-    await sendTeamDM({
-      team: match.teamBId,
-      embeds: [getMatchCancelledEmbed({ match })]
-    })
-  }
-
   return match
 }
 
@@ -172,7 +305,8 @@ const changeMatchScheduledAt = async ({ seasonIndex, teamAName, teamBName, day, 
 }
 
 module.exports = {
-  createMatchInstance,
+  createMatchChannel,
+  createMatch,
   findMatchByNamesAndSeason,
   getMatchInfo,
   cancelMatch,
