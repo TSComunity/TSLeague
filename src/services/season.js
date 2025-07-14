@@ -3,9 +3,9 @@ const Division = require('../Esquemas/Division.js')
 const Team = require('../Esquemas/Team.js')
 
 const { sendAnnouncement } = require('../discord/send/general.js')
-const { getSeasonCreatedEmbed, getSeasonEndedEmbed } = require('../discord/embeds/season.js')
+const { getSeasonStartedEmbed, getSeasonEndedEmbed } = require('../discord/embeds/season.js')
 
-const { round } = require('../configs/league.js')
+const { round, roles } = require('../configs/league.js')
 const { startDay, startHour } = round
 
 /**
@@ -58,7 +58,24 @@ const getLastSeason = async () => {
  * Crea una nueva temporada con todas las divisiones existentes.
  * @returns {Object} season - La temporada creada.
  */
-const createSeason = async ({ name }) => {
+const startSeason = async ({ name, client }) => {
+
+  const season = await Season.findOne({ status: 'active' })
+    .populate('divisions.divisionId')
+    .populate('divisions.teams.teamId')
+    .populate({
+      path: 'divisions.rounds.matches.matchId',
+      populate: [
+        { path: 'teamA', model: 'Team' },
+        { path: 'teamB', model: 'Team' }
+      ]
+    })
+    .populate('divisions.rounds.resting.teamId')
+
+  if (season) {
+    throw new Error('No se peude crear una temporada si ya hay una activa.')
+  }
+
   // Desactivar temporadas y divisiones activas previas
   await Season.updateMany(
     { status: 'active' }, // Condición: busca temporadas con status 'active'
@@ -112,8 +129,9 @@ const createSeason = async ({ name }) => {
   await season.save()
 
   await sendAnnouncement({
-    content: '@everyone',
-    embeds: [getSeasonCreatedEmbed({ season })]
+    client,
+    content: `<@&${roles.ping.id}>`,
+    embeds: [getSeasonStartedEmbed({ season })]
   })
 
   await addScheduledFunction({
@@ -142,7 +160,8 @@ const endSeason = async () => {
   await season.save()
 
   await sendAnnouncement({
-    content: '@everyone',
+    client,
+    content: `<@&${roles.ping.id}>`,
     embeds: [getSeasonEndedEmbed({ season })]
   })
 
@@ -153,4 +172,4 @@ const endSeason = async () => {
 
 // se podria hacer algo para pausar la temporada (mantenimiento)
 
-module.exports = { getActiveSeason, getLastSeason, createSeason, endSeason }
+module.exports = { getActiveSeason, getLastSeason, startSeason, endSeason }

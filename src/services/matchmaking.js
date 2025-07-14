@@ -1,4 +1,4 @@
-const { createMatchInstance } = require('./match.js')
+const { createMatch } = require('./match.js')
 
 /**
  * Genera los partidos para una ronda en una división, evitando repeticiones y permitiendo descansos.
@@ -14,7 +14,7 @@ const { createMatchInstance } = require('./match.js')
  * @returns {Array} newMatchesDocs - Lista de nuevos partidos generados.
  * @returns {Array} newRestingTeamsDocs - IDs de los equipos que descansan esta ronda.
  */
-const generateMatchmaking = async ({ matchesDocs, teamsDocs, seasonId, divisionId, nextRoundIndex }) => {
+const generateMatchmaking = async ({ client, matchesDocs, teamsDocs, seasonId, divisionId, nextRoundIndex }) => {
   // Evitar errores por equipos eliminados/null
   const validTeams = teamsDocs.filter(teamDoc => teamDoc && teamDoc._id)
   const validTeamsIds = validTeams.map(teamDoc => teamDoc._id)
@@ -54,7 +54,8 @@ const generateMatchmaking = async ({ matchesDocs, teamsDocs, seasonId, divisionI
       if (alreadyPlayed.has(key)) continue // evitar duplicados
 
       // Emparejamiento válido
-      const matchInstance = await createMatchInstance({
+      const createdMatch = await createMatch({
+        client,
         seasonId, // El ID de la temporada
         divisionId, // El ID de la división
         roundIndex: nextRoundIndex, // El índice de la ronda
@@ -62,7 +63,7 @@ const generateMatchmaking = async ({ matchesDocs, teamsDocs, seasonId, divisionI
         teamBId // El ID del segundo equipo
       })
 
-      newMatchesDocs.push(matchInstance)
+      newMatchesDocs.push(createdMatch)
       usedThisRound.add(teamAId)
       usedThisRound.add(teamBId)
       alreadyPlayed.add(key)

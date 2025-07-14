@@ -12,7 +12,7 @@ const Team = require('../../Esquemas/Team.js')
 const config = require('../../configs/league.js')
 const maxTeams = config.division.maxTeams
 
-const updateTeamsEmbed = async () => {
+const updateTeamsEmbed = async ({ client }) => {
     const channel = await client.channels.fetch('ID_DEL_CANAL_CLASIFICACIONES')
     if (!channel || !channel.isTextBased()) throw new Error('Canal no encontrado o no es de texto.')
 

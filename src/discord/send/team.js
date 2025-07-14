@@ -1,5 +1,3 @@
-const client = require('../../index.js')
-
 /**
  * Envía un mensaje a un equipo filtrando por rol.
  * @param {Object} team - Equipo al que enviar mensaje.
@@ -9,7 +7,7 @@ const client = require('../../index.js')
  * @param {Array} embeds - Embeds ha enviar.
  * @param {Array} components - Componentes ha enviar.
  */
-const sendTeamDM = async ({ team, rol = 'jugador', content = '', files = [], embeds = [], components = [] }) => {
+const sendTeamDM = async ({ client, team, rol = 'jugador', content = '', files = [], embeds = [], components = [] }) => {
   if (!team?.members || team.members.length === 0) throw new Error('El equipo no tiene jugadores')
 
   const members = (() => {

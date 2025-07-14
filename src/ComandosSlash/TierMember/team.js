@@ -11,7 +11,7 @@ const {
 
 } = require('../../services/team.js')
 
-const { getErrorEmbed } = require('../../discord/embeds/management.js')
+const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 
 const { config } = require('../../configs/league.js')
 const ROLES_WITH_PERMS = config.commands.perms
@@ -74,10 +74,11 @@ module.exports = {
       sub
         .setName('expulsar-miembro')
         .setDescription('Expulsa a un miembro del equipo')
-        .addStringOption(opt =>
-          opt.setName('nombre_equipo').setDescription('Nombre del equipo').setRequired(true))
-        .addStringOption(opt =>
-          opt.setName('id-usuario').setDescription('ID de Discord del usuario').setRequired(true))
+        .addUserOption(opt =>
+          opt.setName('usuario')
+            .setDescription('El usuario')
+            .setRequired(true)
+        )
     )
 
     // /equipo cambiar-rol-miembro
@@ -85,10 +86,11 @@ module.exports = {
       sub
         .setName('cambiar-rol-miembro')
         .setDescription('Cambia el rol de un miembro del equipo')
-        .addStringOption(opt =>
-          opt.setName('nombre-equipo').setDescription('Nombre del equipo').setRequired(true))
-        .addStringOption(opt =>
-          opt.setName('id-usuario').setDescription('ID de Discord del usuario').setRequired(true))
+        .addUserOption(opt =>
+          opt.setName('usuario')
+            .setDescription('El usuario')
+            .setRequired(true)
+        )
         .addStringOption(opt =>
           opt.setName('nuevo-rol').setDescription('Nuevo rol').setRequired(true)
             .addChoices(
@@ -126,7 +128,9 @@ module.exports = {
         const color = interaction.options.getString('color')
         const presidentDiscordId = interaction.user.id
         const team = await createTeam({ name, iconURL, color, presidentDiscordId })
-        await interaction.reply(`Equipo **${team.name}** creado.`)
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** creado.` })]
+        })
 
       } else if (sub === 'actualizar') {
         const oldName = interaction.options.getString('nombre')
@@ -135,39 +139,49 @@ module.exports = {
         const iconURL = iconAttachment.url
         const color = interaction.options.getString('nuevo_color')
         const team = await updateTeam({ oldName, newName, iconURL, color })
-        await interaction.reply(`Equipo **${oldName}** actualizado.`)
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message:`Equipo **${oldName}** actualizado.` })]
+        })
 
       } else if (sub === 'añadir-division') {
         const teamName = interaction.options.getString('nombre-equipo')
         const divisionName = interaction.options.getString('nombre-division')
         const team = await addTeamToDivision({ teamName, divisionName })
-        await interaction.reply(`Equipo **${team.name}** añadido a la división **${team.divisionId.name}**.`)
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** añadido a la división **${team.divisionId.name}**.` })]
+        })
 
       } else if (sub === 'eliminar-division') {
         const teamName = interaction.options.getString('nombre-equipo')
         const team = await removeTeamFromDivision({ teamName })
-        await interaction.reply(`Equipo **${team.name}** eliminado de su división.`)
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** eliminado de su división.` })]
+        })
 
       } else if (sub === 'expulsar-miembro') {
-        const teamName = interaction.options.getString('nombre-equipo')
-        const discordId = interaction.options.getString('id-usuario')
-        const team = await removeMemberFromTeam({ teamName, discordId })
-        await interaction.reply(`Miembro <@${discordId}> expulsado de **${team.name}**.`)
+        const user = interaction.options.getUser('usuario')
+        const discordId = user.id
+        const team = await removeMemberFromTeam({ discordId })
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message:`Miembro <@${discordId}> expulsado de **${team.name}**.` })]
+        })
 
       } else if (sub === 'cambiar-rol-miembro') {
-        const teamName = interaction.options.getString('nombre-equipo')
-        const discordId = interaction.options.getString('id-usuario')
+        const user = interaction.options.getUser('usuario')
+        const discordId = user.id
         const newRole = interaction.options.getString('nuevo-rol')
-        const team = await changeMemberRole({ teamName, discordId, newRole })
-        await interaction.reply(`Rol del usuario <@${discordId}> actualizado en **${team.name}** a ${newRol}.`)
+        const team = await changeMemberRole({ discordId, newRole })
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message:`Rol del usuario <@${discordId}> actualizado en **${team.name}** a ${newRol}.` })]
+        })
 
       } else if (sub === 'regenerar_codigo') {
         const teamName = interaction.options.getString('nombre-equipo')
         const team = await updateTeamCode({ teamName })
         await team.save()
         await interaction.reply({
-            content: `Nuevo código generado para el equipo **${team.name}**: \`${team.code}\``,
-            ephemeral: true
+          embeds: [getSuccesEmbed({ message:`Nuevo código generado para el equipo **${team.name}**: \`${team.code}\`` })],
+          ephemeral: true
         })
       }
 

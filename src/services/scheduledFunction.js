@@ -2,10 +2,8 @@ const ScheduledFunction = require('../Esquemas/ScheduledFunction.js')
 
 const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
 
-const { addRound } = require('./round')
-
 const functionMap = {
-  addRound: async () => { await addRound() }
+  addRound: require('./round.js').addRound,
   // otras funciones programadas
 }
 
@@ -22,7 +20,7 @@ const addScheduledFunction = async ({
     day,
     hour
 }) => {
-    if (!functionName || day || hour) throw new Error('Faltan datos: functionName, day o hour.')
+    if (!functionName || day === undefined || hour === undefined) throw new Error('Faltan datos: functionName, day o hour.')
 
     const scheduledFor = getNextDayAndHour({ day, hour })
     const scheduledFunction = new ScheduledFunction({
@@ -39,7 +37,7 @@ const addScheduledFunction = async ({
  * ejecuta la función correspondiente y elimina el registro de la base de datos.
  * ¡No necesita parámetros!
  */
-const executeDueScheduledFunctions = async () => {
+const executeDueScheduledFunctions = async ({ client }) => {
   const now = new Date()
   const dueFunctions = await ScheduledFunction.find({ scheduledFor: { $lte: now } })
 
@@ -47,7 +45,7 @@ const executeDueScheduledFunctions = async () => {
     const fn = functionMap[job.functionName]
     if (typeof fn === 'function') {
       try {
-        await Promise.resolve(fn(job.parameters))
+        await Promise.resolve(fn({ ...job.parameters, client }))
       } catch (err) {
         console.error(`Error ejecutando función programada "${job.functionName}":`, err)
       }

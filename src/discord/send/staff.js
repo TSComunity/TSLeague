@@ -9,7 +9,7 @@ const { logs } = channels
  * @param {Client} options.client - Instancia de Discord.js
  */
 
-const sendLog = async ({ content = '', files = [], embeds = [], components = [], client }) => {
+const sendLog = async ({ client, content = '', files = [], embeds = [], components = [], client }) => {
   const channel = await client.channels.fetch(logs.id)
 
   if (!channel) throw new Error('No se ha encontrado el canal')

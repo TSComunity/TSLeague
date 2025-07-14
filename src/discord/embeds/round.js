@@ -1,26 +1,66 @@
 const { EmbedBuilder } = require('discord.js')
 
-const getRoundAddedEmbed = ({ divisionsWithNewRounds, seasonIndex, nextRoundIndex }) => {
+const getRoundAddedEmbed = ({ divisionsWithNewRounds, seasonIndex, seasonName, nextRoundIndex }) => {
+
+  let matchesLength = 0
+  let restingLength = 0
+  for (const division of divisionWithNewRounds) {
+    matchesLength += division.newMatchesDocs.length
+    restingLength += division.newRestingTeamsDocs.length
+  }
+
+  return (
+      new EmbedBuilder()
+          .setColor('Purple')
+          .setDescription(`## Nueva Jornada - Temporada ${name}`)
+          .addFields(
+              { name: 'Indice', value: `👆 \`${seasonIndex}\``, inline: true },
+              { name: 'Estado', value: `\`📅 En curso\``, inline: true },
+              { name: 'Ronda', value: `🖇️ \`${nextRoundIndex}\``, inline: true },
+              { name: 'Divisiones', value: `🧩 \`${divisions.length}\``, inline: true },
+              { name: 'Nuevos partidos', value: `👥 \`${matchesLength}\``, inline: true },
+              { name: 'Nuevos descansos', value: `🎯 \`${restingLength}\``, inline: true }
+          )
+  )
+}
+
+const getRoundDivisionAddedEmbed = ({ division, seasonIndex, seasonName, nextRoundIndex }) => {
+  const { divisionDoc, newMatchesDocs, newRestingTeamsDocs }
+
+  const divisionName = divisionDoc.name || 'División sin nombre'
+
   const embed = new EmbedBuilder()
     .setColor('Blue')
-    .setTitle(`🌀 Ronda ${nextRoundIndex} añadida`)
-    .setDescription(`Se ha añadido la ronda ${nextRoundIndex} a la temporada ${seasonIndex}.\n\n` +
-                    'Aquí tienes los detalles por división:')
+    .setDescription(`### Nuevos Partidos - Division ${divisionName}`)
 
-  for (const { divisionDoc, newMatchesDocs, newRestingTeamsDocs } of divisionsWithNewRounds) {
-    const divisionName = divisionDoc.name || 'División sin nombre'
-    const restingNames = newRestingTeamsDocs.map(t => t.name).join(', ') || 'Ninguno'
-    const matchCount = newMatchesDocs.length
+  for (const match of newMatchesDocs) {
+    const teamAName = match.teamAId.name || 'Sin nombre'
+    const teamBName = match.teamBId.name || 'Sin nombre'
+    const channel = `<#${match.channelId}>` || 'Sin canal'
+    const timestampText = (() => {
+      if (match.scheduledAt) {
+        const unix = Math.floor(match.scheduledAt.getTime() / 1000)
+        return `<t:${unix}:R>` // formato relativo de Discord
+      }
+      return 'Sin fecha'
+    })()
 
-    embed.addFields({
-      name: `🏆 ${divisionName}`,
-      value: `📅 Partidos: ${matchCount}\n🛋️ Descansan: ${restingNames}`,
-    })
+
+
+    embed.addFields(
+      { name: `🆚 ${teamAName} vs ${teamBName}`, value: `💬 Canal: ${channel}\n🕛 Horario: ${timestamptText}`, inline: true}
+    )
+  }
+
+  for (const restingTeam of newRestingTeamsDocs) {
+    const teamName = restingTeam.name || 'Sin nombre'
+
+    embed.addFields(
+      { name: `💤 ${teamName}`, value: '💤 Descansa esta jornada', inline: true}
+    )
   }
 
   return embed
 }
 
-module.exports = { getRoundAddedEmbed }
-
-// verificar esto, porrito, q le pase toda la season o q ostise
+module.exports = { getRoundAddedEmbed, getRoundDivisionAddedEmbed }

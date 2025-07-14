@@ -8,8 +8,7 @@ const { loadPrefix } = require('./Handlers/handlerComandosPrefix.js')
 
 const { createChampionsGroupsImage } = require('./utils/crearCanva.js')
 
-require('dotenv').config()
-const TOKEN = process.env.TOKEN
+const { TOKEN } = require('./configs/configs.js')
 
 const wait = require('node:timers/promises').setTimeout
 
@@ -68,11 +67,13 @@ const { updateRankingsEmbed } = require('./discord/update/season.js')
 const { updateTeamsEmbed } = require('./discord/update/teams.js')
 const { updateAllTeamsEligibility, deleteAllEmptyTeams } = require('./services/team.js')
 const { executeDueScheduledFunctions } = require('./services/scheduledFunction.js')
+const { updateUsersPingRole } = require('./services/user.js')
 
 setInterval(() => {
-  updateRankingsEmbed().catch(error => console.error(error))
-  updateTeamsEmbed().catch(error => console.error(error))
+  updateRankingsEmbed({ client }).catch(error => console.error(error))
+  updateTeamsEmbed({ client }).catch(error => console.error(error))
   updateAllTeamsEligibility().catch(error => console.error(error))
   deleteAllEmptyTeams().catch(error => console.error(error))
-  executeDueScheduledFunctions().catch(error => console.error(error))
+  executeDueScheduledFunctions({ client }).catch(error => console.error(error))
+  updateUsersPingRole({ client }).catch(error => console.error(error))
 }, 1000 * 60 * 10)

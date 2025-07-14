@@ -2,16 +2,17 @@ const Season = require('../Esquemas/Season.js')
 const Match = require('../Esquemas/Match.js')
 const Team = require('../Esquemas/Team.js')
 
+const { createMatchChannel } = require('./match.js')
 const { generateMatchmaking } = require('./matchmaking.js')
 const { generateRandomSets } = require('./sets.js')
 const { getActiveSeason, endSeason } = require('./season.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
 
 const { sendAnnouncement } = require('../discord/send/general.js')
-const { getRoundAddedEmbed } = require('../discord/embeds/round.js')
+const { getRoundAddedEmbed, getRoundDivisionAddedEmbed } = require('../discord/embeds/round.js')
 const { getDivisionEndedEmbed } = require('../discord/embeds/division.js')
 
-const { season, round } = require('../configs/league.js')
+const { season, round, roles } = require('../configs/league.js')
 const { maxRounds } = season
 const { startDay, startHour } = round
 
@@ -31,7 +32,7 @@ const getCurrentRoundNumber = ({ season }) => {
  * @param {ObjectId} seasonId - ID de la temporada activa
  * @returns {Promise<Object>} Objeto con información sobre si se generó ronda o se terminó la división
  */
-const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
+const processDivision = async ({ division, seasonId, isSeasonEnding, client }) => {
   const { divisionId: divisionDoc, status, teams, rounds } = division
 
   // La termporadas ya esta terminada
@@ -43,9 +44,10 @@ const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
     division.status = 'ended'
 
     if (!isSeasonEnding) {
+      client,
       // Se envia cuando se llega al limite de rondas en una division pero no en todas
       await sendAnnouncement({
-        content: '@everyone',
+        content: `<@&${roles.ping.id}>`,
         embeds: [getDivisionEndedEmbed({ division })]
       })
     }
@@ -59,12 +61,13 @@ const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
     round.matches.map((match) => match.matchId)
   )
 
-  const teamsDocs = teams.map((team) => team.teamId)
+  const teamsDocs = teams
 
   const indices = division.rounds.map(r => r.roundIndex || 0)
   const nextRoundIndex = (indices.length ? Math.max(...indices) : 0) + 1
 
   const { newMatchesDocs, newRestingTeamsDocs } = await generateMatchmaking({
+    client,
     matchesDocs,
     teamsDocs,
     seasonId,
@@ -77,18 +80,17 @@ const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
     division.status = 'ended'
 
     if (!isSeasonEnding) {
+      client,
       // Se envia cuando termina esta division pero no todas
       await sendAnnouncement({
-        content: '@everyone',
-        embeds: [getSeasonDivisionEndedEmbed({ division })]
+        content: `<@&${roles.ping.id}>`,
+        embeds: [getDivisionEndedEmbed({ division })]
       })
     }
 
     return { ended: true, divisionDoc }
   }
 
-  // Insertar nuevos partidos y sets aleatorios
-  const savedMatches = await Match.insertMany(newMatchesDocs)
   const { set1, set2, set3 } = await generateRandomSets()
 
   // Crear y añadir nueva ronda a la división
@@ -118,10 +120,11 @@ const processDivision = async ({ division, seasonId, isSeasonEnding }) => {
  * También envía anuncios según lo que ocurra.
  * @returns {Promise<Object>} Documento actualizado de la temporada
  */
-const addRound = async () => {
+const addRound = async ({ client }) => {
   const season = await getActiveSeason()
   const seasonId = season._id
   const seasonIndex = season.seasonIndex
+  const seasonName = season.name
 
   const divisionsSkipped = []
   const divisionsWithNewRounds = []
@@ -131,7 +134,7 @@ const addRound = async () => {
     const activeDivisions = season.divisions.filter(d => d.status !== 'ended')
     const isSeasonEnding = activeDivisions.every(d => d.rounds.length >= maxRounds)
 
-    const result = await processDivision({ division, seasonId, isSeasonEnding })
+    const result = await processDivision({ division, seasonId, isSeasonEnding, client })
 
     if (result.ended) {
       divisionsSkipped.push({ divisionDoc: result.divisionDoc })
@@ -156,15 +159,31 @@ const addRound = async () => {
   )
 
   await sendAnnouncement({
-    content: '@everyone',
+    client,
+    content: `<@&${roles.ping.id}>`,
     embeds: [
       getRoundAddedEmbed({
         divisionsWithNewRounds,
         seasonIndex,
+        seasonName,
         nextRoundIndex: latestRoundIndex
       })
     ]
   })
+
+  for (const division of divisionWithNewRounds) {
+    await sendAnnouncement({
+      client,
+      embeds: [
+        getRoundDivisionAddedEmbed({
+          division,
+          seasonIndex,
+          seasonName,
+          nextRoundIndex: latestRoundIndex
+        })
+      ]
+    })
+  }
 
   await addScheduledFunction({
     functionName: 'addRound',

@@ -6,7 +6,7 @@ let TeamSchema = new Schema({
     color: { type: String },
     code: { type: String, required: true, unique: true },
 
-    divisionId: { type: Types.ObjectId, ref: 'Division', required: true }, // Usar ./id de la division
+    divisionId: { type: Types.ObjectId, ref: 'Division' }, // Usar ./id de la division
 
     members: [
         {

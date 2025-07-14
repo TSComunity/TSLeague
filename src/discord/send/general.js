@@ -1,5 +1,3 @@
-const client = require('../../index.js')
-
 const { channels } = require('../../configs/league.js')
 const { announcements } = channels
 
@@ -11,7 +9,7 @@ const { announcements } = channels
  * @param {Client} options.client - Instancia de Discord.js
  */
 
-const sendAnnouncement = async ({ content = '', files = [], embeds = [], components = [], client }) => {
+const sendAnnouncement = async ({ client, content = '', files = [], embeds = [], components = [], client }) => {
   const channel = await client.channels.fetch(announcements.id)
 
   if (!channel) throw new Error('No se ha encontrado el canal')

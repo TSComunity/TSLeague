@@ -2,7 +2,7 @@ const { EmbedBuilder } = require('discord.js')
 
 const { getCurrentRoundNumber } = require('../../services/round.js')
 
-const getSeasonCreatedEmbed = ({ season }) =>  {
+const getSeasonStartedEmbed = ({ season }) =>  {
     return (
         new EmbedBuilder()
             .setColor('Blue')
@@ -49,4 +49,4 @@ const getSeasonSummaryEmbed = ({ season }) => {
     )
 }
 
-module.exports = { getSeasonCreatedEmbed, getSeasonEndedEmbed, getSeasonSummaryEmbed }
+module.exports = { getSeasonStartedEmbed, getSeasonEndedEmbed, getSeasonSummaryEmbed }

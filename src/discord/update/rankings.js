@@ -1,11 +1,9 @@
-const client = require('../../index.js')
-
 const { getLastSeason } = require('../../services/season.js')
 
 const { getSeasonSummaryEmbed } = require('../embeds/season.js')
 const { getDivisionRankingEmbed } = require('../embeds/division.js')
 
-const updateRankingsEmbed = async () => {
+const updateRankingsEmbed = async ({ client }) => {
   const season = await getLastSeason()
 
   const channel = await client.channels.fetch('ID_DEL_CANAL_CLASIFICACIONES')
