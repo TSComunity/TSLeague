@@ -20,12 +20,18 @@ const checkUserVerification = async ({ discordId }) => {
 }
 
 const verifyUser = async ({ discordId, brawlId }) => {
+    if (!discordId || !brawlId) {
+        throw new Error('Faltan datos: discordId o brawlId.')
+    }
     const user = await User.findOne({ discordId })
-    if (!user) throw new Error('No se encontro el usuario.')
+    if (!user) {
+        await User.create({ discordId, brawlId: brawlId.startsWith('#') ? brawlId.toUpperCase() : `#${brawlId.toUpperCase()}`})
+        return
+    }
     
     // se puede verificar si existe llamando a la api de brawl
 
-    user.brawlId = brawlId
+    user.brawlId = brawlId.startsWith('#') ? brawlId.toUpperCase() : `#${brawlId.toUpperCase()}`
     await user.save()
     return user
 }

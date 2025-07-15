@@ -2,6 +2,7 @@ const { ActionRowBuilder } = require('discord.js')
 
 const { checkTeamUserHasPerms } = require('../../../services/team.js')
 
+const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamChangeIconModal } = require('../../../discord/modals/team.js')
 const { getTeamIconInput } = require('../../../discord/inputs/team.js')
 

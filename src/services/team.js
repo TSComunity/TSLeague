@@ -12,7 +12,7 @@ const maxTeams = config.division.maxTeams
 const maxMembers = config.team.maxMembers
 
 const findTeam = async ({ teamName = null, teamCode = null, discordId = null }) => {
-  if (!teamName || !teamCode || !discordId) {
+  if (!teamName && !teamCode && !discordId) {
     throw new Error('Faltan datos: teamName, teamCode o discordId.')
   }
   let team
@@ -33,7 +33,7 @@ const findTeam = async ({ teamName = null, teamCode = null, discordId = null }) 
 }
 
 const checkTeamUserHasPerms = async ({ discordId }) => {
-  const team = await findTeamByDiscordId({ discordId })
+  const team = await findTeam({ discordId })
 
   const member = team.members.filter(m => m.userId.discordId === discordId)
 
@@ -184,17 +184,23 @@ const createTeam = async ({ name, iconURL, presidentDiscordId, color = 'Blue' })
   }
   
   const user = await User.findOne({ discordId: presidentDiscordId })
-  if (!user) throw new Error('Usuario no encontrado.')
+  if (!user) throw new Error('El usuario no esta verificado.')
+  
+  if (user.teamId) {
+    throw new Error('El usuario ya se encuentra en un equipo.')
+  }
 
   const team = await Team.create({
     name,
     iconURL,
     color,
-    code: generateTeamCode(),
+    code: await generateTeamCode(),
     members: [{ userId: user._id, role: 'leader' }],
     isEligible: false
   })
 
+  user.teamId = team._id
+  await user.save()
   return team
 }
 
@@ -211,13 +217,17 @@ const updateTeam = async ({ teamName = null, teamCode = null, discordId = null, 
   const team = await findTeam({ teamName, teamCode, discordId })
   if (!team) throw new Error('Equipo no encontrado.')
 
-  if (newName) team.name = name
+  if (name) team.name = name
   if (iconURL) team.iconURL = iconURL
   if (color) {
-    const colorObj = colors.find(c => c.label === color)
-    const colorValue = colorObj ? colorObj.value : null
-    if (!colorValue) throw new Error('Color no válido.')
-    team.color = colorValue
+    // Elimina un emoji al principio seguido de espacios (si lo hay)
+    const normalizedColor = color.replace(/^\p{Extended_Pictographic}\s*/u, '').trim()
+
+    const colorObj = colors.find(c => c.value === normalizedColor)
+
+    if (!colorObj) throw new Error('Color no válido.')
+
+    team.color = colorObj.value // <--- usar el value, no el label
   }
 
   await team.save()
@@ -281,7 +291,7 @@ const addMemberToTeam = async ({ teamName = null, teamCode = null, discordId }) 
   }
 
   const user = await User.findOne({ discordId })
-  if (user && user.teamId) throw new Error('El usuario ya esta en un equipo.')
+  if (user && user.teamId) throw new Error('El usuario ya se encuentra en un equipo.')
   
   const team = await findTeam({ teamName, teamCode, discordId})
 
@@ -309,10 +319,10 @@ const addMemberToTeam = async ({ teamName = null, teamCode = null, discordId }) 
  * @returns {Object} equipo actualizado.
  */
 const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordId }) => {
-  const team = await findTeam({ teamName, teamcode, discordId })
+  const team = await findTeam({ teamName, teamCode, discordId })
 
   const memberToRemove = team.members.find(m => m.userId?.discordId === discordId)
-  if (!memberToRemove) throw new Error('El miembro no estaba en el equipo.')
+  if (!memberToRemove) throw new Error('El usuario no esta en el equipo.')
 
   // Si el que se va es el líder, se transfiere el rol
   if (memberToRemove.role === 'leader') {
@@ -325,9 +335,10 @@ const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordI
     } else if (otherMembers.length > 0) {
       newLeader = otherMembers[Math.floor(Math.random() * otherMembers.length)]
     } else {
-      throw new Error('No hay otros miembros para transferir el liderazgo.')
+      const deletedTeam = await team.deleteOne()
+      return deletedTeam
     }
-
+    
     newLeader.role = 'leader'
   }
 
@@ -396,6 +407,7 @@ module.exports = {
   updateTeam,
   addTeamToDivision,
   removeTeamFromDivision,
+  addMemberToTeam,
   removeMemberFromTeam,
   changeMemberRole
 }

@@ -1,6 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js')
 const {
-    generateTeamCode,
     updateTeamCode,
     createTeam,
     updateTeam,
@@ -13,6 +12,7 @@ const {
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 
+const colors = require('../../configs/colors.json')
 const { commands } = require('../../configs/league.js')
 const ROLES_WITH_PERMS = commands.perms
 
@@ -31,8 +31,11 @@ module.exports = {
         .addAttachmentOption(opt =>
             opt.setName('icono').setDescription('Ícono del equipo').setRequired(true))
         .addStringOption(opt =>
-          opt.setName('color').setDescription('Color del equipo').setRequired(true))
-    )
+          opt.setName('color').setDescription('Color del equipo').setRequired(true)
+        .addChoices(...colors.map(color => ({
+            name: `${color.emoji} ${color.label}`, // Mostramos emoji + nombre
+            value: color.value
+        })))))
 
     // /equipo actualizar
     .addSubcommand(sub =>
@@ -46,7 +49,11 @@ module.exports = {
         .addAttachmentOption(opt =>
             opt.setName('nuevo_icono').setDescription('Ícono del equipo').setRequired(false))
         .addStringOption(opt =>
-          opt.setName('nuevo_color').setDescription('Nuevo color').setRequired(false))
+          opt.setName('nuevo_color').setDescription('Nuevo color').setRequired(false)
+                  .addChoices(...colors.map(color => ({
+            name: `${color.emoji} ${color.label}`, // Mostramos emoji + nombre
+            value: color.value
+        }))))
     )
 
     // /equipo añadir-division
@@ -66,7 +73,7 @@ module.exports = {
         .setName('eliminar-division')
         .setDescription('Elimina un equipo de su división')
         .addStringOption(opt =>
-          opt.setName('nombre_equipo').setDescription('Nombre del equipo').setRequired(true))
+          opt.setName('nombre-equipo').setDescription('Nombre del equipo').setRequired(true))
     )
 
     // /equipo expulsar-miembro
@@ -112,10 +119,10 @@ module.exports = {
   async execute(interaction) {
 
     const member = interaction.member
-    const hasPerms = member.roles.cache.some(role => ROLES_WITH_PERMS.includes(role.name))
+    const hasPerms = member.roles.cache.some(role => ROLES_WITH_PERMS.includes(role.id))
 
     if (!hasPerms) {
-        return await interaction.reply({ embeds: [getErrorEmbed({ error: 'No tienes permiso para usar este comando.' })]})
+        return await interaction.reply({ embeds: [getErrorEmbed({ error: 'No tienes permisos para utilizar este comando.' })]})
     }
 
     const sub = interaction.options.getSubcommand()
@@ -133,14 +140,14 @@ module.exports = {
         })
 
       } else if (sub === 'actualizar') {
-        const oldName = interaction.options.getString('nombre')
-        const newName = interaction.options.getString('nuevo_nombre')
+        const teamName = interaction.options.getString('nombre')
+        const name = interaction.options.getString('nuevo_nombre')
         const iconAttachment = interaction.options.getAttachment('nuevo_icono')
-        const iconURL = iconAttachment.url
+        const iconURL = iconAttachment?.url
         const color = interaction.options.getString('nuevo_color')
-        const team = await updateTeam({ oldName, newName, iconURL, color })
+        const team = await updateTeam({ teamName, name, iconURL, color })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message:`Equipo **${oldName}** actualizado.` })]
+          embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** actualizado.` })]
         })
 
       } else if (sub === 'añadir-division') {

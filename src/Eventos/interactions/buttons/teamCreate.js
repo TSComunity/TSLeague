@@ -2,6 +2,7 @@ const { ActionRowBuilder } = require('discord.js')
 
 const { checkUserVerification } = require('../../../services/user.js')
 
+const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getUserVerifyModal } = require('../../../discord/modals/user.js')
 const { getUserBrawlIdInput } = require('../../../discord/inputs/user.js')
 

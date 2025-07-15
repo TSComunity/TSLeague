@@ -16,45 +16,26 @@ module.exports = {
   args: false,
   run: async (message, client, args) => {
     const textoReglas = `
-## 📘 Reglas de la Liga
-### 📝 Registro
-- Todos los equipos deben registrarse antes de la fecha límite.
-- Se debe proporcionar un **nombre de equipo** y la lista de jugadores.
-### 👥 Tamaño del equipo
-- Los equipos deben tener entre **3 y 5 jugadores**.
-### 🗺️ Mapas
-- Los mapas de cada ronda serán **anunciados con anticipación**.
-- **No se permiten cambios** de mapa durante el torneo.
-### ⚖️ Fair Play
-- Está **prohibido** hacer team con otros equipos, provocar, insultar o sabotear.
-### 🚫 Trampas
-- **Cualquier uso de hacks o trampas** resultará en la **expulsión del jugador y su equipo**.
-### ⏱️ Tiempo límite
-- Si un equipo no se presenta **10 minutos después de la hora programada**, se considerará **derrota por incomparecencia**.
-### 👨‍⚖️ Árbitros
-- Las decisiones del **organizador o árbitro son finales** en caso de disputas o empates.
-### 🏆 Premiación y conducta
-- Los **premios se entregarán al final** del torneo.
-- Se exige una **actitud respetuosa antes, durante y después** de cada partida.
+pepe haz esto (estoy probando si funcionan los botones)
 `;
 
     const text = new TextDisplayBuilder().setContent(textoReglas);
     const separator = new SeparatorBuilder();
 
     const crearTeam = new ButtonBuilder()
-      .setCustomId('inscribir')
+      .setCustomId('teamCreate')
       .setLabel('Crear Equipo')
-      .setEmoji('1374648332974297098')
+      .setEmoji('📋')
       .setStyle(ButtonStyle.Secondary);
 
     const verTeam = new ButtonBuilder()
-      .setCustomId('equipo')
+      .setCustomId('teamSee')
       .setLabel('Ver Equipo')
       .setEmoji('📋')
       .setStyle(ButtonStyle.Secondary);
     
     const unirseTeam = new ButtonBuilder()
-      .setCustomId('unirse')
+      .setCustomId('teamJoin')
       .setLabel('Unirte a un Equipo')
       .setEmoji('👥')
       .setStyle(ButtonStyle.Success)

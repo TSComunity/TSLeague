@@ -129,10 +129,10 @@ module.exports = {
   async execute(interaction) {
 
     const member = interaction.member
-    const hasPerms = member.roles.cache.some(role => ROLES_WITH_PERMS.includes(role.name))
+    const hasPerms = member.roles.cache.some(role => ROLES_WITH_PERMS.includes(role.id))
 
     if (!hasPerms) {
-        return await interaction.reply({ embeds: [getErrorEmbed({ error: 'No tienes permiso para usar este comando.' })]})
+        return await interaction.reply({ embeds: [getErrorEmbed({ error: 'No tienes permisos para utilizar este comando.' })]})
     }
 
     const sub = interaction.options.getSubcommand()
