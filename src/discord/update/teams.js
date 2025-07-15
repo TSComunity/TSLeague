@@ -13,10 +13,10 @@ const config = require('../../configs/league.js')
 const maxTeams = config.division.maxTeams
 
 const updateTeamsEmbed = async ({ client }) => {
-    const channel = await client.channels.fetch('ID_DEL_CANAL_CLASIFICACIONES')
+    const channel = await client.channels.fetch('1375108833558397053')
     if (!channel || !channel.isTextBased()) throw new Error('Canal no encontrado o no es de texto.')
 
-    const message = await channel.messages.fetch('ID_MENSAJE_1')
+    const message = await channel.messages.fetch('1394721797609492560')
     if (!message) throw new Error('Mensaje no encontrado.')
 
     const divisions = await Division.find().sort({ tier: 1 }).exec()
