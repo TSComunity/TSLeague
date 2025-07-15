@@ -1,11 +1,6 @@
-const Season = require('../Esquemas/Season.js')
-const Match = require('../Esquemas/Match.js')
-const Team = require('../Esquemas/Team.js')
-
-const { createMatchChannel } = require('./match.js')
+const { getActiveSeason, endSeason } = require('./season.js')
 const { generateMatchmaking } = require('./matchmaking.js')
 const { generateRandomSets } = require('./sets.js')
-const { getActiveSeason, endSeason } = require('./season.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
 
 const { sendAnnouncement } = require('../discord/send/general.js')
@@ -66,7 +61,7 @@ const processDivision = async ({ division, seasonId, isSeasonEnding, client }) =
   const indices = division.rounds.map(r => r.roundIndex || 0)
   const nextRoundIndex = (indices.length ? Math.max(...indices) : 0) + 1
 
-  const { newMatchesDocs, newRestingTeamsDocs } = await generateMatchmaking({
+  const { newMatchesDocs, newRestingTeamsDocs } = generateMatchmaking({
     client,
     matchesDocs,
     teamsDocs,
@@ -121,6 +116,7 @@ const processDivision = async ({ division, seasonId, isSeasonEnding, client }) =
  * @returns {Promise<Object>} Documento actualizado de la temporada
  */
 const addRound = async ({ client }) => {
+
   const season = await getActiveSeason()
   const seasonId = season._id
   const seasonIndex = season.seasonIndex

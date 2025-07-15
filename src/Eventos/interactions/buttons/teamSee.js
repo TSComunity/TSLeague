@@ -1,9 +1,9 @@
 const { ActionRowBuilder } = require('discord.js')
 
-const { findTeam, checkTeamUserHasPerms } = require('../../services/team.js')
+const { findTeam, checkTeamUserHasPerms } = require('../../../services/team.js')
 
-const { getTeamInfoEmbed } = require('../../discord/embeds/team.js')
-const { getErrorEmbed } = require('../../discord/embeds/management.js')
+const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
+const { getErrorEmbed } = require('../../../discord/embeds/management.js')
 
 const {
     getTeamLeftButton,
@@ -12,7 +12,7 @@ const {
     getTeamChangeColorButton,
     getTeamManageMembersButton,
     getTeamReGenerateCodeButton
-} = require('../../discord/buttons/team.js')
+} = require('../../../discord/buttons/team.js')
 
 module.exports = {
   customId: 'teamSee',

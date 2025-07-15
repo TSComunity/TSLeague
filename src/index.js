@@ -23,8 +23,21 @@ process.on('uncaughtExceptionMonitor', (err, origin) => {
 })
 
 const client = new Client({
-  intents: [Object.keys(GatewayIntentBits)],
-  partials: [Object.keys(Partials)],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent, // Importante para leer mensajes si usas comandos de prefijo
+    GatewayIntentBits.GuildMembers, // Necesario para roles y miembros
+    // Añade cualquier otro intent que necesites para tu bot
+  ],
+  partials: [
+    Partials.Message,
+    Partials.Channel,
+    Partials.Reaction,
+    Partials.User,
+    Partials.GuildMember,
+    // Añade cualquier otro partial que necesites
+  ],
   allowedMentions: {
       parse: ["users"]
     },
@@ -42,28 +55,9 @@ client.login(TOKEN).then(() => {
 
 module.exports = client
 
-client.on('messageCreate', async (message) => {
-    // Ignorar mensajes del propio bot
-    if (message.author.bot) return;
-    if (message.content === '!grupos') {
-        try {
-            // Llama a la función para crear la imagen
-            const buffer = await createChampionsGroupsImage();
-            // Crea un AttachmentBuilder con el buffer de la imagen
-            const attachment = new AttachmentBuilder(buffer, { name: 'grupos_champions.png' });
-            // Envía la imagen al canal
-            message.channel.send({ files: [attachment] });
-        } catch (error) {
-            console.error('Error al generar o enviar la imagen de grupos:', error);
-            message.channel.send('Hubo un error al generar los grupos. Inténtalo de nuevo más tarde.');
-        }
-    }
-})
-
-
 // Logica de la liga
 
-const { updateRankingsEmbed } = require('./discord/update/season.js')
+const { updateRankingsEmbed } = require('./discord/update/rankings.js')
 const { updateTeamsEmbed } = require('./discord/update/teams.js')
 const { updateAllTeamsEligibility, deleteAllEmptyTeams } = require('./services/team.js')
 const { executeDueScheduledFunctions } = require('./services/scheduledFunction.js')

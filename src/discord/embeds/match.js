@@ -35,7 +35,7 @@ const getMatchCancelledEmbed = ({ match }) => {
 }
 
 const getMatchInfoEmbed = ({ match }) => {
-    const { teamAId, teamBId, matchIndex, scoreA, scoreB, scheduledAt, status, set1, set2, set3 }
+    const { teamAId, teamBId, matchIndex, scoreA, scoreB, scheduledAt, status, set1, set2, set3 } = match
 
     const miliseconds = scheduledAt.getTime()
 
@@ -50,13 +50,15 @@ const getMatchInfoEmbed = ({ match }) => {
     const set3ModeName = set3 ? getModeOrMapName(set3.modeId, 'mode') : 'N/A';
     const set3MapName = set3 ? getModeOrMapName(set3.mapId, 'map') : 'N/A';
 
+    let color
+
+    if (status === 'scheduled') color = 'Yellow'
+    else if (status === 'cancelled') color = 'Red'
+    else if (status === 'ended') color = 'Green'
+    else color = 'Blue';
     return (
         new EmbedBuilder()
-            .setColor(() => {
-                if (status === 'scheduled') return 'Yellow'
-                if (status === 'cancelled') return 'Red'
-                if (status === 'ended') return 'Green'
-            }())
+            .setColor(color)
             .setDescription(`## ${match.teamAId.name} vs ${match.teamBId.name}`)
             .addFields(
                 { name: 'Indice', value: `\`${matchIndex}\``, inline: true },

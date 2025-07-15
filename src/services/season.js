@@ -2,6 +2,8 @@ const Season = require('../Esquemas/Season.js')
 const Division = require('../Esquemas/Division.js')
 const Team = require('../Esquemas/Team.js')
 
+const { addScheduledFunction } = require('./scheduledFunction.js')
+
 const { sendAnnouncement } = require('../discord/send/general.js')
 const { getSeasonStartedEmbed, getSeasonEndedEmbed } = require('../discord/embeds/season.js')
 
@@ -60,7 +62,7 @@ const getLastSeason = async () => {
  */
 const startSeason = async ({ name, client }) => {
 
-  const season = await Season.findOne({ status: 'active' })
+  const checkedSeason = await Season.findOne({ status: 'active' })
     .populate('divisions.divisionId')
     .populate('divisions.teams.teamId')
     .populate({
@@ -72,7 +74,7 @@ const startSeason = async ({ name, client }) => {
     })
     .populate('divisions.rounds.resting.teamId')
 
-  if (season) {
+  if (checkedSeason) {
     throw new Error('No se peude crear una temporada si ya hay una activa.')
   }
 

@@ -4,7 +4,7 @@ const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/manageme
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('división')
+    .setName('division')
     .setDescription('Gestiona las divisiones')
     .addSubcommand(sub =>
       sub
@@ -67,7 +67,7 @@ module.exports = {
 
       else if (subcomand === 'eliminar') {
         const name = interaction.options.getString('nombre')
-        const división = await deleteDivision({ name: nombre })
+        const división = await deleteDivision({ name })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `División eliminada: **${división.name}**` })]
         })

@@ -13,8 +13,9 @@ module.exports = {
   customId: 'teamJoin',
 
   async execute(interaction) {
+    try {
 
-        const isVerified = await checkUserVerification()
+        const isVerified = checkUserVerification()
 
         if (!isVerified) {
             const modal = getUserVerifyModal()
@@ -28,7 +29,7 @@ module.exports = {
         const modal = getTeamJoinModal()
 
         const modalRow = new ActionRowBuilder().addComponents(
-                getTeamCodeInputUI
+                getTeamCodeInput()
             )
 
         modal.addComponents(modalRow)

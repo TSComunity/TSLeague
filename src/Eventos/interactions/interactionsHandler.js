@@ -7,7 +7,7 @@ const modalHandlers = [];
 const menusHandlers = [];
 
 // Cargar botones
-const buttonFiles = fs.readdirSync('./buttons');
+const buttonFiles = fs.readdirSync(__dirname + '/buttons');
 for (const file of buttonFiles) {
   const button = require(`./buttons/${file}`);
   buttonHandlers.push({
@@ -17,7 +17,7 @@ for (const file of buttonFiles) {
 }
 
 // Cargar modales
-const modalFiles = fs.readdirSync('./modals');
+const modalFiles = fs.readdirSync(__dirname + '/modals');
 for (const file of modalFiles) {
   const modal = require(`./modals/${file}`);
   modalHandlers.push({
@@ -27,7 +27,7 @@ for (const file of modalFiles) {
 }
 
 // Cargar select menus
-const selectFiles = fs.readdirSync('./menus');
+const selectFiles = fs.readdirSync(__dirname + '/menus');
 for (const file of selectFiles) {
   const select = require(`./menus/${file}`);
   menusHandlers.push({

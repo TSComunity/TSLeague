@@ -25,7 +25,7 @@ const getRoundAddedEmbed = ({ divisionsWithNewRounds, seasonIndex, seasonName, n
 }
 
 const getRoundDivisionAddedEmbed = ({ division, seasonIndex, seasonName, nextRoundIndex }) => {
-  const { divisionDoc, newMatchesDocs, newRestingTeamsDocs }
+  const { divisionDoc, newMatchesDocs, newRestingTeamsDocs } = division
 
   const divisionName = divisionDoc.name || 'División sin nombre'
 

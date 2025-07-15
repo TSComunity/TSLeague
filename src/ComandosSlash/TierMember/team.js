@@ -13,8 +13,8 @@ const {
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 
-const { config } = require('../../configs/league.js')
-const ROLES_WITH_PERMS = config.commands.perms
+const { commands } = require('../../configs/league.js')
+const ROLES_WITH_PERMS = commands.perms
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -44,7 +44,7 @@ module.exports = {
         .addStringOption(opt =>
           opt.setName('nuevo_nombre').setDescription('Nuevo nombre del equipo').setRequired(false))
         .addAttachmentOption(opt =>
-            opt.setName('nuevo_icono').setDescription('Ícono del equipo').setRequired(true))
+            opt.setName('nuevo_icono').setDescription('Ícono del equipo').setRequired(false))
         .addStringOption(opt =>
           opt.setName('nuevo_color').setDescription('Nuevo color').setRequired(false))
     )

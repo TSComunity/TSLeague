@@ -2,10 +2,10 @@ function loadEvents(client) {
     const fs = require('fs');
     var colors = require('colors');
 
-    const eventFolders = fs.readdirSync('./Eventos');
+    const eventFolders = fs.readdirSync('src/Eventos')
     for (const folder of eventFolders) {
         const eventFiles = fs
-      .readdirSync(`./Eventos/${folder}`)
+      .readdirSync(`src/Eventos/${folder}`)
       .filter((file) => file.endsWith(".js"))
 
         for (const file of eventFiles) {
@@ -13,11 +13,11 @@ function loadEvents(client) {
 
             if (evento.rest) {
                 if(evento.once)
-                    client.rest.once(event.name, (...args) =>
+                    client.rest.once(evento.name, (...args) =>
                     evento.execute(...args, client)
                 );
                 else
-                    client.rest.on(event.name, (...args) =>
+                    client.rest.on(evento.name, (...args) =>
                         evento.execute(...args, client)
                     );
             } else {

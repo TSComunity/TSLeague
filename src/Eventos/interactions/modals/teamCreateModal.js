@@ -18,7 +18,7 @@ module.exports = {
       return await interaction.reply({
         ephemeral: true,
         content: 'Equipo creado con exito.',
-        embeds: [getTeamInfoEmbed({ team, perms = true })],
+        embeds: [getTeamInfoEmbed({ team, perms: true })],
       })
 
     } catch (error) {
