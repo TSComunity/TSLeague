@@ -20,7 +20,7 @@ module.exports = {
         getTeamLeftButton()
     )
 
-      return await interaction.reply({
+      return interaction.reply({
         ephemeral: true,
         embeds: [getSuccesEmbed({ message: `Te has unido al equipo ${team.name}.` })],
         components: [teamRow]

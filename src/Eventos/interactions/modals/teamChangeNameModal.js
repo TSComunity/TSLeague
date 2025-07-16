@@ -1,8 +1,7 @@
-const { ActionRowBuilder } = require('discord.js')
-
-const { updateTeam } = require('../../../services/team.js')
+const { updateTeam, checkTeamUserHasPerms } = require('../../../services/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
+const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
 
 module.exports = {
   customId: 'teamChangeNameModal',
@@ -14,10 +13,15 @@ module.exports = {
 
       const team = await updateTeam({ discordId, name })
 
+      const perms = await checkTeamUserHasPerms({ discordId })
+
+      await interaction.update({
+        embeds: getTeamInfoEmbed({ perms, discordId})
+      })
+
       return interaction.reply({
         ephemeral: true,
-        embeds: [getSuccesEmbed({ message: `Se ha cambiado el nombre ha ${team.name}.` })],
-        components: [teamRow]
+        embeds: [getSuccesEmbed({ message: `Se ha actualizado el nombre del equipo por **${team.name}**.` })],
       })
 
     } catch (error) {

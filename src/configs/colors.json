@@ -1,25 +1,10 @@
 [
-  { "label": "Azul claro", "value": "LightBlue", "emoji": "🟦" },
   { "label": "Azul", "value": "Blue", "emoji": "🔵" },
-  { "label": "Azul oscuro", "value": "DarkBlue", "emoji": "💙" },
-
-  { "label": "Rojo claro", "value": "LightCoral", "emoji": "🟥" },
   { "label": "Rojo", "value": "Red", "emoji": "🔴" },
-  { "label": "Rojo oscuro", "value": "DarkRed", "emoji": "❤️" },
-
-  { "label": "Verde claro", "value": "LightGreen", "emoji": "🟩" },
   { "label": "Verde", "value": "Green", "emoji": "🟢" },
-  { "label": "Verde oscuro", "value": "DarkGreen", "emoji": "💚" },
-
-  { "label": "Amarillo claro", "value": "LightYellow", "emoji": "🟨" },
   { "label": "Amarillo", "value": "Yellow", "emoji": "🟡" },
-  { "label": "Amarillo oscuro", "value": "GoldenRod", "emoji": "💛" },
-
-  { "label": "Naranja claro", "value": "Moccasin", "emoji": "🟧" },
   { "label": "Naranja", "value": "Orange", "emoji": "🟠" },
-  { "label": "Naranja oscuro", "value": "DarkOrange", "emoji": "🧡" },
+  { "label": "Negro", "value": "NotQuiteBlack", "emoji": "⚫" },
+  { "label": "Blanco", "value": "White", "emoji": "⚪" }
 
-  { "label": "Púrpura claro", "value": "Orchid", "emoji": "🟪" },
-  { "label": "Púrpura", "value": "Purple", "emoji": "🟣" },
-  { "label": "Púrpura oscuro", "value": "DarkMagenta", "emoji": "💜" }
 ]

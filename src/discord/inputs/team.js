@@ -27,8 +27,8 @@ const getTeamIconInput = () => {
         new TextInputBuilder()
             .setCustomId('teamIconInput')
             .setLabel('Icono del equipo')
-            .setPlaceholder('https://i.pinimg.com/736x/9c/5d/70/9c5d708a46f35e24e76b43f5cd01a1b4.jpg')
-            .setStyle(TextInputStyle.Long)
+            .setPlaceholder('https://i.pinimg.com/...')
+            .setStyle(TextInputStyle.Paragraph)
             .setRequired(true)
     )
 }

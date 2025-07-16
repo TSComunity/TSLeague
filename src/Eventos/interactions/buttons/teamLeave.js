@@ -11,7 +11,7 @@ module.exports = {
 
       return interaction.reply({
         ephemeral: true,
-        embeds: [getSuccesEmbed({ message: `Has abandonado el equipo ${team.name}.`})]
+        embeds: [getSuccesEmbed({ message: `Has abandonado el equipo **${team.name}**.`})]
       })
     } catch (error) {
       console.error(error)

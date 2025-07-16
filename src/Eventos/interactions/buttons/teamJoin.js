@@ -16,15 +16,15 @@ module.exports = {
   async execute(interaction) {
     try {
 
-        const isVerified = checkUserVerification()
-
+        const isVerified = await checkUserVerification({ discordId: interaction.user.id })
+      console.log(isVerified)
         if (!isVerified) {
             const modal = getUserVerifyModal()
 
             const modalRow = new ActionRowBuilder().addComponents(getUserBrawlIdInput())
             modal.addComponents(modalRow)
 
-            return await interaction.showModal(modal)
+            return interaction.showModal(modal)
         }
 
         const modal = getTeamJoinModal()

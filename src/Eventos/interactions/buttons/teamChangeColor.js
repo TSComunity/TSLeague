@@ -22,8 +22,6 @@ module.exports = {
 
         const row = new ActionRowBuilder().addComponents(getTeamChangeColorMenu())
 
-        const team = await removeMemberFromTeam({ discordId })
-
         return interaction.reply({
                 ephemeral: true,
                 components: [row],

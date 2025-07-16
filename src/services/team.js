@@ -16,13 +16,13 @@ const findTeam = async ({ teamName = null, teamCode = null, discordId = null }) 
     throw new Error('Faltan datos: teamName, teamCode o discordId.')
   }
   let team
-  let user
   if (teamName) {
       team = await Team.findOne({ name: teamName }).populate('members.userId')
   } else if (teamCode) {
       team = await Team.findOne({ code: teamCode }).populate('members.userId')
   } else if (discordId) {
       const user = await User.findOne({ discordId })
+      console.log(user)
       if (!user || !user.teamId) throw new Error('El usuario no esta en ningun equipo.')
 
       team = await Team.findById(user.teamId).populate('members.userId')
@@ -36,7 +36,8 @@ const findTeam = async ({ teamName = null, teamCode = null, discordId = null }) 
 const checkTeamUserHasPerms = async ({ discordId }) => {
   const team = await findTeam({ discordId })
 
-  const member = team.members.filter(m => m.userId.discordId === discordId)
+  const member = team.members.find(m => m.userId.discordId === discordId)
+  if (!member) return false
 
   return (member.role === 'leader' || member.role === 'sub-leader')
 }
@@ -129,7 +130,8 @@ const deleteAllEmptyTeams = async () => {
       }
     }
 
-    for (const discordId of team.members.userId.discordId) {
+    for (const { userId } of team.members) {
+      const discordId = userId.discordId
       await removeMemberFromTeam({ discordId })
     }
     // Finalmente eliminar el equipo
@@ -201,7 +203,7 @@ const createTeam = async ({ name, iconURL, presidentDiscordId, color = 'Blue' })
     code: await generateTeamCode(),
     members: [{ userId: user._id, role: 'leader' }],
     isEligible: false
-  })
+  }).populate('members.userId')
 
   user.teamId = team._id
   await user.save()
@@ -305,7 +307,7 @@ const addMemberToTeam = async ({ teamName = null, teamCode = null, discordId }) 
 
   team.members.push({
     userId: user._id,
-    role: 'Member'
+    role: 'member'
   })
   await team.save()
 
@@ -398,7 +400,7 @@ const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, n
   return team
 }
 
-const deleteTeam = async ({ teamName, teamCode, discordId }) => {
+const deleteTeam = async ({ teamName = null, teamCode = null, discordId = null }) => {
   const team = await findTeam({ teamName, teamCode, discordId })
 
     const teamId = team._id
@@ -453,14 +455,15 @@ const deleteTeam = async ({ teamName, teamCode, discordId }) => {
         await season.save()
       }
     }
-
-    for (const discordId of team.members.userId.discordId) {
+    
+    for (const { userId } of team.members) {
+      const discordId = userId.discordId
       await removeMemberFromTeam({ discordId })
     }
     // Finalmente eliminar el equipo
-    const deletedTeam = await Team.deleteOne({ _id: teamId })
+    await Team.deleteOne({ _id: teamId })
 
-  return deletedTeam
+  return team
 }
 
 module.exports = {

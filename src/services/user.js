@@ -10,10 +10,11 @@ const { roles, guild: configGuild } = require('../configs/league.js')
  * @returns {Boolean} isEligible - Si es elegible o no.
  */
 const checkUserVerification = async ({ discordId }) => {
+    console.log('aaaaaaaa')
     const user = await User.findOne({ discordId })
-    if (!user) throw new Error('No se encontro el usuario.')
+    if (!user) return false
 
-    const isVerified = (user.brawlId)
+    const isVerified = !!user.brawlId
     user.isVerified = isVerified
     await user.save()
     return isVerified

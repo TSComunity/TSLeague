@@ -1,4 +1,4 @@
-const { ButtonBuilder } = require('discord.js')
+const { ButtonBuilder, ButtonStyle } = require('discord.js')
 
 const getTeamSeeButton = () => {
     return (

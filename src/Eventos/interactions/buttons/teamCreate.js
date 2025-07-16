@@ -14,7 +14,7 @@ module.exports = {
 
   async execute(interaction) {
     try {
-        const isVerified = await checkUserVerification()
+        const isVerified = await checkUserVerification({ discordId: interaction.user.id })
 
         if (!isVerified) {
             const modal = getUserVerifyModal()
@@ -22,13 +22,14 @@ module.exports = {
             const modalRow = new ActionRowBuilder().addComponents(getUserBrawlIdInput())
             modal.addComponents(modalRow)
 
-            return await interaction.showModal(modal)
+            return interaction.showModal(modal)
         }
 
         const modal = getTeamCreateModal()
 
-        const modalRow = new ActionRowBuilder().addComponents(getTeamNameInput(), getTeamIconInput())
-        modal.addComponents(modalRow)
+        const row1 = new ActionRowBuilder().addComponents(getTeamNameInput())
+        const row2 = new ActionRowBuilder().addComponents(getTeamIconInput())
+        modal.addComponents(row1, row2)
 
         await interaction.showModal(modal)
     } catch (error) {

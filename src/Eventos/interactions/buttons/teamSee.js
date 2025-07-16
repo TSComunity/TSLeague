@@ -26,7 +26,7 @@ module.exports = {
         let components = []
 
         if (perms) {
-            components.push(new ActionRowBuilder.addComponents(
+            components.push(new ActionRowBuilder().addComponents(
                 getTeamChangeNameButton(),
                 getTeamChangeIconButton(),
                 getTeamChangeColorButton(),
@@ -35,7 +35,7 @@ module.exports = {
             ))
         }
 
-        components.push(new ActionRowBuilder.addComponents(
+        components.push(new ActionRowBuilder().addComponents(
             getTeamLeftButton()
         ))
 

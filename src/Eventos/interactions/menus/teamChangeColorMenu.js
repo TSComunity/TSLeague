@@ -1,6 +1,9 @@
-const { updateTeam } = require('../../../services/team.js')
+const { updateTeam, checkTeamUserHasPerms } = require('../../../services/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
+const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
+
+const colors = require('../../../configs/colors.json')
 
 module.exports = {
   customId: 'teamChangeColorMenu',
@@ -9,11 +12,20 @@ module.exports = {
     const selectedColor = interaction.values[0]
     
     try {
-      const team = await updateTeam({ discordId: interaction.user.id, color: selectedColor })
+      const discordId = interaction.user.id
+      const team = await updateTeam({ discordId, color: selectedColor })
 
-      await interaction.reply({
+      const color = colors.find(c => c.value === selectedColor)
+      
+      const perms = await checkTeamUserHasPerms({ discordId })
+
+      await interaction.update({
+        embeds: getTeamInfoEmbed({ perms, discordId})
+      })
+      
+      await interaction.followUp({
         ephemeral: true,
-        embeds: [getSuccesEmbed({ message: `Se ha actualizado el color del equipo ${team.name} por \`${selectedColor}\`.` })]
+        embeds: [getSuccesEmbed({ message: `Se ha actualizado el color del equipo ${team.name} por \`${color.emoji} ${color.label}\`.` })]
       })
     } catch (err) {
       console.error(err)

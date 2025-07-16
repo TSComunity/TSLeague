@@ -8,11 +8,12 @@ const getErrorEmbed = ({ error = 'No se recibieron detalles del error.' }) => {
   )
 }
 
-const getSuccesEmbed = ({ message = 'La operación ha sido completada sin errores.' }) => {
+const getSuccesEmbed = ({ message = 'La operación ha sido completada sin errores.', imageURL = null }) => {
   return (
     new EmbedBuilder()
       .setColor('Green')
       .setDescription(`### Operación completada\n\n> ${message}`)
+      .setImage(imageURL)
   )
 }
 

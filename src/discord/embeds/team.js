@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require('discord.js')
 
 const getTeamInfoEmbed = ({ team, perms }) => {
+    console.log(team)
 
     const rolePriority = { 'leader': 0, 'sub-leader': 1, 'member': 2 }
       const sortedMembers = [...team.members].sort((a, b) => {
