@@ -28,12 +28,14 @@ module.exports = {
           embeds: [getErrorEmbed({ error: `**${iconURL}** no es una URL válida.` })]
         })
       }
+
       const team = await updateTeam({ discordId, iconURL })
 
       const perms = await checkTeamUserHasPerms({ discordId })
 
       await interaction.update({
-        embeds: getTeamInfoEmbed({ perms, discordId})
+        content: 'Equipo actualizado con exito.',
+        embeds: getTeamInfoEmbed({ perms, team })
       })
 
       return interaction.reply({

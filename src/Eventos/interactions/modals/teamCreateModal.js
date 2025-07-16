@@ -1,6 +1,6 @@
 const { ActionRowBuilder } = require('discord.js')
 
-const { createTeam } = require('../../../services/team.js')
+const { createTeam, checkTeamUserHasPerms } = require('../../../services/team.js')
 
 const { getErrorEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
@@ -19,12 +19,31 @@ module.exports = {
 
   async execute(interaction, client) {
     try {
+      const isValidURL = ({ url }) => {
+        try {
+          new URL(url)
+          return true
+        } catch {
+          return false
+        }
+      }
+
       const name = interaction.fields.getTextInputValue('teamNameInput').trim()
       const iconURL = interaction.fields.getTextInputValue('teamIconInput').trim()
 
-      const team = await createTeam({ name, iconURL, presidentDiscordId: interaction.user.id })
+      const isValid = isValidURL({ url: iconURL})
 
-              let components = []
+      if (!isValid) {
+        return interaction.reply({
+          ephemeral: true,
+          embeds: [getErrorEmbed({ error: `**${iconURL}** no es una URL válida.` })]
+        })
+      }
+
+      const team = await createTeam({ name, iconURL, presidentDiscordId: interaction.user.id })
+      const perms = await checkTeamUserHasPerms({ discordId: interaction.user.id })
+
+        let components = []
 
         if (perms) {
             components.push(new ActionRowBuilder().addComponents(

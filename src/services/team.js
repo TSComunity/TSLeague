@@ -196,17 +196,19 @@ const createTeam = async ({ name, iconURL, presidentDiscordId, color = 'Blue' })
     throw new Error('El usuario ya se encuentra en un equipo.')
   }
 
-  const team = await Team.create({
+  const team = new Team({
     name,
     iconURL,
     color,
     code: await generateTeamCode(),
     members: [{ userId: user._id, role: 'leader' }],
     isEligible: false
-  }).populate('members.userId')
+  })
 
   user.teamId = team._id
   await user.save()
+  await team.save()
+  await team.populate('members.userId')
   return team
 }
 

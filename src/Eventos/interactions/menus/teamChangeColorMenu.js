@@ -20,9 +20,10 @@ module.exports = {
       const perms = await checkTeamUserHasPerms({ discordId })
 
       await interaction.update({
-        embeds: getTeamInfoEmbed({ perms, discordId})
+        content: 'Equipo actualizado con exito.',
+        embeds: getTeamInfoEmbed({ perms, team })
       })
-      
+
       await interaction.followUp({
         ephemeral: true,
         embeds: [getSuccesEmbed({ message: `Se ha actualizado el color del equipo ${team.name} por \`${color.emoji} ${color.label}\`.` })]
