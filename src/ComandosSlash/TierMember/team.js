@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('discord.js')
 const {
     updateTeamCode,
     createTeam,
+    deleteTeam,
     updateTeam,
     addTeamToDivision,
     removeTeamFromDivision,
@@ -36,6 +37,14 @@ module.exports = {
             name: `${color.emoji} ${color.label}`, // Mostramos emoji + nombre
             value: color.value
         })))))
+
+    // /equipo eliminar
+    .addSubcommand(sub =>
+      sub
+        .setName('eliminar')
+        .setDescription('Elimina un equipo')
+        .addStringOption(opt =>
+          opt.setName('nombre').setDescription('Nombre del equipo').setRequired(true)))
 
     // /equipo actualizar
     .addSubcommand(sub =>
@@ -138,6 +147,13 @@ module.exports = {
         await interaction.reply({
           embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** creado.` })]
         })
+
+      } else if (sub === 'eliminar') {
+          const teamName = interaction.options.getString('nombre')
+          const team = await deleteTeam({ teamName })
+          await interaction.reply({
+            embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** eliminado.` })]
+          })
 
       } else if (sub === 'actualizar') {
         const teamName = interaction.options.getString('nombre')

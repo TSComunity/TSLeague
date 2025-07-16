@@ -6,8 +6,6 @@ const { loadEvents } = require('./Handlers/handlerEventos.js')
 const { loadCommands } = require('./Handlers/handlerComandos.js')
 const { loadPrefix } = require('./Handlers/handlerComandosPrefix.js')
 
-const { createChampionsGroupsImage } = require('./utils/crearCanva.js')
-
 const { TOKEN } = require('./configs/configs.js')
 
 const wait = require('node:timers/promises').setTimeout
