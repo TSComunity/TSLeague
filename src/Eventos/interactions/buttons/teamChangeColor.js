@@ -24,7 +24,6 @@ module.exports = {
 
         return interaction.update({
                 ephemeral: true,
-                content:
                 components: [row],
             })
     } catch (error) {
