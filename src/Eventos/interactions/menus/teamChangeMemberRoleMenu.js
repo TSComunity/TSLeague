@@ -64,9 +64,7 @@ module.exports = {
 
       const row = new ActionRowBuilder().addComponents(buttons);
 
-      await interaction.reply({
-        ephemeral: true,
-        content: `Selecciona el nuevo rol para <@${selectedDiscordId}>:`,
+      await interaction.update({
         components: [row]
       })
 

@@ -59,8 +59,7 @@ module.exports = {
 
       const row = new ActionRowBuilder().addComponents(getTeamKickMemberMenu({ options }))
 
-      await interaction.reply({
-        ephemeral: true,
+      await interaction.update({
         components: [row],
       })
 

@@ -34,9 +34,8 @@ const options = await Promise.all(
 
       const row = new ActionRowBuilder().addComponents(getTeamChangeMemberRoleMenu({ options }))
 
-      await interaction.reply({
-        ephemeral: true,
-        components: [row],
+      await interaction.update({
+        components: [row]
       });
     } catch (error) {
       console.error(error);

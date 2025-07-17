@@ -1,4 +1,4 @@
-const { updateTeam, checkTeamUserHasPerms } = require('../../../services/team.js')
+const { findTeam, updateTeam, checkTeamUserHasPerms } = require('../../../services/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
@@ -11,6 +11,7 @@ module.exports = {
       const name = interaction.fields.getTextInputValue('teamNameInput').trim()
       const discordId = interaction.user.id
 
+      const previewTeam = await findTeam({ discordId })
       const team = await updateTeam({ discordId, name })
 
       const perms = await checkTeamUserHasPerms({ discordId })
@@ -22,7 +23,7 @@ module.exports = {
 
       return interaction.followUp({
         ephemeral: true,
-        embeds: [getSuccesEmbed({ message: `Se ha actualizado el nombre del equipo por **${team.name}**.` })],
+        embeds: [getSuccesEmbed({ message: `Se ha actualizado el nombre del equipo **${previewTeam.name}** por \`${team.name}\`.` })],
       })
 
     } catch (error) {

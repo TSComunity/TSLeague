@@ -22,7 +22,7 @@ module.exports = {
 
       return interaction.reply({
         ephemeral: true,
-        embeds: [getSuccesEmbed({ message: `Te has unido al equipo ${team.name}.` })],
+        embeds: [getSuccesEmbed({ message: `Te has unido al equipo **${team.name}**.` })],
         components: [teamRow]
       })
           

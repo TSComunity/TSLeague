@@ -16,7 +16,7 @@ module.exports = {
 
       return interaction.reply({
         ephemeral: true,
-        embeds: [getSuccesEmbed({ message: `Has sido verificado correctamente con el id \`${user.brawlId}\`, ya puedes crear o unirte a un equipo.` })],
+        embeds: [getSuccesEmbed({ message: `Has sido verificado correctamente con el ID \`${user.brawlId}\`, ya puedes crear o unirte a un equipo.` })],
       })
 
     } catch (error) {

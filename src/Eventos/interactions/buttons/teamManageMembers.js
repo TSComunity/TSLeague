@@ -27,8 +27,7 @@ module.exports = {
         getTeamKickMemberButton
       )
 
-      await interaction.reply({
-        ephemeral: true,
+      await interaction.update({
         components: [row]
       })
 

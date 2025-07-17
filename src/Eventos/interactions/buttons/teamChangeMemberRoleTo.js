@@ -11,11 +11,16 @@ module.exports = {
       const discordId = splittedId[2]
       const newRole = splittedId[1]
 
+      let rol = ''
+      if (newRole === 'leader') rol === '👑 Líder'
+      if (newRole === 'sub-leader') rol === '⭐ Sublíder'
+      if (newRole === 'member') rol === '👤 Miembro'
+
       const team = await changeMemberRole({ discordId, newRole })
 
       return interaction.reply({
         ephemeral: true,
-        embeds: [getSuccesEmbed({ message: `Se ha actualizado el rol de <@${discordId}>.`})]
+        embeds: [getSuccesEmbed({ message: `Se ha actualizado el rol de <@${discordId}> ha \`${rol}\`.`})]
       })
     } catch (error) {
       console.error(error)
