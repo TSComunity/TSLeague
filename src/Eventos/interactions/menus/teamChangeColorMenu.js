@@ -3,6 +3,15 @@ const { updateTeam, checkTeamUserHasPerms } = require('../../../services/team.js
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
 
+const {
+    getTeamLeftButton,
+    getTeamChangeNameButton,
+    getTeamChangeIconButton,
+    getTeamChangeColorButton,
+    getTeamManageMembersButton,
+    getTeamReGenerateCodeButton
+} = require('../../../discord/buttons/team.js')
+
 const colors = require('../../../configs/colors.json')
 
 module.exports = {
@@ -19,9 +28,26 @@ module.exports = {
       
       const perms = await checkTeamUserHasPerms({ discordId })
 
+      let components = []
+
+      if (perms) {
+          components.push(new ActionRowBuilder().addComponents(
+              getTeamChangeNameButton(),
+              getTeamChangeIconButton(),
+              getTeamChangeColorButton(),
+              getTeamManageMembersButton(),
+              getTeamReGenerateCodeButton()
+          ))
+      }
+
+      components.push(new ActionRowBuilder().addComponents(
+          getTeamLeftButton()
+      ))
+
       await interaction.update({
         content: 'Equipo actualizado con exito.',
-        embeds: [getTeamInfoEmbed({ perms, team })]
+        embeds: [getTeamInfoEmbed({ perms, team })],
+        components
       })
 
       await interaction.followUp({

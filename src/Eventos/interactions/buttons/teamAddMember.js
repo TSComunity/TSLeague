@@ -12,7 +12,7 @@ module.exports = {
       const team = await findTeam({ discordId })
       const code = team.code
 
-      const row = new ActionRowBuilder.addComponents(getTeamReGenerateCodeButton())
+      const row = new ActionRowBuilder().addComponents(getTeamReGenerateCodeButton())
 
       await interaction.reply({
         ephemeral: true,

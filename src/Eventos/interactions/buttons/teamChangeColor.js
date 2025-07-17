@@ -22,8 +22,9 @@ module.exports = {
 
         const row = new ActionRowBuilder().addComponents(getTeamChangeColorMenu())
 
-        return interaction.reply({
+        return interaction.update({
                 ephemeral: true,
+                content:
                 components: [row],
             })
     } catch (error) {

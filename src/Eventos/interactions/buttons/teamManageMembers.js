@@ -21,7 +21,7 @@ module.exports = {
 
       const team = await findTeam({ discordId })
 
-      const row = new ActionRowBuilder.addComponents(
+      const row = new ActionRowBuilder().addComponents(
         getTeamAddMemberButton(),
         getTeamChangeMemberRoleButton(),
         getTeamKickMemberButton
