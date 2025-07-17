@@ -15,17 +15,45 @@ const findTeam = async ({ teamName = null, teamCode = null, discordId = null }) 
   if (!teamName && !teamCode && !discordId) {
     throw new Error('Faltan datos: teamName, teamCode o discordId.')
   }
-  let team
-  if (teamName) {
-      team = await Team.findOne({ name: teamName }).populate('members.userId')
-  } else if (teamCode) {
-      team = await Team.findOne({ code: teamCode }).populate('members.userId')
-  } else if (discordId) {
-      const user = await User.findOne({ discordId })
-      console.log(user)
-      if (!user || !user.teamId) throw new Error('El usuario no esta en ningun equipo.')
 
+  let team = null
+
+  // Buscar por nombre de equipo
+  if (teamName) {
+    team = await Team.findOne({ name: teamName }).populate('members.userId')
+  }
+
+  // Buscar por código de equipo
+  else if (teamCode) {
+    team = await Team.findOne({ code: teamCode }).populate('members.userId')
+  }
+
+  // Buscar por Discord ID
+  else if (discordId) {
+    const user = await User.findOne({ discordId })
+
+    if (!user) throw new Error('El usuario no esta verificado.')
+
+    // Si el usuario tiene un teamId vinculado
+    if (user.teamId) {
       team = await Team.findById(user.teamId).populate('members.userId')
+
+      if (!team) {
+          user.teamId = null
+          await user.save()
+      }
+    }
+
+    // Si no tiene teamId, buscar por miembro directo en algún equipo
+    if (!team) {
+      team = await Team.findOne({ 'members.userId': user._id }).populate('members.userId')
+      if (team) {
+        user.teamId = team._id
+        await user.save()
+      }
+    }
+
+    if (!team) throw new Error('El usuario no se encuentra en ningún equipo.')
   }
 
   if (!team) throw new Error('Equipo no encontrado.')
@@ -54,6 +82,55 @@ const checkTeamEligibility = async ({ teamName = null, teamCode = null, discordI
   team.isEligible = isEligible
   await team.save()
   return isEligible
+}
+
+/**
+ * Expulsa a un miembro del equipo usando su Discord ID.
+ * @param {Object} params
+ * @param {String} params.teamName - Nombre del equipo.
+ * @param {String} params.discordId - ID de Discord del usuario.
+ * @returns {Object} equipo actualizado.
+ */
+const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordId }) => {
+  const team = await findTeam({ teamName, teamCode, discordId })
+
+  const user = await User.findOne({ discordId })
+
+  const memberToRemove = team.members.find(m => m.userId?.discordId === discordId)
+  if (!memberToRemove) throw new Error('El usuario no esta en el equipo.')
+
+  // Si el que se va es el líder, se transfiere el rol
+  if (memberToRemove.role === 'leader') {
+    const subLeaders = team.members.filter(m => m.role === 'sub-leader' && m.userId?.discordId !== discordId);
+    const otherMembers = team.members.filter(m => m.userId?.discordId !== discordId)
+
+    let newLeader
+    if (subLeaders.length > 0) {
+      newLeader = subLeaders[Math.floor(Math.random() * subLeaders.length)]
+      newLeader.role = 'leader'
+    } else if (otherMembers.length > 0) {
+      newLeader = otherMembers[Math.floor(Math.random() * otherMembers.length)]
+      newLeader.role = 'leader'
+    }
+  }
+
+  // Quitar al usuario del equipo
+  team.members = team.members.filter(m => m.userId?.discordId !== discordId)
+
+  team.isEligible = team.members.length >= 3
+
+  if (team.members.length === 0) {
+    const teamSnapshot = { ...team.toObject() };
+    await Team.findByIdAndDelete(team._id);
+    user.teamId = null;
+    await user.save();
+    return teamSnapshot;
+  } else {
+    await team.save();
+    user.teamId = null;
+    await user.save();
+    return team;
+  }
 }
 
 /**
@@ -191,7 +268,7 @@ const createTeam = async ({ name, iconURL, presidentDiscordId, color = 'Blue' })
   
   const user = await User.findOne({ discordId: presidentDiscordId })
   if (!user) throw new Error('El usuario no esta verificado.')
-  
+  console.log(user)
   if (user.teamId) {
     throw new Error('El usuario ya se encuentra en un equipo.')
   }
@@ -223,7 +300,6 @@ const createTeam = async ({ name, iconURL, presidentDiscordId, color = 'Blue' })
  */
 const updateTeam = async ({ teamName = null, teamCode = null, discordId = null, name, iconURL, color }) => {
   const team = await findTeam({ teamName, teamCode, discordId })
-  if (!team) throw new Error('Equipo no encontrado.')
 
   if (name) team.name = name
   if (iconURL) team.iconURL = iconURL
@@ -280,7 +356,6 @@ const addTeamToDivision = async ({ teamName = null, teamCode = null, discordId =
  */
 const removeTeamFromDivision = async ({ teamName = null, teamCode = null, discordId = null }) => {
   const team = await findTeam({ teamName, teamCode, discordId })
-  if (!team) throw new Error('Equipo no encontrado.')
 
   team.divisionId = null
   await team.save()
@@ -314,48 +389,6 @@ const addMemberToTeam = async ({ teamName = null, teamCode = null, discordId }) 
   await team.save()
 
   user.team = team._id
-  await user.save()
-
-  return team
-}
-
-/**
- * Expulsa a un miembro del equipo usando su Discord ID.
- * @param {Object} params
- * @param {String} params.teamName - Nombre del equipo.
- * @param {String} params.discordId - ID de Discord del usuario.
- * @returns {Object} equipo actualizado.
- */
-const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordId }) => {
-  const team = await findTeam({ teamName, teamCode, discordId })
-
-  const user = await User.findOne({ discordId })
-
-  const memberToRemove = team.members.find(m => m.userId?.discordId === discordId)
-  if (!memberToRemove) throw new Error('El usuario no esta en el equipo.')
-
-  // Si el que se va es el líder, se transfiere el rol
-  if (memberToRemove.role === 'leader') {
-    const subLeaders = team.members.filter(m => m.role === 'sub-leader' && m.userId?.discordId !== discordId);
-    const otherMembers = team.members.filter(m => m.userId?.discordId !== discordId)
-
-    let newLeader
-    if (subLeaders.length > 0) {
-      newLeader = subLeaders[Math.floor(Math.random() * subLeaders.length)]
-      newLeader.role = 'leader'
-    } else if (otherMembers.length > 0) {
-      newLeader = otherMembers[Math.floor(Math.random() * otherMembers.length)]
-      newLeader.role = 'leader'
-    }
-  }
-
-  // Quitar al usuario del equipo
-  team.members = team.members.filter(m => m.userId?.discordId !== discordId)
-
-  team.isEligible = team.members.length >= 3
-  await team.save()
-
-  user.teamId = null
   await user.save()
 
   return team
@@ -462,8 +495,6 @@ const deleteTeam = async ({ teamName = null, teamCode = null, discordId = null }
       const discordId = userId.discordId
       await removeMemberFromTeam({ discordId })
     }
-    // Finalmente eliminar el equipo
-    await Team.deleteOne({ _id: teamId })
 
   return team
 }

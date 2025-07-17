@@ -1,5 +1,6 @@
 const { updateTeamCode, checkTeamUserHasPerms } = require('../../../services/team.js')
 
+const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 
 module.exports = {
@@ -19,7 +20,12 @@ module.exports = {
 
       const team = await updateTeamCode({ discordId: interaction.user.id })
 
-      return interaction.reply({
+      await interaction.update({
+        content: 'Equipo actualizado con exito.',
+        embeds: [getTeamInfoEmbed({ perms, team })]
+      })
+
+      return interaction.followUp({
         ephemeral: true,
         embeds: [getSuccesEmbed({ message: `Nuevo codigo del equipo: \`${team.code}\``})]
       })

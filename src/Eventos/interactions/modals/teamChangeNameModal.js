@@ -17,10 +17,10 @@ module.exports = {
 
       await interaction.update({
         content: 'Equipo actualizado con exito.',
-        embeds: getTeamInfoEmbed({ perms, team })
+        embeds: [getTeamInfoEmbed({ perms, team })]
       })
 
-      return interaction.reply({
+      return interaction.followUp({
         ephemeral: true,
         embeds: [getSuccesEmbed({ message: `Se ha actualizado el nombre del equipo por **${team.name}**.` })],
       })

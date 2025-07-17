@@ -21,12 +21,12 @@ module.exports = {
 
       await interaction.update({
         content: 'Equipo actualizado con exito.',
-        embeds: getTeamInfoEmbed({ perms, team })
+        embeds: [getTeamInfoEmbed({ perms, team })]
       })
 
       await interaction.followUp({
         ephemeral: true,
-        embeds: [getSuccesEmbed({ message: `Se ha actualizado el color del equipo ${team.name} por \`${color.emoji} ${color.label}\`.` })]
+        embeds: [getSuccesEmbed({ message: `Se ha actualizado el color del equipo **${team.name}** por \`${color.emoji} ${color.label}\`.` })]
       })
     } catch (err) {
       console.error(err)
