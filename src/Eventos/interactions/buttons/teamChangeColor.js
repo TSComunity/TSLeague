@@ -3,6 +3,7 @@ const { ActionRowBuilder } = require('discord.js')
 const { checkTeamUserHasPerms } = require('../../../services/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
+const { getTeamCancelButton } = require('../../../discord/buttons/team.js')
 const { getTeamChangeColorMenu } = require('../../../discord/menus/team.js')
 
 module.exports = {
@@ -21,10 +22,11 @@ module.exports = {
         }
 
         const row = new ActionRowBuilder().addComponents(getTeamChangeColorMenu())
+        const row2 = new ActionRowBuilder().addComponents(getTeamCancelButton())
 
         return interaction.update({
                 ephemeral: true,
-                components: [row],
+                components: [row, row2],
             })
     } catch (error) {
       console.error(error)

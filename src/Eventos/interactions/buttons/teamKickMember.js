@@ -7,7 +7,7 @@ const { getTeamKickMemberMenu } = require('../../../discord/embeds/management.js
 const { getUserDisplayName } = require('../../../services/user.js')
 
 module.exports = {
-  customId: 'teamkickMember',
+  customId: 'teamKickMember',
 
   async execute(interaction) {
     try {
@@ -45,7 +45,7 @@ module.exports = {
       if (membersToKick.length === 0) {
         return interaction.reply({
           ephemeral: true,
-          content: 'No hay miembros que puedas expulsar.',
+          embeds: [getErrorEmbed({ error: 'No hay ningun miembro al que puedas expulsar' })]
         })
       }
 

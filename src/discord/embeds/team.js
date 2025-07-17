@@ -43,7 +43,7 @@ const getAddMemberInfoEmbed = ({ teamCode }) => {
         new EmbedBuilder()
             .setColor('Blue')
             .setDescription(`
-
+## Añadir miembros
 Para que un miembro pueda unirse a tu equipo, debe utilizar el código del equipo, el cual es accesible solo para los lideres y sub-lideres del equipo y no debe ser compartido por canales publicos, si no cualquiera podria unirse a tu equipo.
 
 La generación de un nuevo código invalidará automáticamente cualquier versión anterior, asegurando que la privacidad y la seguridad de su equipo se mantengan constantemente actualizadas y protegidas.

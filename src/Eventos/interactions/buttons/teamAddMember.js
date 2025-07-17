@@ -17,8 +17,9 @@ module.exports = {
 
   async execute(interaction) {
     try {
+      const discordId = interaction.user.id
       const team = await findTeam({ discordId })
-      const code = team.code
+      const teamCode = team.code
 
       const perms = await checkTeamUserHasPerms({ discordId })
 
@@ -45,10 +46,10 @@ module.exports = {
         components
       })
       
-      await interaction.reply({
+      await interaction.followUp({
         ephemeral: true,
-        embeds: [getAddMemberInfoEmbed({ code })],
-        componentes: [row]
+        embeds: [getAddMemberInfoEmbed({ teamCode })],
+        components: [row]
       })
 
     } catch (error) {

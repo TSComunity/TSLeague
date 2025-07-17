@@ -54,11 +54,11 @@ module.exports = {
         .addStringOption(opt =>
           opt.setName('nombre').setDescription('Nombre actual del equipo').setRequired(true))
         .addStringOption(opt =>
-          opt.setName('nuevo_nombre').setDescription('Nuevo nombre del equipo').setRequired(false))
+          opt.setName('nuevo-nombre').setDescription('Nuevo nombre del equipo').setRequired(false))
         .addAttachmentOption(opt =>
-            opt.setName('nuevo_icono').setDescription('Ícono del equipo').setRequired(false))
+            opt.setName('nuevo-icono').setDescription('Ícono del equipo').setRequired(false))
         .addStringOption(opt =>
-          opt.setName('nuevo_color').setDescription('Nuevo color').setRequired(false)
+          opt.setName('nuevo-color').setDescription('Nuevo color').setRequired(false)
                   .addChoices(...colors.map(color => ({
             name: `${color.emoji} ${color.label}`, // Mostramos emoji + nombre
             value: color.value
@@ -119,7 +119,7 @@ module.exports = {
     // /equipo regenerar_codigo
     .addSubcommand(sub =>
       sub
-        .setName('regenerar_codigo')
+        .setName('regenerar-codigo')
         .setDescription('Cambia el código de un equipo')
         .addStringOption(opt =>
           opt.setName('nombre-equipo').setDescription('Nombre del equipo').setRequired(true))
@@ -157,8 +157,8 @@ module.exports = {
 
       } else if (sub === 'actualizar') {
         const teamName = interaction.options.getString('nombre')
-        const name = interaction.options.getString('nuevo_nombre')
-        const iconAttachment = interaction.options.getAttachment('nuevo_icono')
+        const name = interaction.options.getString('nuevo-nombre')
+        const iconAttachment = interaction.options.getAttachment('nuevo-icono')
         const iconURL = iconAttachment?.url
         const color = interaction.options.getString('nuevo_color')
         const team = await updateTeam({ teamName, name, iconURL, color })
@@ -195,10 +195,10 @@ module.exports = {
         const newRole = interaction.options.getString('nuevo-rol')
         const team = await changeMemberRole({ discordId, newRole })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message:`Rol del usuario <@${discordId}> actualizado en **${team.name}** a ${newRol}.` })]
+          embeds: [getSuccesEmbed({ message:`Rol del usuario <@${discordId}> actualizado en **${team.name}** a ${newRole}.` })]
         })
 
-      } else if (sub === 'regenerar_codigo') {
+      } else if (sub === 'regenerar-codigo') {
         const teamName = interaction.options.getString('nombre-equipo')
         const team = await updateTeamCode({ teamName })
         await team.save()

@@ -1,7 +1,7 @@
 const { ActionRowBuilder } = require('discord.js')
 
 const { checkTeamUserHasPerms, findTeam } = require('../../../services/team.js')
-const { getTeamAddMemberButton, getTeamChangeMemberRoleButton, getTeamKickMemberButton } = require('../../../discord/buttons/team.js')
+const { getTeamAddMemberButton, getTeamChangeMemberRoleButton, getTeamKickMemberButton, getTeamCancelButton } = require('../../../discord/buttons/team.js')
 const { getErrorEmbed } = require('../../../discord/embeds/management.js')
 
 module.exports = {
@@ -19,16 +19,15 @@ module.exports = {
         })
       }
 
-      const team = await findTeam({ discordId })
-
       const row = new ActionRowBuilder().addComponents(
         getTeamAddMemberButton(),
         getTeamChangeMemberRoleButton(),
-        getTeamKickMemberButton
+        getTeamKickMemberButton()
       )
+      const row2 = new ActionRowBuilder().addComponents(getTeamCancelButton())
 
       await interaction.update({
-        components: [row]
+        components: [row, row2]
       })
 
     } catch (error) {

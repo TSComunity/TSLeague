@@ -403,11 +403,11 @@ const addMemberToTeam = async ({ teamName = null, teamCode = null, discordId }) 
  * @returns {Object} equipo actualizado.
  */
 const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, newRole }) => {
-  if (!discordId || !newRol) {
+  if (!discordId || !newRole) {
     throw new Error('Faltan datos: discordId o newRole.')
   }
 
-  const team = findTeam({ teamName, teamCode, discordId })
+  const team = await findTeam({ teamName, teamCode, discordId })
 
   const member = team.members.find(m => m.userId?.discordId === discordId)
   if (!member) throw new Error('Miembro no encontrado.')
@@ -421,7 +421,7 @@ const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, n
     const currentLeaders = team.members.filter(m => m.role === 'leader')
     if (currentLeaders.length >= 1) {
       const otherLeader = currentLeaders.find(m => m.userId?.discordId !== discordId)
-      if (otherLeader) otherLeader.role = 'subleader'
+      if (otherLeader) otherLeader.role = 'sub-leader'
     }
 
     // Asigna líder al nuevo miembro

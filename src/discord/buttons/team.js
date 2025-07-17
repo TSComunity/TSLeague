@@ -83,7 +83,7 @@ const getTeamAddMemberButton = () => {
 const getTeamChangeMemberRoleButton = () => {
     return (
         new ButtonBuilder()
-            .setCustomId('teamChangeRoleMember')
+            .setCustomId('teamChangeMemberRole')
             .setLabel('Gestionar Roles')
             .setEmoji('🔄')
             .setStyle(ButtonStyle.Secondary)
@@ -127,6 +127,16 @@ const getTeamChangeMemberRoleToMember = () => {
     )
 }
 
+const getTeamCancelButton = () => {
+    return (
+        new ButtonBuilder()
+        .setCustomId('teamCancel')
+        .setLabel('Cancelar')
+        .setEmoji('❌')
+        .setStyle(ButtonStyle.Danger)
+    )
+}
+
 module.exports = {
     getTeamSeeButton,
     getTeamLeftButton,
@@ -140,5 +150,6 @@ module.exports = {
     getTeamKickMemberButton,
     getTeamChangeMemberRoleToLeader,
     getTeamChangeMemberRoleToSubLeader,
-    getTeamChangeMemberRoleToMember
+    getTeamChangeMemberRoleToMember,
+    getTeamCancelButton
 }

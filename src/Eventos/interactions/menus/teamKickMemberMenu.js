@@ -43,7 +43,7 @@ module.exports = {
         components
       })
       
-      await interaction.reply({
+      await interaction.followUp({
         ephemeral: true,
         embeds: [getSuccesEmbed({ message: `Se elimino al usuario <@${discordId}> del equipo **${team.name}**.` })]
       })

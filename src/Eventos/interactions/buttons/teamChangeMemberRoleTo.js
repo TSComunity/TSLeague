@@ -16,9 +16,33 @@ module.exports = {
       if (newRole === 'sub-leader') rol === '⭐ Sublíder'
       if (newRole === 'member') rol === '👤 Miembro'
 
-      const team = await changeMemberRole({ discordId, newRole })
 
-      return interaction.reply({
+      const perms = await checkTeamUserHasPerms({ discordId })
+
+      let components = []
+
+      if (perms) {
+          components.push(new ActionRowBuilder().addComponents(
+              getTeamChangeNameButton(),
+              getTeamChangeIconButton(),
+              getTeamChangeColorButton(),
+              getTeamManageMembersButton(),
+              getTeamReGenerateCodeButton()
+          ))
+      }
+
+      components.push(new ActionRowBuilder().addComponents(
+          getTeamLeftButton()
+      ))
+      
+
+      await changeMemberRole({ discordId, newRole })
+
+      interaction.update({
+        components
+      })
+
+      return interaction.followUp({
         ephemeral: true,
         embeds: [getSuccesEmbed({ message: `Se ha actualizado el rol de <@${discordId}> ha \`${rol}\`.`})]
       })
