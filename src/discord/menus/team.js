@@ -18,11 +18,12 @@ const getTeamChangeColorMenu = () => {
 const getTeamKickMemberMenu = ({ options }) => {
     return(
         new StringSelectMenuBuilder()
-                .setCustomId('teamkickMemberMenu')
+                .setCustomId('teamKickMemberMenu')
                 .setPlaceholder('Selecciona un miembro para expulsarlo')
                 .addOptions(options)
     )
 }
+
 const getTeamChangeMemberRoleMenu = ({ options }) => {
     return (
         new StringSelectMenuBuilder()

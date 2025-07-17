@@ -100,29 +100,32 @@ const getTeamKickMemberButton = () => {
     )
 }
 
-const getTeamChangeMemberRoleToLeader = () => {
+const getTeamChangeMemberRoleToLeader = ({ discordId }) => {
     return (
         new ButtonBuilder()
           .setCustomId(`teamChangeMemberRoleTo_leader_${discordId}`)
-          .setLabel('👑 Líder')
+          .setLabel('Cambiar a Líder')
+          .setEmoji('👑')
           .setStyle(ButtonStyle.Danger)
     )
 }
 
-const getTeamChangeMemberRoleToSubLeader = () => {
+const getTeamChangeMemberRoleToSubLeader = ({ discordId }) => {
     return (
         new ButtonBuilder()
-          .setCustomId(`teamChangeMemberRoleTo_member_sub-leader_${discordId}`)
-          .setLabel('⭐ Sub-líder')
+          .setCustomId(`teamChangeMemberRoleTo_sub-leader_${discordId}`)
+          .setLabel('Cambiar a Sub-líder')
+          .setEmoji('⭐')
           .setStyle(ButtonStyle.Primary)
     )
 }
 
-const getTeamChangeMemberRoleToMember = () => {
+const getTeamChangeMemberRoleToMember = ({ discordId }) => {
     return (
         new ButtonBuilder()
           .setCustomId(`teamChangeMemberRoleTo_member_${discordId}`)
-          .setLabel('👤 Miembro')
+          .setLabel('Cambiar a Miembro')
+          .setEmoji('👤')
           .setStyle(ButtonStyle.Secondary)
     )
 }

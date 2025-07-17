@@ -194,8 +194,15 @@ module.exports = {
         const discordId = user.id
         const newRole = interaction.options.getString('nuevo-rol')
         const team = await changeMemberRole({ discordId, newRole })
+        let role = ''
+        if (newRole === 'leader') role = 'líder'
+        if (newRole === 'sub-leader') role = 'sub-líder'
+        if (newRole === 'member') role = 'miembro'
+        if (newRole !== 'leader' && newRole !== 'sub-leader' && newRole !== 'member') {
+          throw new Error('No se ha proporcionado un rol valido.')
+        }
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message:`Rol del usuario <@${discordId}> actualizado en **${team.name}** a ${newRole}.` })]
+          embeds: [getSuccesEmbed({ message:`Rol del usuario <@${discordId}> actualizado en el equipo **${team.name}** a \`${role}\`.` })]
         })
 
       } else if (sub === 'regenerar-codigo') {

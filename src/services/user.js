@@ -10,7 +10,7 @@ const { roles, guild: configGuild } = require('../configs/league.js')
  * @returns {Boolean} isEligible - Si es elegible o no.
  */
 const checkUserVerification = async ({ discordId }) => {
-    console.log('aaaaaaaa')
+
     const user = await User.findOne({ discordId })
     if (!user) return false
 

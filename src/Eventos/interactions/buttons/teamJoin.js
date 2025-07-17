@@ -17,7 +17,6 @@ module.exports = {
     try {
 
         const isVerified = await checkUserVerification({ discordId: interaction.user.id })
-      console.log(isVerified)
         if (!isVerified) {
             const modal = getUserVerifyModal()
 

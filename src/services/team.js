@@ -408,26 +408,33 @@ const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, n
   }
 
   const team = await findTeam({ teamName, teamCode, discordId })
+  if (!team) throw new Error('Equipo no encontrado.')
 
   const member = team.members.find(m => m.userId?.discordId === discordId)
   if (!member) throw new Error('Miembro no encontrado.')
 
-  const isAlreadyLeader = member.role === 'leader'
+  const isCurrentLeader = member.role === 'leader'
+
+  // ❌ No se puede quitar el rol de líder directamente
+  if (isCurrentLeader && newRole !== 'leader') {
+    throw new Error('No se puede quitar el rol de líder. Asigna primero a otro miembro como líder.')
+  }
 
   if (newRole === 'leader') {
-    if (isAlreadyLeader) throw new Error('Este miembro ya es líder.')
-
-    // Baja a sublíder al líder actual (si hay uno distinto)
-    const currentLeaders = team.members.filter(m => m.role === 'leader')
-    if (currentLeaders.length >= 1) {
-      const otherLeader = currentLeaders.find(m => m.userId?.discordId !== discordId)
-      if (otherLeader) otherLeader.role = 'sub-leader'
+    if (isCurrentLeader) {
+      throw new Error('Este miembro ya es líder.')
     }
 
-    // Asigna líder al nuevo miembro
+    // Buscar al líder actual
+    const currentLeader = team.members.find(m => m.role === 'leader')
+    if (currentLeader) {
+      currentLeader.role = 'sub-leader'
+    }
+
+    // Promocionar a este miembro como líder
     member.role = 'leader'
   } else {
-    // Cambiar a cualquier otro rol (normal)
+    // Cambiar a cualquier otro rol (member o sub-leader)
     member.role = newRole
   }
 

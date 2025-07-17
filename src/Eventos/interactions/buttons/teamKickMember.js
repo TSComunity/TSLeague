@@ -2,8 +2,8 @@ const { ActionRowBuilder } = require('discord.js')
 const { findTeam, checkTeamUserHasPerms } = require('../../../services/team.js')
 
 const { getErrorEmbed } = require('../../../discord/embeds/management.js')
-const { getTeamKickMemberMenu } = require('../../../discord/embeds/management.js')
-
+const { getTeamKickMemberMenu } = require('../../../discord/menus/team.js')
+const { getTeamCancelButton } = require('../../../discord/buttons/team.js')
 const { getUserDisplayName } = require('../../../services/user.js')
 
 module.exports = {
@@ -45,22 +45,27 @@ module.exports = {
       if (membersToKick.length === 0) {
         return interaction.reply({
           ephemeral: true,
-          embeds: [getErrorEmbed({ error: 'No hay ningun miembro al que puedas expulsar' })]
+          embeds: [getErrorEmbed({ error: 'No hay ningun miembro al que puedas expulsar.' })]
         })
       }
-
+        const rolesJSON = {
+          'leader': 'Líder',
+          'sub-leader': 'Sub-líder',
+          'member': 'Miembro'
+        }
         const options = await Promise.all(
         membersToKick.map(async m => ({
-            label: await getUserDisplayName({ guild: interaction.guild, discordId: m.userId }),
-            description: m.role,
+            label: await getUserDisplayName({ guild: interaction.guild, discordId: m.userId.discordId }),
+            description: rolesJSON[m.role],
             value: m.userId.discordId,
         }))
         )
 
       const row = new ActionRowBuilder().addComponents(getTeamKickMemberMenu({ options }))
+      const row2 = new ActionRowBuilder().addComponents(getTeamCancelButton())
 
       await interaction.update({
-        components: [row],
+        components: [row, row2],
       })
 
     } catch (error) {

@@ -5,7 +5,8 @@ const {
 const {
   getTeamChangeMemberRoleToLeader,
   getTeamChangeMemberRoleToSubLeader,
-  getTeamChangeMemberRoleToMember
+  getTeamChangeMemberRoleToMember,
+  getTeamCancelButton
 } = require('../../../discord/buttons/team.js')
 
 const {
@@ -39,22 +40,37 @@ module.exports = {
 
       const executor = team.members.find(m => m.userId.discordId === executorDiscordId);
       const executorRole = executor?.role;
-      if (!executorRole) throw new Error('No se pudo determinar tu rol en el equipo.');
+      const selected = team.members.find(m => m.userId.discordId === selectedDiscordId);
+      const selectedRole = selected?.role;
+      if (!executorRole) throw new Error('No se pudo determinar el rol del usuario en el equipo.');
+      if (!selectedRole) throw new Error('No se pudo determinar el rol del usuario en el equipo.');
 
       const buttons = [];
 
       // Permisos según el rol del que ejecuta:
       if (executorRole === 'leader') {
-        buttons.push(
-          getTeamChangeMemberRoleToLeader(selectedDiscordId),
-          getTeamChangeMemberRoleToSubLeader(selectedDiscordId),
-          getTeamChangeMemberRoleToMember(selectedDiscordId)
-        )
+          if (selectedRole === 'sub-leader') {
+            buttons.push(
+              getTeamChangeMemberRoleToLeader({ discordId: selectedDiscordId }),
+              getTeamChangeMemberRoleToMember({ discordId: selectedDiscordId })
+            )
+          } else if (selectedRole === 'member') {
+            buttons.push(
+              getTeamChangeMemberRoleToLeader({ discordId: selectedDiscordId }),
+              getTeamChangeMemberRoleToSubLeader({ discordId: selectedDiscordId })
+            )    
+          }
+
       } else if (executorRole === 'sub-leader') {
-        buttons.push(
-          getTeamChangeMemberRoleToSubLeader(selectedDiscordId),
-          getTeamChangeMemberRoleToMember(selectedDiscordId)
-        )
+          if (selectedRole === 'sub-leader') {
+            buttons.push(
+              getTeamChangeMemberRoleToMember({ discordId: selectedDiscordId })
+            )
+          } else if (selectedRole === 'member') {
+            buttons.push(
+              getTeamChangeMemberRoleToSubLeader({ discordId: selectedDiscordId })
+            )    
+          }
       } else {
         return interaction.reply({
           ephemeral: true,
@@ -63,9 +79,10 @@ module.exports = {
       }
 
       const row = new ActionRowBuilder().addComponents(buttons);
+      const row2 = new ActionRowBuilder().addComponents(getTeamCancelButton())
 
       await interaction.update({
-        components: [row]
+        components: [row, row2]
       })
 
     } catch (error) {

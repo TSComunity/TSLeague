@@ -1,6 +1,18 @@
-const { changeMemberRole } = require('../../../services/team.js')
+const { ActionRowBuilder } = require('discord.js')
+
+const { changeMemberRole, checkTeamUserHasPerms } = require('../../../services/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
+const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
+
+const {
+    getTeamLeftButton,
+    getTeamChangeNameButton,
+    getTeamChangeIconButton,
+    getTeamChangeColorButton,
+    getTeamManageMembersButton,
+    getTeamReGenerateCodeButton
+} = require('../../../discord/buttons/team.js')
 
 module.exports = {
   condition: (id) => id.startsWith('teamChangeMemberRoleTo'),
@@ -12,12 +24,12 @@ module.exports = {
       const newRole = splittedId[1]
 
       let rol = ''
-      if (newRole === 'leader') rol === '👑 Líder'
-      if (newRole === 'sub-leader') rol === '⭐ Sublíder'
-      if (newRole === 'member') rol === '👤 Miembro'
+      if (newRole === 'leader') rol = '👑 Líder'
+      if (newRole === 'sub-leader') rol = '⭐ Sublíder'
+      if (newRole === 'member') rol = '👤 Miembro'
 
 
-      const perms = await checkTeamUserHasPerms({ discordId })
+      const perms = await checkTeamUserHasPerms({ discordId: interaction.user.id })
 
       let components = []
 
@@ -36,13 +48,14 @@ module.exports = {
       ))
       
 
-      await changeMemberRole({ discordId, newRole })
+      const team = await changeMemberRole({ discordId, newRole })
 
-      interaction.update({
+      await interaction.update({
+        embeds: [getTeamInfoEmbed({ team })],
         components
       })
 
-      return interaction.followUp({
+      await interaction.followUp({
         ephemeral: true,
         embeds: [getSuccesEmbed({ message: `Se ha actualizado el rol de <@${discordId}> ha \`${rol}\`.`})]
       })

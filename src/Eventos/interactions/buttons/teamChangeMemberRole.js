@@ -2,8 +2,8 @@ const { ActionRowBuilder } = require('discord.js')
 const { findTeam, checkTeamUserHasPerms } = require('../../../services/team.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamChangeMemberRoleMenu } = require('../../../discord/menus/team.js')
-
 const { getUserDisplayName } = require('../../../services/user.js')
+const { getTeamCancelButton } = require('../../../discord/buttons/team.js')
 
 module.exports = {
   customId: 'teamChangeMemberRole',
@@ -17,26 +17,52 @@ module.exports = {
         return interaction.reply({
           ephemeral: true,
           embeds: [getErrorEmbed({ error: 'No tienes permisos para cambiar roles.' })],
-        })
+        });
       }
 
-      const team = await findTeam({ discordId })
+      const team = await findTeam({ discordId });
+      const rolesJSON = {
+        'leader': 'Líder',
+        'sub-leader': 'Sub-líder',
+        'member': 'Miembro'
+      };
+      const member = team.members.find(m => m.userId.discordId === discordId)
+      let filteredMembers = [];
 
-const options = await Promise.all(
-  team.members
-    .filter(m => m.userId.discordId !== discordId)
-    .map(async m => ({
-      label: await getUserDisplayName({ guild: interaction.guild, discordId: m.userId.discordId}),
-      description: m.role,
-      value: m.userId.discordId,
-    }))
-)
+      if (member.role === 'leader') {
+        filteredMembers = team.members.filter(m => m.userId.discordId !== discordId);
+      } else if (member.role === 'sub-leader') {
+        filteredMembers = team.members.filter(m => m.role === 'member');
+      } else {
+        // Si es miembro
+        return interaction.reply({
+          ephemeral: true,
+          embeds: [getErrorEmbed({ error: 'No tienes permisos para cambiar roles.' })],
+        });
+      }
 
-      const row = new ActionRowBuilder().addComponents(getTeamChangeMemberRoleMenu({ options }))
+      if (filteredMembers.length === 0) {
+        return interaction.reply({
+          ephemeral: true,
+          embeds: [getErrorEmbed({ error: 'No hay ningun miembro al que puedas cambiarle el rol.' })],
+        });
+      }
+
+      const options = await Promise.all(
+        filteredMembers.map(async m => ({
+          label: await getUserDisplayName({ guild: interaction.guild, discordId: m.userId.discordId }),
+          description: rolesJSON[m.role],
+          value: m.userId.discordId,
+        }))
+      );
+
+      const row = new ActionRowBuilder().addComponents(getTeamChangeMemberRoleMenu({ options }));
+      const row2 = new ActionRowBuilder().addComponents(getTeamCancelButton());
 
       await interaction.update({
-        components: [row]
+        components: [row, row2]
       });
+
     } catch (error) {
       console.error(error);
       return interaction.reply({
