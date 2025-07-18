@@ -54,4 +54,18 @@ Código del equipo: \`${teamCode}\`.
     )
 }
 
-module.exports = { getTeamInfoEmbed, getRestingTeamEmbed, getAddMemberInfoEmbed }
+const getTeamsSummaryEmbed = ({ divisionsCount, teamsInDivisionsCount, teamsCount }) => {
+
+    return (
+        new EmbedBuilder()
+            .setColor('Purple')
+            .setDescription(`## Divisiones`)
+            .addFields(
+                { name: 'Divisiones', value: `🧩 \`${divisionsCount}\``, inline: true },
+                { name: 'Equipos en divisiones', value: `👥 \`${teamsInDivisionsCount}\``, inline: true },
+                { name: 'Equipos totales', value: `🎯 \`${teamsCount}\``, inline: true }
+            )
+    )
+}
+
+module.exports = { getTeamInfoEmbed, getRestingTeamEmbed, getAddMemberInfoEmbed, getTeamsSummaryEmbed }

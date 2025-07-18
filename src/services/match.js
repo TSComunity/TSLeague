@@ -191,6 +191,45 @@ const createMatch = async ({ client, seasonId, divisionId, roundIndex, teamAId, 
   }
 }
 
+const createMatchMannualy = async ({ client, teamAId, teamBId }) => {
+  // Calcular matchIndex según los partidos existentes en la división y ronda
+  const existingMatchesCount = await Match.countDocuments()
+
+  const matchIndex = existingMatchesCount + 1 // siguiente índice
+
+  // Crear el partido
+  let match
+  try {
+    match = await Match.create({
+      matchIndex,
+      roundIndex,
+      seasonId,
+      divisionId,
+      teamAId,
+      teamBId,
+      scoreA: 0,
+      scoreB: 0,
+      scheduledAt: getNextDayAndHour({ day: defaultStartDay, hour: defaultStartHour }),
+      status: 'scheduled',
+      set1: { winner: null },
+      set2: { winner: null },
+      set3: { winner: null },
+      imageURL: null
+    })
+
+    // Crear canal de Discord y actualizar el match con channelId
+    const updatedMatch = await createMatchChannel({ match, client })
+
+    return updatedMatch
+  } catch (error) {
+    // Si hubo error y ya se creó el match, borrarlo para no dejar basura
+    if (match && match._id) {
+      await Match.findByIdAndDelete(match._id)
+    }
+    throw error
+  }
+}
+
 const findMatchByNamesAndSeason = async ({ seasonIndex, teamAName, teamBName }) => {
   const season = await Season.findOne({ seasonIndex })
   if (!season) throw new Error('Temporada no encontrada')

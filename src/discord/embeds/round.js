@@ -4,7 +4,7 @@ const getRoundAddedEmbed = ({ divisionsWithNewRounds, seasonIndex, seasonName, n
 
   let matchesLength = 0
   let restingLength = 0
-  for (const division of divisionWithNewRounds) {
+  for (const division of divisionsWithNewRounds) {
     matchesLength += division.newMatchesDocs.length
     restingLength += division.newRestingTeamsDocs.length
   }
@@ -12,7 +12,7 @@ const getRoundAddedEmbed = ({ divisionsWithNewRounds, seasonIndex, seasonName, n
   return (
       new EmbedBuilder()
           .setColor('Purple')
-          .setDescription(`## Nueva Jornada - Temporada ${name}`)
+          .setDescription(`## Nueva Jornada - Temporada ${seasonName}`)
           .addFields(
               { name: 'Indice', value: `👆 \`${seasonIndex}\``, inline: true },
               { name: 'Estado', value: `\`📅 En curso\``, inline: true },

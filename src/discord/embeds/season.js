@@ -36,7 +36,7 @@ const getSeasonSummaryEmbed = ({ season }) => {
 
     return (
         new EmbedBuilder()
-            .setColor(status === 'active' ? 'Purple' : '#4f07f7')
+            .setColor('Purple')
             .setDescription(`## Temporada ${name}`)
             .addFields(
                 { name: 'Indice', value: `👆 \`${seasonIndex}\``, inline: true },

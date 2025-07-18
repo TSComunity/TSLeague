@@ -3,5 +3,5 @@ require('dotenv').config()
 module.exports = {
     TOKEN: process.env.TOKEN,
     MONGODB_URL: process.env.MONGODBURL,
-    BRAWL_STARS_API_KEY: null
+    BRAWL_STARS_API_KEY: process.env.BRAWL_STARS_API_KEY
 }

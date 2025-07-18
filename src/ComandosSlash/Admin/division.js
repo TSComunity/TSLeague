@@ -20,6 +20,11 @@ module.exports = {
             .setDescription('Tier de la división')
             .setRequired(true)
         )
+        .addStringOption(opt =>
+          opt.setName('emoji')
+            .setDescription('Emoji de la división')
+            .setRequired(true)
+        )
     )
     .addSubcommand(sub =>
       sub
@@ -41,13 +46,18 @@ module.exports = {
             .setRequired(true)
         )
         .addStringOption(opt =>
-          opt.setName('nuevo_nombre')
+          opt.setName('nuevo-nombre')
             .setDescription('Nuevo nombre)')
             .setRequired(false)
         )
         .addIntegerOption(opt =>
-          opt.setName('nuevo_tier')
+          opt.setName('nuevo-tier')
             .setDescription('Nuevo tier')
+            .setRequired(false)
+        )
+        .addStringOption(opt =>
+          opt.setName('nuevo-emoji')
+            .setDescription('Nuevo emoji')
             .setRequired(false)
         )
     ),
@@ -59,9 +69,10 @@ module.exports = {
       if (subcomand === 'crear') {
         const name = interaction.options.getString('nombre')
         const tier = interaction.options.getInteger('tier')
-        const división = await createDivision({ name, tier })
+        const emoji = interaction.options.getString('emoji')
+        const división = await createDivision({ name, tier, emoji })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `División creada: **${división.name}** (Tier ${división.tier})` })]
+          embeds: [getSuccesEmbed({ message: `División creada: **${división.emoji} ${división.name}** (Tier ${división.tier})` })]
         })
       }
 
@@ -75,12 +86,13 @@ module.exports = {
 
       else if (subcomand === 'actualizar') {
         const name = interaction.options.getString('nombre')
-        const newName = interaction.options.getString('nuevo_nombre')
-        const newTier = interaction.options.getInteger('nuevo_tier')
+        const newName = interaction.options.getString('nuevo-nombre')
+        const newTier = interaction.options.getInteger('nuevo-tier')
+        const newEmoji = interaction.options.getString('nuevo-emoji')
 
-        const división = await updateDivision({ name, newName, newTier })
+        const división = await updateDivision({ name, newName, newTier, newEmoji })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `División actualizada: **${división.name}** (Tier ${división.tier})` })]
+          embeds: [getSuccesEmbed({ message: `División actualizada: **${división.emoji} ${división.name}** (Tier ${división.tier})` })]
         })
       }
     } catch (error) {

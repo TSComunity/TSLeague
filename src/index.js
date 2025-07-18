@@ -68,4 +68,4 @@ setInterval(() => {
   deleteAllEmptyTeams().catch(error => console.error(error))
   executeDueScheduledFunctions({ client }).catch(error => console.error(error))
   updateUsersPingRole({ client }).catch(error => console.error(error))
-}, 1000 * 60 * 10)
+}, 1000 * 30)

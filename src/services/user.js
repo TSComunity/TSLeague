@@ -2,7 +2,7 @@ const Team = require('../Esquemas/Team.js')
 const User = require('../Esquemas/User.js')
 
 const { roles, guild: configGuild } = require('../configs/league.js')
-
+const { BRAWL_STARS_API_KEY } = require('../configs/configs.js')
 
 /**
  * Actualiza la elegibilidad de un equipo dependiendo de si tiene al menos 3 miembros y devuelve su elegibilidad.
@@ -21,21 +21,33 @@ const checkUserVerification = async ({ discordId }) => {
 }
 
 const verifyUser = async ({ discordId, brawlId }) => {
-    if (!discordId || !brawlId) {
-        throw new Error('Faltan datos: discordId o brawlId.')
-    }
-    let user
-    user = await User.findOne({ discordId })
-    if (!user) {
-        user = await User.create({ discordId, brawlId: brawlId.startsWith('#') ? brawlId.toUpperCase() : `#${brawlId.toUpperCase()}`})
-        return user
-    }
-    
-    // se puede verificar si existe llamando a la api de brawl
+  if (!discordId || !brawlId)
+    throw new Error('Faltan datos: discordId o brawlId')
 
-    user.brawlId = brawlId.startsWith('#') ? brawlId.toUpperCase() : `#${brawlId.toUpperCase()}`
+  const formattedBrawlId = brawlId.startsWith('#')
+    ? brawlId.toUpperCase()
+    : `#${brawlId.toUpperCase()}`
+
+  const token = `Bearer ${BRAWL_STARS_API_KEY}`
+  const encodedTag = encodeURIComponent(formattedBrawlId)
+
+  const res = await fetch(`https://api.brawlstars.com/v1/players/${encodedTag}`, {
+    headers: { Authorization: token, Accept: 'application/json' }
+  })
+
+  if (!res.ok)
+    throw new Error(`No existe ninguna cuenta con el ID \`${formattedBrawlId}\` como ID en brawl.`)
+
+  let user = await User.findOne({ discordId })
+
+  if (!user)
+    user = await User.create({ discordId, brawlId: formattedBrawlId })
+  else {
+    user.brawlId = formattedBrawlId
     await user.save()
-    return user
+  }
+
+  return user
 }
 
 
