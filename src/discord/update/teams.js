@@ -1,4 +1,5 @@
 const {
+  ActionRowBuilder,
   ContainerBuilder,
   TextDisplayBuilder,
   MediaComponentBuilder,
@@ -13,6 +14,7 @@ const Team = require('../../Esquemas/Team.js');
 const config = require('../../configs/league.js');
 
 const { getTeamsSummaryEmbed } = require('../embeds/team.js');
+const { getTeamStatsButton } = require('../buttons/team.js')
 
 const maxTeams = config.division.maxTeams;
 
@@ -123,7 +125,7 @@ function buildDivisionContainer(division, teams) {
     .setAccentColor(parseInt(division.color.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
+        `## ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
       )
     );
 
@@ -134,19 +136,41 @@ function buildDivisionContainer(division, teams) {
   }
 
   for (const team of teams) {
-    const { name, iconURL } = team;
+    const { name, iconURL, members } = team;
+
+    const rolePriority = { 'leader': 0, 'sub-leader': 1, 'member': 2 }
+      const sortedMembers = [...team.members].sort((a, b) => {
+        return rolePriority[a.role] - rolePriority[b.role]
+      })
+
+      const formattedList = sortedMembers.map(m => {
+        const userId = m.userId.discordId || m.userId // por si acaso no está poblado
+        const roleLabel = m.role === 'leader' ? '<:leader:1394257429373390878>' :
+                          m.role === 'sub-leader' ? '<:subleader:1394257347861286933>' :
+                          '<:member:1394257533094461533>'
+        return `${roleLabel} <@${userId}>`
+      }).join('\n')
 
     const thumbnailComponent = new ThumbnailBuilder({ media: { url: iconURL } });
 
     const sectionComponent = new SectionBuilder()
       .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(name)
+        new TextDisplayBuilder().setContent([
+          `### ${name}`,
+          formattedList
+        ].join('\n'))
       )
       .setThumbnailAccessory(thumbnailComponent)
 
+      const sectionComponent2 = new SectionBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent('** **')
+      )
+      .setButtonAccessory(getTeamStatsButton())
+
     container
       .addSeparatorComponents(new SeparatorBuilder())
-      .addSectionComponents(sectionComponent);
+      .addSectionComponents(sectionComponent, sectionComponent2)
   }
 
   return container;

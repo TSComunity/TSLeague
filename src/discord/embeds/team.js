@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js')
+const config  = require('../../configs/league.js')
 
 const getTeamInfoEmbed = ({ team, perms }) => {
-    console.log(team)
 
     const rolePriority = { 'leader': 0, 'sub-leader': 1, 'member': 2 }
       const sortedMembers = [...team.members].sort((a, b) => {
@@ -10,10 +10,10 @@ const getTeamInfoEmbed = ({ team, perms }) => {
 
       const formattedList = sortedMembers.map(m => {
         const userId = m.userId.discordId || m.userId // por si acaso no está poblado
-        const roleLabel = m.role === 'leader' ? '👑 Líder' :
-                          m.role === 'sub-leader' ? '🛡 Sub-líder' :
-                          '👤 Miembro'
-        return `${roleLabel} — <@${userId}>`
+        const roleLabel = m.role === 'leader' ? '<:leader:1394257429373390878>' :
+                          m.role === 'sub-leader' ? '<:subleader:1394257347861286933>' :
+                          '<:member:1394257533094461533>'
+        return `${roleLabel} <@${userId}>`
       }).join('\n')
 
 
@@ -23,7 +23,7 @@ const getTeamInfoEmbed = ({ team, perms }) => {
             .setThumbnail(team.iconURL)
             .setDescription(`## ${team.name}`)
             .addFields(
-                { name: 'Miembros', value: formattedList, inline: true },
+                { name: `Miembros — ${team.members.length}/${config.team.maxMembers}`, value: formattedList, inline: true },
                 { name: 'Division', value: `${team.divisionId?.name ? `\`${team.divisionId.name}\`` : 'En ninguna division'}`, inline: true },
                 ...(perms ? [{ name: 'Código', value: `\`${team.code}\``, inline: true }] : [])
 	    )

@@ -24,9 +24,9 @@ module.exports = {
       const newRole = splittedId[1]
 
       let rol = ''
-      if (newRole === 'leader') rol = '👑 Líder'
-      if (newRole === 'sub-leader') rol = '⭐ Sublíder'
-      if (newRole === 'member') rol = '👤 Miembro'
+      if (newRole === 'leader') rol = '<:leader:1394257429373390878> Líder'
+      if (newRole === 'sub-leader') rol = '<subleader:1394257347861286933> Sublíder'
+      if (newRole === 'member') rol = '<:member:1394257533094461533> Miembro'
 
 
       const perms = await checkTeamUserHasPerms({ discordId: interaction.user.id })

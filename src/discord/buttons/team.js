@@ -105,7 +105,7 @@ const getTeamChangeMemberRoleToLeader = ({ discordId }) => {
         new ButtonBuilder()
           .setCustomId(`teamChangeMemberRoleTo_leader_${discordId}`)
           .setLabel('Cambiar a Líder')
-          .setEmoji('👑')
+          .setEmoji('<:leader:1394257429373390878>')
           .setStyle(ButtonStyle.Danger)
     )
 }
@@ -115,7 +115,7 @@ const getTeamChangeMemberRoleToSubLeader = ({ discordId }) => {
         new ButtonBuilder()
           .setCustomId(`teamChangeMemberRoleTo_sub-leader_${discordId}`)
           .setLabel('Cambiar a Sub-líder')
-          .setEmoji('⭐')
+          .setEmoji('<:subleader:1394257347861286933>')
           .setStyle(ButtonStyle.Primary)
     )
 }
@@ -140,6 +140,16 @@ const getTeamCancelButton = () => {
     )
 }
 
+const getTeamStatsButton = () => {
+    return (
+        new ButtonBuilder()
+        .setCustomId('teamStats')
+        .setLabel('Ver Estadísticas')
+        .setEmoji('👀')
+        .setStyle(ButtonStyle.Primary)
+    )
+}
+
 module.exports = {
     getTeamSeeButton,
     getTeamLeftButton,
@@ -154,5 +164,6 @@ module.exports = {
     getTeamChangeMemberRoleToLeader,
     getTeamChangeMemberRoleToSubLeader,
     getTeamChangeMemberRoleToMember,
-    getTeamCancelButton
+    getTeamCancelButton,
+    getTeamStatsButton
 }

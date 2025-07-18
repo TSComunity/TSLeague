@@ -33,7 +33,7 @@ module.exports = {
           const nombre = user ? user.displayName : `ID: ${j.discordId}`;
           const tag = j.brawlId || 'Sin tag';
           let emoji = '👤'; // Miembro por defecto
-          if (j.jerarquia === 'lider') emoji = '👑';
+          if (j.jerarquia === 'lider') emoji = '<:leader:1394257429373390878>';
           else if (j.jerarquia === 'sublider') emoji = '🥈';
           const rolFormateado = j.jerarquia ? capitalizar(j.jerarquia) : 'Miembro';
           return `• **${nombre}** — ${tag} (${emoji} ${rolFormateado})`;
