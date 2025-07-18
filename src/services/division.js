@@ -7,9 +7,9 @@ const Team = require('../Esquemas/Team.js')
  * @param {number} tier - Tier numérico (prioridad).
  * @returns {Object} newDivision - La división creada.
  */
-const createDivision = async ({ name, tier, emoji }) => {
-  if (!name || !tier || !emoji) {
-    throw new Error('Faltan datos: name, tier o emoji.')
+const createDivision = async ({ name, tier, emoji, color }) => {
+  if (!name || !tier || !emoji || !color) {
+    throw new Error('Faltan datos: name, tier, emoji o color.')
   }
 
   const divisions = await Division.find()
@@ -24,7 +24,7 @@ const createDivision = async ({ name, tier, emoji }) => {
     throw new Error('Ya existe una división con ese tier.')
   }
 
-  const newDivision = new Division({ name, tier, emoji })
+  const newDivision = new Division({ name, tier, emoji, color })
 
   await newDivision.save()
   return newDivision
@@ -63,7 +63,7 @@ const deleteDivision = async ({ name }) => {
  * @param {number} newTier - Nuevo tier (opcional).
  * @returns {Object} division - División actualizada.
  */
-const updateDivision = async ({ name, newName, newTier, newEmoji }) => {
+const updateDivision = async ({ name, newName, newTier, newEmoji, newColor }) => {
     if (!name) {
         throw new Error('Debes proporcionar un nombre.')
     }
@@ -92,6 +92,9 @@ const updateDivision = async ({ name, newName, newTier, newEmoji }) => {
 
     if (newEmoji) {
         division.emoji = newEmoji
+    }
+    if (newColor) {
+        division.color = newColor
     }
 
     await division.save()

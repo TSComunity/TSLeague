@@ -5,7 +5,7 @@ const config = require('../../configs/league.js')
 const getDivisionEndedEmbed = ({ division }) =>  {
     return (
         new EmbedBuilder()
-            .setColor('Blue')
+            .setColor(division.color)
             .setDescription('Mantenimiento')
     )
 }
@@ -36,7 +36,7 @@ const getDivisionRankingEmbed = ({ division }) => {
 
   return (
     new EmbedBuilder()
-      .setColor('Blue')
+      .setColor(division.color)
       .setDescription(`### División ${divisionName} — ${sortedTeams.length}/${maxTeams}`)
       .addFields(...teamFields)
   )

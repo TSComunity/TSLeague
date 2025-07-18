@@ -39,7 +39,7 @@ module.exports = {
         const brawlId = interaction.options.getString('brawl-id')
         await verifyUser({ discordId, brawlId })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `Se ha verificado al usuario <@${discordId}> con el ID: \`${brawlId.startsWith('#') ? brawlId.toUpperCase() : `#${brawlId.toUpperCase()}`}\`` })]
+          embeds: [getSuccesEmbed({ message: `Se ha verificado al usuario <@${discordId}> con el ID: \`${brawlId.startsWith('#') ? brawlId.toUpperCase() : `#${brawlId.toUpperCase()}`}\`.` })]
         })
 
       }

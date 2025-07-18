@@ -120,7 +120,7 @@ const updateTeamsEmbed = async ({ client }) => {
 // 🧠 Utilidad para construir el embed de una división
 function buildDivisionContainer(division, teams) {
   const container = new ContainerBuilder()
-    .setAccentColor(0x1bfc62)
+    .setAccentColor(parseInt(division.color.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `### ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
@@ -128,10 +128,9 @@ function buildDivisionContainer(division, teams) {
     );
 
   if (teams.length === 0) {
-    container.addTextDisplayComponents(
-      new TextDisplayBuilder().setContent('> División sin equipos.')
-    );
-    return container;
+    container.addSeparatorComponents(new SeparatorBuilder())
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent('División sin equipos.'))
+    return container
   }
 
   for (const team of teams) {

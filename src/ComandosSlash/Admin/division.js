@@ -2,6 +2,8 @@ const { SlashCommandBuilder } = require('discord.js')
 const { createDivision, deleteDivision, updateDivision } = require('../../services/division.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 
+const colors = require('../../configs/colors.json')
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('division')
@@ -24,6 +26,15 @@ module.exports = {
           opt.setName('emoji')
             .setDescription('Emoji de la división')
             .setRequired(true)
+        )
+        .addStringOption(opt =>
+          opt.setName('color')
+            .setDescription('Color de la división')
+            .setRequired(true)
+            .addChoices(...colors.map(color => ({
+                name: `${color.emoji} ${color.label}`, // Mostramos emoji + nombre
+                value: color.value
+            })))
         )
     )
     .addSubcommand(sub =>
@@ -60,6 +71,15 @@ module.exports = {
             .setDescription('Nuevo emoji')
             .setRequired(false)
         )
+        .addStringOption(opt =>
+          opt.setName('nuevo-color')
+            .setDescription('Nuevo color')
+            .setRequired(false)
+            .addChoices(...colors.map(color => ({
+                name: `${color.emoji} ${color.label}`, // Mostramos emoji + nombre
+                value: color.value
+            })))
+        )
     ),
 
   async execute(interaction) {
@@ -70,9 +90,10 @@ module.exports = {
         const name = interaction.options.getString('nombre')
         const tier = interaction.options.getInteger('tier')
         const emoji = interaction.options.getString('emoji')
-        const división = await createDivision({ name, tier, emoji })
+        const color = interaction.options.getString('color')
+        const división = await createDivision({ name, tier, emoji, color })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `División creada: **${división.emoji} ${división.name}** (Tier ${división.tier})` })]
+          embeds: [getSuccesEmbed({ message: `División **${división.emoji} ${división.name}** creada.` })]
         })
       }
 
@@ -80,7 +101,7 @@ module.exports = {
         const name = interaction.options.getString('nombre')
         const división = await deleteDivision({ name })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `División eliminada: **${división.name}**` })]
+          embeds: [getSuccesEmbed({ message: `División **${división.emoji} ${división.name}** eliminada.` })]
         })
       }
 
@@ -89,10 +110,11 @@ module.exports = {
         const newName = interaction.options.getString('nuevo-nombre')
         const newTier = interaction.options.getInteger('nuevo-tier')
         const newEmoji = interaction.options.getString('nuevo-emoji')
+        const newColor = interaction.options.getString('nuevo-color')
 
-        const división = await updateDivision({ name, newName, newTier, newEmoji })
+        const división = await updateDivision({ name, newName, newTier, newEmoji, newColor })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `División actualizada: **${división.emoji} ${división.name}** (Tier ${división.tier})` })]
+          embeds: [getSuccesEmbed({ message: `División **${división.emoji} ${división.name}** actualizada.` })]
         })
       }
     } catch (error) {

@@ -308,7 +308,7 @@ const updateTeam = async ({ teamName = null, teamCode = null, discordId = null, 
     const normalizedColor = color.replace(/^\p{Extended_Pictographic}\s*/u, '').trim()
 
     const colorObj = colors.find(c => c.value === normalizedColor)
-
+console.log({ normalizedColor, color, colorObj, colors })
     if (!colorObj) throw new Error('Color no válido.')
 
     team.color = colorObj.value // <--- usar el value, no el label

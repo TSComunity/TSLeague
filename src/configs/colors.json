@@ -1,10 +1,10 @@
 [
-  { "label": "Azul", "value": "Blue", "emoji": "🔵" },
-  { "label": "Rojo", "value": "Red", "emoji": "🔴" },
-  { "label": "Verde", "value": "Green", "emoji": "🟢" },
-  { "label": "Amarillo", "value": "Yellow", "emoji": "🟡" },
-  { "label": "Naranja", "value": "Orange", "emoji": "🟠" },
-  { "label": "Negro", "value": "NotQuiteBlack", "emoji": "⚫" },
-  { "label": "Blanco", "value": "White", "emoji": "⚪" }
-
+  { "label": "Rojo", "value": "#ED4245", "emoji": "🔴" },
+  { "label": "Naranja", "value": "#E67E22", "emoji": "🟠" },
+  { "label": "Amarillo", "value": "#FFFF00", "emoji": "🟡" },
+  { "label": "Verde", "value": "#57F287", "emoji": "🟢" },
+  { "label": "Azul", "value": "#3498DB", "emoji": "🔵" },
+  { "label": "Morado", "value": "#9B59B6", "emoji": "🟣" },
+  { "label": "Negro", "value": "#23272A", "emoji": "⚫" },
+  { "label": "Blanco", "value": "#FFFFFF", "emoji": "⚪" }
 ]

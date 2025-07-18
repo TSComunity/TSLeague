@@ -8,7 +8,6 @@ const {
     removeTeamFromDivision,
     removeMemberFromTeam,
     changeMemberRole
-
 } = require('../../services/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
@@ -160,7 +159,7 @@ module.exports = {
         const name = interaction.options.getString('nuevo-nombre')
         const iconAttachment = interaction.options.getAttachment('nuevo-icono')
         const iconURL = iconAttachment?.url
-        const color = interaction.options.getString('nuevo_color')
+        const color = interaction.options.getString('nuevo-color')
         const team = await updateTeam({ teamName, name, iconURL, color })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** actualizado.` })]
