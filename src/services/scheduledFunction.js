@@ -18,15 +18,10 @@ const functionMap = {
 */
 
 const addScheduledFunction = async ({
-
 functionName,
-
 parameters = {},
-
 day,
-
 hour
-
 }) => {
 
 if (!functionName || day === undefined || hour === undefined) throw new Error('Faltan datos: functionName, day o hour.')
@@ -34,6 +29,7 @@ if (!functionName || day === undefined || hour === undefined) throw new Error('F
 
 
 const scheduledFor = getNextDayAndHour({ day, hour })
+console.log(scheduledFor)
 
 const scheduledFunction = new ScheduledFunction({
 

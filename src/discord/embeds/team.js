@@ -10,9 +10,9 @@ const getTeamInfoEmbed = ({ team, perms }) => {
 
       const formattedList = sortedMembers.map(m => {
         const userId = m.userId.discordId || m.userId // por si acaso no está poblado
-        const roleLabel = m.role === 'leader' ? '<:leader:1394257429373390878>' :
-                          m.role === 'sub-leader' ? '<:subleader:1394257347861286933>' :
-                          '<:member:1394257533094461533>'
+        const roleLabel = m.role === 'leader' ? '<:leader:1395916423695564881>' :
+                          m.role === 'sub-leader' ? '<:subleader:1395916298025832519>' :
+                          '<:member:1395916668869283860>'
         return `${roleLabel} <@${userId}>`
       }).join('\n')
 
@@ -27,14 +27,6 @@ const getTeamInfoEmbed = ({ team, perms }) => {
                 { name: 'Division', value: `${team.divisionId?.name ? `\`${team.divisionId.name}\`` : 'En ninguna division'}`, inline: true },
                 ...(perms ? [{ name: 'Código', value: `\`${team.code}\``, inline: true }] : [])
 	    )
-    )
-}
-
-const getRestingTeamEmbed = ({ team }) => {
-    return (
-        new EmbedBuilder()
-            .setColor('Blue')
-            .setDescription('Mantenimiento')
     )
 }
 
@@ -68,4 +60,4 @@ const getTeamsSummaryEmbed = ({ divisionsCount, teamsInDivisionsCount, teamsCoun
     )
 }
 
-module.exports = { getTeamInfoEmbed, getRestingTeamEmbed, getAddMemberInfoEmbed, getTeamsSummaryEmbed }
+module.exports = { getTeamInfoEmbed, getAddMemberInfoEmbed, getTeamsSummaryEmbed }

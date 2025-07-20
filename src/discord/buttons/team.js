@@ -105,7 +105,7 @@ const getTeamChangeMemberRoleToLeader = ({ discordId }) => {
         new ButtonBuilder()
           .setCustomId(`teamChangeMemberRoleTo_leader_${discordId}`)
           .setLabel('Cambiar a Líder')
-          .setEmoji('<:leader:1394257429373390878>')
+          .setEmoji('<:leader:1395916423695564881')
           .setStyle(ButtonStyle.Danger)
     )
 }
@@ -115,7 +115,7 @@ const getTeamChangeMemberRoleToSubLeader = ({ discordId }) => {
         new ButtonBuilder()
           .setCustomId(`teamChangeMemberRoleTo_sub-leader_${discordId}`)
           .setLabel('Cambiar a Sub-líder')
-          .setEmoji('<:subleader:1394257347861286933>')
+          .setEmoji('<:subleader:1395916298025832519>')
           .setStyle(ButtonStyle.Primary)
     )
 }
@@ -140,10 +140,10 @@ const getTeamCancelButton = () => {
     )
 }
 
-const getTeamStatsButton = () => {
+const getTeamStatsButton = ({ i }) => {
     return (
         new ButtonBuilder()
-        .setCustomId('teamStats')
+        .setCustomId(`teamStats-${i}`)
         .setLabel('Ver Estadísticas')
         .setEmoji('👀')
         .setStyle(ButtonStyle.Primary)

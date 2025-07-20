@@ -1,42 +1,44 @@
+const { DateTime } = require('luxon');
+
 /**
- * Devuelve la fecha del siguiente dia y hora en sistema es-ES.
- * @param {Number} day - dia de la semana en numero.
- * @param {Number} hour - hora del dia en numero (sin minutos).
- * @param {Number} minute - minuto del dia en numero.
- * @returns {Date} madridTime - fecha del siguiente dia y hora.
+ * Devuelve la fecha del siguiente día y hora en horario de Madrid.
+ * @param {Number} day - Día de la semana (0=domingo, 1=lunes, ..., 6=sábado)
+ * @param {Number} hour - Hora del día (0-23)
+ * @param {Number} minute - Minuto (0-59, opcional, por defecto 0)
+ * @returns {Date} - Objeto Date en horario local con zona Madrid
  */
-
 const getNextDayAndHour = ({ day, hour, minute = 0 }) => {
-    // Verificar tipo y valor de day
-  if (typeof day !== "number" || !Number.isInteger(day)) {
-    throw new TypeError("El día debe ser un número entero");
+  if (!Number.isInteger(day) || day < 0 || day > 6)
+    throw new Error("El parámetro 'day' debe ser un número entre 0 y 6.");
+
+  if (!Number.isInteger(hour) || hour < 0 || hour > 23)
+    throw new Error("El parámetro 'hour' debe estar entre 0 y 23.");
+
+  if (!Number.isInteger(minute) || minute < 0 || minute > 59)
+    throw new Error("El parámetro 'minute' debe estar entre 0 y 59.");
+
+  // Fecha actual en zona Madrid
+  const now = DateTime.now().setZone('Europe/Madrid');
+
+  // Día de la semana actual (0 = domingo)
+  const todayWeekday = now.weekday % 7;
+
+  // Cuántos días faltan hasta el próximo día solicitado
+  let daysToAdd = (day - todayWeekday + 7) % 7;
+  if (daysToAdd === 0 && (hour < now.hour || (hour === now.hour && minute <= now.minute))) {
+    daysToAdd = 7; // Si es hoy pero ya pasó la hora, ir a la semana siguiente
   }
-  if (![5, 6, 0].includes(day)) {
-    throw new RangeError("El día debe ser 5, 6 o 0");
-  }
 
-  // Verificar tipo y valor de hour
-  if (typeof hour !== "number" || !Number.isInteger(hour)) {
-    throw new TypeError("La hora debe ser un número entero");
-  }
-  if (hour < 0 || hour > 23) {
-    throw new RangeError("La hora debe estar entre 0 y 23");
-  }
+  // Crear el DateTime objetivo
+  const scheduled = now.plus({ days: daysToAdd }).set({
+    hour,
+    minute,
+    second: 0,
+    millisecond: 0,
+  });
 
-  const now = new Date()
+  // Convertir a objeto Date para guardar en Mongo
+  return scheduled.toJSDate();
+};
 
-  // Cuántos días faltan para el próximo dia
-  const daysUntilMonday = (8 - day) % 7 || 7
-
-  // Crear fecha base
-  const nextMonday = new Date(now)
-  nextMonday.setDate(now.getDate() + daysUntilMonday)
-  nextMonday.setHours(hour, minute, 0, 0)
-
-  // Corregir a horario de España
-  const madridTime = new Date(nextMonday.toLocaleString('es-ES', { timeZone: 'Europe/Madrid' }))
-
-  return madridTime
-}
-
-module.exports = { getNextDayAndHour }
+module.exports = { getNextDayAndHour };

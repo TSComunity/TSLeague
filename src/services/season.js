@@ -1,6 +1,7 @@
 const Season = require('../Esquemas/Season.js')
 const Division = require('../Esquemas/Division.js')
 const Team = require('../Esquemas/Team.js')
+const ScheduledFunction = require('../Esquemas/ScheduledFunction.js')
 
 const { addScheduledFunction } = require('./scheduledFunction.js')
 
@@ -75,7 +76,7 @@ const startSeason = async ({ name, client }) => {
     .populate('divisions.rounds.resting.teamId')
 
   if (checkedSeason) {
-    throw new Error('No se peude crear una temporada si ya hay una activa.')
+    throw new Error('No se puede crear una temporada si ya hay una activa.')
   }
 
   // Desactivar temporadas y divisiones activas previas
@@ -141,6 +142,7 @@ const startSeason = async ({ name, client }) => {
       day: startDay,
       hour: startHour
   })
+  console.log(startDay, startHour)
 
   return season
 }
@@ -149,7 +151,7 @@ const startSeason = async ({ name, client }) => {
  * Termina una temporada (solo si esta activa).
  * @returns {Object} season - La temporada terminada.
  */
-const endSeason = async () => {
+const endSeason = async ({ client }) => {
   const season = await getActiveSeason()
 
   season.status = 'ended'
@@ -160,6 +162,8 @@ const endSeason = async () => {
   }
 
   await season.save()
+
+  await ScheduledFunction.deleteMany({ functionName: 'addRound' })
 
   await sendAnnouncement({
     client,

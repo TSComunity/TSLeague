@@ -48,7 +48,7 @@ const getRoundDivisionAddedEmbed = ({ division, seasonIndex, seasonName, nextRou
 
 
     embed.addFields(
-      { name: `🆚 ${teamAName} vs ${teamBName}`, value: `💬 Canal: ${channel}\n🕛 Horario: ${timestamptText}`, inline: true}
+      { name: `🆚 ${teamAName} vs ${teamBName}`, value: `💬 Canal: ${channel}\n🕛 Horario: ${timestampText}`, inline: true}
     )
   }
 

@@ -4,7 +4,7 @@ const Season = require('../Esquemas/Season')
 const Match = require('../Esquemas/Match')
 const Team = require('../Esquemas/Team')
 
-const { getMatchCancelledEmbed } = require('../discord/embeds/match.js')
+const { getCurrentRoundNumber } = require('./round.js')
 
 const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
 
@@ -31,7 +31,7 @@ const createMatchChannel = async ({ match, client }) => {
     const leaderA = teamA.members.find(m => m.role === 'leader')?.userId
     const leaderB = teamB.members.find(m => m.role === 'leader')?.userId
 
-    const channelName = `「🎮」partido-${match.matchIndex}`
+    const channelName = `「🎮」partido-${match.matchIndex}-${teamA.name}-vs-${teamB.name}`
     const guildToUse = await client.guilds.fetch(guild.id)
     const categoryId = categories.matches.id
 
@@ -128,6 +128,7 @@ const createMatchChannel = async ({ match, client }) => {
       name: channelName,
       type: ChannelType.GuildText,
       parent: categoryId,
+      topic: `Partido entre ${teamA.name} y ${teamB.name} — Ronda ${match.roundIndex + 1}`,
       permissionOverwrites
     })
 
@@ -191,22 +192,70 @@ const createMatch = async ({ client, seasonId, divisionId, roundIndex, teamAId, 
   }
 }
 
-const createMatchMannualy = async ({ client, teamAId, teamBId }) => {
-  // Calcular matchIndex según los partidos existentes en la división y ronda
+/**
+ * Crea un partido manualmente entre dos equipos por nombre, en la última ronda compartida.
+ * @param {Object} params
+ * @param {string} params.teamAName
+ * @param {string} params.teamBName
+ * @param {Client} params.client
+ */
+const createMatchManually = async ({ teamAName, teamBName, client }) => {
+  if (teamAName === teamBName) {
+    throw new Error('Un equipo no puede jugar contra sí mismo.')
+  }
+
+  const teamA = await Team.findOne({ name: teamAName })
+  const teamB = await Team.findOne({ name: teamBName })
+
+  if (!teamA) throw new Error(`No se encontró el equipo: ${teamAName}.`)
+  if (!teamB) throw new Error(`No se encontró el equipo: ${teamBName}.`)
+
+  const season = await getActiveSeason()
+  if (!season) throw new Error('No hay ninguna temporada activa.')
+
+  const activeDivisions = season.divisions.filter(d => d.status === 'active')
+
+  const division = activeDivisions.find(d =>
+    d.teams.some(t => t.teamId.equals(teamA._id)) &&
+    d.teams.some(t => t.teamId.equals(teamB._id))
+  )
+
+  if (!division) {
+    throw new Error('Ambos equipos deben estar en la misma división activa.')
+  }
+
+  const divisionId = division.divisionId
+  const seasonId = season._id
+
+  const roundIndex = getCurrentRoundNumber({ season })
+
+  // Verifica si ya jugaron entre sí esta temporada
+  const alreadyPlayed = await Match.exists({
+    seasonId,
+    divisionId,
+    $or: [
+      { teamAId: teamA._id, teamBId: teamB._id },
+      { teamAId: teamB._id, teamBId: teamA._id }
+    ]
+  })
+
+  if (alreadyPlayed) {
+    throw new Error('Estos equipos ya se enfrentaron esta temporada.')
+  }
+
   const existingMatchesCount = await Match.countDocuments()
+  const matchIndex = existingMatchesCount + 1
 
-  const matchIndex = existingMatchesCount + 1 // siguiente índice
-
-  // Crear el partido
   let match
+
   try {
     match = await Match.create({
       matchIndex,
       roundIndex,
       seasonId,
       divisionId,
-      teamAId,
-      teamBId,
+      teamAId: teamA._id,
+      teamBId: teamB._id,
       scoreA: 0,
       scoreB: 0,
       scheduledAt: getNextDayAndHour({ day: defaultStartDay, hour: defaultStartHour }),
@@ -217,16 +266,22 @@ const createMatchMannualy = async ({ client, teamAId, teamBId }) => {
       imageURL: null
     })
 
-    // Crear canal de Discord y actualizar el match con channelId
-    const updatedMatch = await createMatchChannel({ match, client })
+    // Agregar a la última ronda de la división
+    const targetDivision = season.divisions.find(d => d.divisionId.equals(divisionId))
+    const lastRound = targetDivision.rounds.at(-1)
+    if (!lastRound) throw new Error('No hay rondas en esta división aún.')
 
+    lastRound.matches.push({ matchId: match._id })
+    await season.save()
+
+    const updatedMatch = await createMatchChannel({ match, client })
     return updatedMatch
+
   } catch (error) {
-    // Si hubo error y ya se creó el match, borrarlo para no dejar basura
     if (match && match._id) {
       await Match.findByIdAndDelete(match._id)
     }
-    throw error
+    throw new Error(`Error al crear el partido: ${error.message}`)
   }
 }
 
@@ -267,6 +322,8 @@ const findMatchByNamesAndSeason = async ({ seasonIndex, teamAName, teamBName }) 
  * @returns {Promise<Object|null>} Partido con sets enriquecidos
  */
 const getMatchInfo = async ({ seasonIndex, teamAName, teamBName }) => {
+  const season = await Season.findOne({ seasonIndex })
+
   const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
   if (!match) return null
 
@@ -282,11 +339,11 @@ const getMatchInfo = async ({ seasonIndex, teamAName, teamBName }) => {
   if (!round) throw new Error('Ronda no encontrada en la división.')
 
   // 5. Crea el objeto de sets enriquecidos
-  const sets = [1, 2, 3].map(i => ({
-    ...match[`set${i}`]?._doc, // Para obtener los datos del subdocumento Mongoose
-    mode: round[`set${i}`]?.mode,
-    map: round[`set${i}`]?.map
-  }))
+const sets = [1, 2, 3].map(i => ({
+  ...match[`set${i}`]?._doc,
+  mode: round[`set${i}`]?.mode,
+  map: round[`set${i}`]?.map
+}))
 
   // 6. Devuelve el partido poblado y con sets enriquecidos
   return {
@@ -346,6 +403,7 @@ const changeMatchScheduledAt = async ({ seasonIndex, teamAName, teamBName, day, 
 module.exports = {
   createMatchChannel,
   createMatch,
+  createMatchManually,
   findMatchByNamesAndSeason,
   getMatchInfo,
   cancelMatch,

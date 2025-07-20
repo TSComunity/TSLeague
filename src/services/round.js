@@ -12,7 +12,7 @@ const { maxRounds } = season
 const { startDay, startHour } = round
 
 
-const getCurrentRoundNumber = ({ season }) => {
+const getCurrentRoundNumber =  ({ season }) => {
   const roundCounts = season.divisions.map(div => div.rounds?.length || 0)
 
   if (!roundCounts.length) return 0 // No hay divisiones
@@ -147,7 +147,7 @@ const addRound = async ({ client }) => {
   await season.save()
 
   if (divisionsSkipped.length === season.divisions.length) {
-    return endSeason()
+    return endSeason({ client })
   }
 
   const latestRoundIndex = Math.max(
@@ -167,7 +167,7 @@ const addRound = async ({ client }) => {
     ]
   })
 
-  for (const division of divisionWithNewRounds) {
+  for (const division of divisionsWithNewRounds) {
     await sendAnnouncement({
       client,
       embeds: [

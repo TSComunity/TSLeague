@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js')
-const { startSeason, endSeason } = require('../../services/division.js')
+const { startSeason, endSeason, getLastSeason } = require('../../services/season.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 
 module.exports = {
@@ -20,6 +20,12 @@ module.exports = {
       sub
         .setName('terminar')
         .setDescription('Cuidado con este comando')
+    )
+    
+    .addSubcommand(sub =>
+      sub
+        .setName('prueba')
+        .setDescription('Cuidado con este comando')
     ),
 
   async execute(interaction, client) {
@@ -30,14 +36,19 @@ module.exports = {
         const name = interaction.options.getString('nombre')
         const season = await startSeason({ name, client })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `Temporada ${season.seasonIndex} comenzada` })]
+          embeds: [getSuccesEmbed({ message: `Temporada ** ${season.name}** comenzada.` })]
         })
       }
 
       else if (subcomand === 'terminar') {
         const season = await endSeason({ client })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `Temporada ${season.seasonIndex} terminada` })]
+          embeds: [getSuccesEmbed({ message: `Temporada **${season.name}** terminada.` })]
+        })
+      } else if (subcomand === 'prueba') {
+        const season = await getLastSeason()
+        interaction.reply({
+          content: `\`\`\`json\n${JSON.stringify(season, null, 2).slice(0, 1900)}\n\`\`\``
         })
       }
     } catch (error) {

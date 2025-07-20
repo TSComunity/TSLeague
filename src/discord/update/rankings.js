@@ -19,7 +19,7 @@ const updateRankingsEmbed = async ({ client }) => {
   const isV2 = (msg) =>
     (msg.flags & MessageFlags.IsComponentsV2) === MessageFlags.IsComponentsV2;
 
-  const channel = await client.channels.fetch('1375108833558397053');
+  const channel = await client.channels.fetch(config.channels.rankings.id);
   if (!channel || !channel.isTextBased())
     throw new Error('Canal no encontrado o no es de texto.');
 
@@ -65,12 +65,15 @@ const updateRankingsEmbed = async ({ client }) => {
     });
 
     for (const division of divisions) {
-    const teams = division.teams
-      .sort((a, b) => b.points - a.points) // orden descendente por puntos
-      .map((team, index) => ({ ...team, rank: index + 1 })); // asigna ranking
+      const teams = division.teams
+        .sort((a, b) => b.points - a.points) // orden descendente por puntos
+        .map((team, index) => ({
+          ...team.teamId,          // aplanar datos del equipo
+          points: team.points,     // conservar puntos
+          rank: index + 1          // asignar ranking
+        }))
 
-
-      const container = buildDivisionContainer(division, teams);
+      const container = buildDivisionContainer({ division: division.divisionId, teams });
       await channel.send({
         components: [container],
         flags: MessageFlags.IsComponentsV2
@@ -86,7 +89,15 @@ const updateRankingsEmbed = async ({ client }) => {
     const msg = divisionMsgs[i];
     if (!msg) continue;
 
-    const container = buildDivisionContainer(division, teams);
+    const teams = division.teams
+      .sort((a, b) => b.points - a.points) // orden descendente por puntos
+      .map((team, index) => ({
+        ...team.teamId,          // aplanar datos del equipo
+        points: team.points,     // conservar puntos
+        rank: index + 1          // asignar ranking
+      }))
+
+    const container = buildDivisionContainer({ division: division.divisionId, teams });
     await msg.edit({
       components: [container],
       flags: MessageFlags.IsComponentsV2
@@ -102,12 +113,12 @@ const updateRankingsEmbed = async ({ client }) => {
 };
 
 // 🧠 Utilidad para construir el embed de una división
-function buildDivisionContainer(division, teams) {
+function buildDivisionContainer({ division, teams }) {
   const container = new ContainerBuilder()
     .setAccentColor(parseInt(division.color.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
+        `### ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
       )
     );
 
@@ -118,8 +129,8 @@ function buildDivisionContainer(division, teams) {
   }
 
   for (const team of teams) {
-    const { teamId, points, rank } = team;
-    const { name, iconURL } = teamId
+    const { points, rank } = team
+    const { name, iconURL } = team._doc
 
     const thumbnailComponent = new ThumbnailBuilder({ media: { url: iconURL } });
 
@@ -134,7 +145,7 @@ function buildDivisionContainer(division, teams) {
 
     container
       .addSeparatorComponents(new SeparatorBuilder())
-      .addSectionComponents(sectionComponent);
+      .addSectionComponents(sectionComponent)
   }
 
   return container;

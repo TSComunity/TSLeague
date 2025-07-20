@@ -18,22 +18,6 @@ function getModeOrMapName(id, type) {
     return 'N/A';
 }
 
-const getMatchScheduledEmbed = ({ match }) => {
-    return (
-        new EmbedBuilder()
-            .setColor('Blue')
-            .setDescription('Mantenimiento')
-    )
-}
-
-const getMatchCancelledEmbed = ({ match }) => {
-    return (
-        new EmbedBuilder()
-            .setColor('Blue')
-            .setDescription('Mantenimiento')
-    )
-}
-
 const getMatchInfoEmbed = ({ match }) => {
     const { teamAId, teamBId, matchIndex, scoreA, scoreB, scheduledAt, status, set1, set2, set3 } = match
 
@@ -76,4 +60,4 @@ const getMatchInfoEmbed = ({ match }) => {
     )
 }
 
-module.exports = { getMatchScheduledEmbed, getMatchCancelledEmbed, getMatchInfoEmbed }
+module.exports = { getMatchInfoEmbed }

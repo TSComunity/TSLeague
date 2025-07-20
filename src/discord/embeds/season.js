@@ -6,7 +6,7 @@ const getSeasonStartedEmbed = ({ season }) =>  {
     return (
         new EmbedBuilder()
             .setColor('Blue')
-            .setDescription('Mantenimiento')
+            .setDescription('Temporada comenzada (es prueba)')
     )
 }
 
@@ -14,7 +14,7 @@ const getSeasonEndedEmbed = ({ season }) =>  {
     return (
         new EmbedBuilder()
             .setColor('Blue')
-            .setDescription('Mantenimiento')
+            .setDescription('Temporada terminada (es prueba)')
     )
 }
 

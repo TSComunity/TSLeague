@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js')
 const {
+  createMatchManually,
   getMatchInfo,
   cancelMatch,
   endMatch,
@@ -17,6 +18,17 @@ module.exports = {
     .setName('partido')
     .setDescription('Gestiona los partidos')
 
+    // /partido crear
+    .addSubcommand(sub =>
+      sub
+        .setName('crear')
+        .setDescription('Crea un partido oficial')
+        .addStringOption(opt =>
+            opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
+        .addStringOption(opt =>
+            opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
+    )
+
     // /partido ver
     .addSubcommand(sub =>
       sub
@@ -24,7 +36,7 @@ module.exports = {
         .setDescription('Ver los datos de un partido')
         .addStringOption(opt =>
             opt.setName('indice-temporada').setDescription('El indice de la temporada').setRequired(true))
-        .addAttachmentOption(opt =>
+        .addStringOption(opt =>
             opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
         .addStringOption(opt =>
             opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
@@ -37,7 +49,7 @@ module.exports = {
         .setDescription('Cancela un partido')
         .addStringOption(opt =>
             opt.setName('indice-temporada').setDescription('El indice de la temporada').setRequired(true))
-        .addAttachmentOption(opt =>
+        .addStringOption(opt =>
             opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
         .addStringOption(opt =>
             opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
@@ -52,7 +64,7 @@ module.exports = {
         .setDescription('Termina un partido')
         .addStringOption(opt =>
             opt.setName('indice-temporada').setDescription('El indice de la temporada').setRequired(true))
-        .addAttachmentOption(opt =>
+        .addStringOption(opt =>
             opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
         .addStringOption(opt =>
             opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
@@ -65,7 +77,7 @@ module.exports = {
         .setDescription('Cambia el horario de un partido')
         .addStringOption(opt =>
             opt.setName('indice-temporada').setDescription('El indice de la temporada').setRequired(true))
-        .addAttachmentOption(opt =>
+        .addStringOption(opt =>
             opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
         .addStringOption(opt =>
             opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
@@ -126,7 +138,7 @@ module.exports = {
         ))
     ),
 
-  async execute(interaction) {
+  async execute(interaction, client) {
 
     const member = interaction.member
     const hasPerms = member.roles.cache.some(role => ROLES_WITH_PERMS.includes(role.id))
@@ -138,7 +150,16 @@ module.exports = {
     const sub = interaction.options.getSubcommand()
 
     try {
-      if (sub === 'ver-datos') {
+      if (sub === 'crear') {
+        const teamAName = interaction.options.getString('nombre-equipo-a')
+        const teamBName = interaction.options.getString('nombre-equipo-b')
+
+        const match = await createMatchManually({ client, teamAName, teamBName })
+        await interaction.reply({
+            embeds: [getSuccesEmbed({ message: `Partido <#${match.channelId}> creado.` })]
+        })
+      }
+      else if (sub === 'ver-datos') {
         const seasonIndex = interaction.options.getString('indice-temporada')
         const teamAName = interaction.options.getString('nombre-equipo-a')
         const teamBName = interaction.options.getString('nombre-equipo-b')
@@ -176,6 +197,10 @@ module.exports = {
         const day = interaction.options.getInteger('dia')
         const hour = interaction.options.getInteger('hora')
         const minute = interaction.options.getInteger('minuto')
+
+        if (![5, 6, 0].includes(day)) {
+          throw new RangeError("El día debe ser viernes, sábado o domingo.")
+        }
 
         const match = await changeMatchScheduledAt({ seasonIndex, teamAName, teamBName, day, hour, minute })
         await interaction.reply({

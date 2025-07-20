@@ -22,7 +22,7 @@ const updateTeamsEmbed = async ({ client }) => {
   const isV2 = (msg) =>
     (msg.flags & MessageFlags.IsComponentsV2) === MessageFlags.IsComponentsV2;
 
-  const channel = await client.channels.fetch('1375108833558397053');
+  const channel = await client.channels.fetch(config.channels.teams.id);
   if (!channel || !channel.isTextBased())
     throw new Error('Canal no encontrado o no es de texto.');
 
@@ -125,7 +125,7 @@ function buildDivisionContainer(division, teams) {
     .setAccentColor(parseInt(division.color.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `## ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
+        `### ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
       )
     );
 
@@ -145,9 +145,9 @@ function buildDivisionContainer(division, teams) {
 
       const formattedList = sortedMembers.map(m => {
         const userId = m.userId.discordId || m.userId // por si acaso no está poblado
-        const roleLabel = m.role === 'leader' ? '<:leader:1394257429373390878>' :
-                          m.role === 'sub-leader' ? '<:subleader:1394257347861286933>' :
-                          '<:member:1394257533094461533>'
+        const roleLabel = m.role === 'leader' ? '<:leader:1395916423695564881>' :
+                          m.role === 'sub-leader' ? '<:subleader:1395916298025832519>' :
+                          '<:member:1395916668869283860>'
         return `${roleLabel} <@${userId}>`
       }).join('\n')
 
@@ -166,7 +166,7 @@ function buildDivisionContainer(division, teams) {
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent('** **')
       )
-      .setButtonAccessory(getTeamStatsButton())
+      .setButtonAccessory(getTeamStatsButton({ i: name }))
 
     container
       .addSeparatorComponents(new SeparatorBuilder())
