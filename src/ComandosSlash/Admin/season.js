@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js')
 const { startSeason, endSeason, getLastSeason } = require('../../services/season.js')
+const { addRound } = require('../../services/round.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 
 module.exports = {
@@ -26,6 +27,11 @@ module.exports = {
       sub
         .setName('prueba')
         .setDescription('Cuidado con este comando')
+    )
+    .addSubcommand(sub =>
+      sub
+        .setName('prueba2')
+        .setDescription('Cuidado con este comando')
     ),
 
   async execute(interaction, client) {
@@ -49,6 +55,11 @@ module.exports = {
         const season = await getLastSeason()
         interaction.reply({
           content: `\`\`\`json\n${JSON.stringify(season, null, 2).slice(0, 1900)}\n\`\`\``
+        })
+      } else if (subcomand === 'prueba2') {
+        await addRound({ client })
+        interaction.reply({
+          content: 'a'
         })
       }
     } catch (error) {

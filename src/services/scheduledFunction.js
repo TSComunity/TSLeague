@@ -3,11 +3,12 @@ const ScheduledFunction = require('../Esquemas/ScheduledFunction.js')
 const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
 
 const functionMap = {
-  addRound: require('./round.js').addRound,
-  // otras funciones programadas
+  addRound: async (params) => {
+    const { addRound } = require('./round.js')
+    return await addRound(params)
+  },
+  // ...
 }
-
-
 
 /**
 * Programa una nueva funciÃ³n para ejecuciÃ³n futura.
@@ -26,10 +27,7 @@ hour
 
 if (!functionName || day === undefined || hour === undefined) throw new Error('Faltan datos: functionName, day o hour.')
 
-
-
 const scheduledFor = getNextDayAndHour({ day, hour })
-console.log(scheduledFor)
 
 const scheduledFunction = new ScheduledFunction({
 
@@ -78,13 +76,13 @@ await Promise.resolve(fn({ ...job.parameters, client }))
 
 } catch (err) {
 
-console.error(`Error ejecutando funciÃ³n programada "${job.functionName}":`, err)
+console.error(`Error ejecutando funcion programada "${job.functionName}":`, err)
 
 }
 
 } else {
 
-console.error(`FunciÃ³n no encontrada para "${job.functionName}"`)
+console.error(`Funcion no encontrada para "${job.functionName}"`)
 
 }
 
@@ -95,7 +93,6 @@ await ScheduledFunction.findByIdAndDelete(job._id)
 }
 
 }
-
 
 
 module.exports = { addScheduledFunction, executeDueScheduledFunctions }

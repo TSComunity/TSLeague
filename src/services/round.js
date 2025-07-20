@@ -116,6 +116,7 @@ const processDivision = async ({ division, seasonId, isSeasonEnding, client }) =
  * @returns {Promise<Object>} Documento actualizado de la temporada
  */
 const addRound = async ({ client }) => {
+  console.log(getActiveSeason)
 
   const season = await getActiveSeason()
   const seasonId = season._id
