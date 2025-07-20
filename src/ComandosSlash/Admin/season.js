@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js')
-const { startSeason, endSeason, getLastSeason } = require('../../services/season.js')
+const { startSeason, endSeason } = require('../../services/season.js')
+const { getLastSeason } = require('../../services/seasonUtils.js')
 const { addRound } = require('../../services/round.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 

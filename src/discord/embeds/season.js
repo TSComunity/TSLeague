@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js')
 
-const { getCurrentRoundNumber } = require('../../services/round.js')
+const { getCurrentRoundNumber } = require('../../services/roundUtils.js')
 
 const getSeasonStartedEmbed = ({ season }) =>  {
     return (

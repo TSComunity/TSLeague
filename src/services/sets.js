@@ -1,4 +1,4 @@
-const { getActiveSeason } = require('./season.js')
+const { getActiveSeason } = require('./seasonUtils.js')
 
 const gameModes = require('../configs/gameModes.json')
 

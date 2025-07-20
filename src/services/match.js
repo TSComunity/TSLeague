@@ -4,7 +4,8 @@ const Season = require('../Esquemas/Season')
 const Match = require('../Esquemas/Match')
 const Team = require('../Esquemas/Team')
 
-const { getCurrentRoundNumber } = require('./round.js')
+const { getActiveSeason } = require('./seasonUtils.js')
+const { getCurrentRoundNumber } = require('./roundUtils.js')
 
 const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
 

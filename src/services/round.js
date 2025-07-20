@@ -1,4 +1,4 @@
-const { getActiveSeason, endSeason } = require('./season.js')
+const { getActiveSeason, endSeason } = require('./seasonUtils.js')
 const { generateMatchmaking } = require('./matchmaking.js')
 const { generateRandomSets } = require('./sets.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
@@ -10,15 +10,6 @@ const { getDivisionEndedEmbed } = require('../discord/embeds/division.js')
 const { season, round, roles } = require('../configs/league.js')
 const { maxRounds } = season
 const { startDay, startHour } = round
-
-
-const getCurrentRoundNumber =  ({ season }) => {
-  const roundCounts = season.divisions.map(div => div.rounds?.length || 0)
-
-  if (!roundCounts.length) return 0 // No hay divisiones
-
-  return Math.max(...roundCounts)
-}
 
 /**
  * Procesa una división dentro de una temporada para generar una nueva ronda o marcarla como finalizada.
@@ -116,8 +107,6 @@ const processDivision = async ({ division, seasonId, isSeasonEnding, client }) =
  * @returns {Promise<Object>} Documento actualizado de la temporada
  */
 const addRound = async ({ client }) => {
-  console.log(getActiveSeason)
-
   const season = await getActiveSeason()
   const seasonId = season._id
   const seasonIndex = season.seasonIndex
@@ -191,4 +180,4 @@ const addRound = async ({ client }) => {
   return season
 }
 
-module.exports = { getCurrentRoundNumber, addRound }
+module.exports = { addRound }

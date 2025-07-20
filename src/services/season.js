@@ -3,6 +3,7 @@ const Division = require('../Esquemas/Division.js')
 const Team = require('../Esquemas/Team.js')
 const ScheduledFunction = require('../Esquemas/ScheduledFunction.js')
 
+const { getActiveSeason } = require('./seasonUtils.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
 
 const { sendAnnouncement } = require('../discord/send/general.js')
@@ -10,52 +11,6 @@ const { getSeasonStartedEmbed, getSeasonEndedEmbed } = require('../discord/embed
 
 const { round, roles } = require('../configs/league.js')
 const { startDay, startHour } = round
-
-/**
- * Obtiene la temporada activa de la base de datos con todos sus datos relacionados poblados.
- * Incluye divisiones, equipos, partidos y equipos en descanso.
- * @returns {Object} season - Documento de la temporada activa
- */
-const getActiveSeason = async () => {
-  const season = await Season.findOne({ status: 'active' })
-    .populate('divisions.divisionId')
-    .populate('divisions.teams.teamId')
-    .populate({
-      path: 'divisions.rounds.matches.matchId',
-      populate: [
-        { path: 'teamA', model: 'Team' },
-        { path: 'teamB', model: 'Team' }
-      ]
-    })
-    .populate('divisions.rounds.resting.teamId')
-
-  if (!season) throw new Error('Ninguna temporada activa encontrada.')
-
-  return season
-}
-
-/**
- * Obtiene la ultima temporda de la base de datos con todos sus datos relacionados poblados.
- * Incluye divisiones, equipos, partidos y equipos en descanso.
- * @returns {Object} season - Documento de la temporada activa
- */
-const getLastSeason = async () => {
-  const season = await Season.findOne({})
-    .sort({ startDate: -1 })
-    .populate('divisions.divisionId')
-    .populate('divisions.teams.teamId')
-    .populate({
-      path: 'divisions.rounds.matches.matchId',
-      populate: [
-        { path: 'teamA', model: 'Team' },
-        { path: 'teamB', model: 'Team' }
-      ]
-    })
-    .populate('divisions.rounds.resting.teamId')
-
-  if (!season) throw new Error('No se ha encontrado ninguna temporada.')
-  return season
-}
 
 /**
  * Crea una nueva temporada con todas las divisiones existentes.
@@ -178,4 +133,4 @@ const endSeason = async ({ client }) => {
 
 // se podria hacer algo para pausar la temporada (mantenimiento)
 
-module.exports = { getActiveSeason, getLastSeason, startSeason, endSeason }
+module.exports = { startSeason, endSeason }
