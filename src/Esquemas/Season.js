@@ -4,7 +4,7 @@ const SeasonSchema = new Schema({
   seasonIndex: { type: Number, required: true, unique: true },
   name: { type: String, required: true, unique: true },
   startDate: { type: Date, required: true },
-  endData: { type: Date },
+  endDate: { type: Date },
   status: { type: String, enum: ['active', 'ended'], default: 'active' },
 
   divisions: [

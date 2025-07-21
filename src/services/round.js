@@ -1,100 +1,73 @@
 const Team = require('../Esquemas/Team.js')
-
 const { generateMatchmaking } = require('./matchmaking.js')
 const { generateRandomSets } = require('./sets.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
-
 const { endSeason } = require('../services/season.js')
 const { getActiveSeason } = require('../utils/season.js')
-
 const { sendAnnouncement } = require('../discord/send/general.js')
 const { getRoundAddedEmbed } = require('../discord/embeds/round.js')
 const { getDivisionEndedEmbed, getDivisionRoundAddedEmbed } = require('../discord/embeds/division.js')
-
 const { season, round, roles } = require('../configs/league.js')
 const { maxRounds } = season
 const { startDay, startHour } = round
 
-/**
- * Procesa una división dentro de una temporada para generar una nueva ronda o marcarla como finalizada.
- * Si no hay emparejamientos posibles, marca la división como finalizada.
- * @param {Object} division - Objeto división del documento de temporada (poblado)
- * @param {ObjectId} seasonId - ID de la temporada activa
- * @returns {Promise<Object>} Objeto con información sobre si se generó ronda o se terminó la división
- */
 const processDivision = async ({ division, seasonId, isSeasonEnding, client }) => {
   const { divisionId: divisionDoc, status, teams, rounds } = division
 
-  // La termporadas ya esta terminada
-  if (status === 'ended') {
-    return { ended: true, divisionDoc }
-  }
+  // Si la división ya está terminada, NO procesar NI anunciar
+  if (status === 'ended') return { ended: true, divisionDoc, alreadyEnded: true }
 
   if (rounds?.length >= maxRounds) {
     division.status = 'ended'
-
     if (!isSeasonEnding) {
-      client,
-      // Se envia cuando se llega al limite de rondas en una division pero no en todas
       await sendAnnouncement({
         client,
         content: `<@&${roles.ping.id}>`,
         embeds: [getDivisionEndedEmbed({ division })]
       })
+      console.log(`[DEBUG] Terminando división por maxRounds: ${division.divisionId.name} (status: ${division.status})`);
     }
-
-    return { ended: true, divisionDoc }
+    return { ended: true, divisionDoc, alreadyEnded: false }
   }
 
-
-  // Extraer partidos anteriores y equipos poblados directamente
-  const matchesDocs = rounds.flatMap((round) =>
-    round.matches.map((match) => match.matchId)
-  )
-
-  const teamsDocs = await Promise.all(teams.map(async t => {
-    return await Team.findById(t.teamId)
-  }))
-
+  // Poblar equipos correctamente
+  const teamsDocs = await Promise.all(teams.map(async t => Team.findById(t.teamId)))
+  console.log(`[DEBUG] Equipos en division ${division.divisionId.name}:`, teamsDocs.map(t => t.name));
   const indices = division.rounds?.map(r => r.roundIndex || 0)
   const nextRoundIndex = (indices?.length ? Math.max(...indices) : 0) + 1
 
-  const { newMatchesDocs, newRestingTeamsDocs } = generateMatchmaking({
+  // Llamada asíncrona
+  const { newMatchesDocs, newRestingTeamsDocs } = await generateMatchmaking({
     client,
-    matchesDocs,
+    matchesDocs: rounds.flatMap((round) => round.matches.map((match) => match.matchId)),
     teamsDocs,
     seasonId,
     divisionId: division._id,
     nextRoundIndex
   })
 
-  // Si no se han podido generar partidos, termina la división
-  if (newMatchesDocs?.length === 0 || !newMatchesDocs || !newMatchesDocs?.length) {
+  // Si no se han podido generar partidos, termina la división (solo una vez)
+  if (!newMatchesDocs || newMatchesDocs.length === 0) {
     division.status = 'ended'
-
     if (!isSeasonEnding) {
-      client,
-      // Se envia cuando termina esta division pero no todas
       await sendAnnouncement({
         client,
         content: `<@&${roles.ping.id}>`,
         embeds: [getDivisionEndedEmbed({ division })]
       })
+      console.log(`[DEBUG] Terminando división por no emparejar: ${division.divisionId.name} (status: ${division.status})`);
     }
-
-    return { ended: true, divisionDoc }
+    return { ended: true, divisionDoc, alreadyEnded: false }
   }
 
   const { set1, set2, set3 } = await generateRandomSets()
-
-  // Crear y añadir nueva ronda a la división
   const newRound = {
     roundIndex: nextRoundIndex,
     set1,
     set2,
     set3,
-    matches: newMatchesDocs?.map((match) => match._id),
-    resting: newRestingTeamsDocs?.map((team) => team._id),
+    matches: newMatchesDocs.map((match) => match._id),
+    resting: newRestingTeamsDocs.map((team) => team._id),
   }
 
   division.rounds.push(newRound)
@@ -108,12 +81,6 @@ const processDivision = async ({ division, seasonId, isSeasonEnding, client }) =
   }
 }
 
-/**
- * Añade una nueva ronda a todas las divisiones activas de la temporada activa.
- * Si todas las divisiones terminan, finaliza la temporada.
- * También envía anuncios según lo que ocurra.
- * @returns {Promise<Object>} Documento actualizado de la temporada
- */
 const addRound = async ({ client }) => {
   const season = await getActiveSeason()
   const seasonId = season._id
@@ -122,6 +89,11 @@ const addRound = async ({ client }) => {
   const divisionsWithNewRounds = []
 
   for (const division of season.divisions) {
+    // Solo procesar divisiones activas
+    if (division.status === 'ended') {
+      divisionsSkipped.push({ divisionDoc: division.divisionId })
+      continue
+    }
 
     const activeDivisions = season.divisions.filter(d => d.status !== 'ended')
     const isSeasonEnding = activeDivisions.every(d => d.rounds?.length >= maxRounds)
@@ -129,7 +101,8 @@ const addRound = async ({ client }) => {
     const result = await processDivision({ division, seasonId, isSeasonEnding, client })
 
     if (result.ended) {
-      divisionsSkipped.push({ divisionDoc: result.divisionDoc })
+      // Solo pushear si la división acaba en este ciclo y no estaba ya terminada
+      if (!result.alreadyEnded) divisionsSkipped.push({ divisionDoc: result.divisionDoc })
     } else {
       divisionsWithNewRounds.push({
         divisionDoc: result.divisionDoc,
@@ -142,38 +115,45 @@ const addRound = async ({ client }) => {
 
   await season.save()
 
-  if (divisionsSkipped?.length === season.divisions.length) {
-    return endSeason({ client })
+  // Si todas las divisiones han sido terminadas, termina la temporada
+  if (divisionsSkipped.length === season.divisions.length) {
+    await endSeason({ client })
+    return season
   }
 
-  const latestRoundIndex = Math.max(
-    ...divisionsWithNewRounds.map((d) => d.roundIndex)
-  )
+  // Anuncia la nueva jornada (embed general)
+  if (divisionsWithNewRounds.length > 0) {
+    const latestRoundIndex = Math.max(
+      ...divisionsWithNewRounds.map((d) => d.roundIndex)
+    )
 
-  await sendAnnouncement({
-    client,
-    content: `<@&${roles.ping.id}>`,
-    embeds: [
-      getRoundAddedEmbed({
-        divisionsWithNewRounds,
-        season,
-        nextRoundIndex: latestRoundIndex
-      })
-    ]
-  })
-
-  for (const division of divisionsWithNewRounds) {
     await sendAnnouncement({
       client,
+      content: `<@&${roles.ping.id}>`,
       embeds: [
-        getDivisionRoundAddedEmbed({
-          division,
-          season
+        getRoundAddedEmbed({
+          divisionsWithNewRounds,
+          season,
+          nextRoundIndex: latestRoundIndex
         })
       ]
     })
+
+    // Anuncia los partidos de cada división nueva (embed por división)
+    for (const division of divisionsWithNewRounds) {
+      await sendAnnouncement({
+        client,
+        embeds: [
+          getDivisionRoundAddedEmbed({
+            division,
+            season
+          })
+        ]
+      })
+    }
   }
 
+  // Programar la función para la siguiente ronda
   await addScheduledFunction({
     functionName: 'addRound',
     day: startDay,

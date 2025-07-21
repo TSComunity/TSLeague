@@ -73,7 +73,7 @@ interaction.reply({
 
       } else if (subcomand === 'prueba2') {
         await addRound({ client })
-        interaction.reply({
+        await interaction.reply({
           content: 'a'
         })
       }

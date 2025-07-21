@@ -20,41 +20,32 @@ const { defaultStartDay, defaultStartHour } = match
  */
 const createMatchChannel = async ({ match, client }) => {
   try {
-    const teamA = await Team.findOne({ _id: match.teamAId })
-    const teamB = await Team.findOne({ _id: match.teamBId })
+    // 1. Poblamos equipos con miembros y sus usuarios (para discordId)
+    const teamA = await Team.findOne({ _id: match.teamAId }).populate('members.userId')
+    const teamB = await Team.findOne({ _id: match.teamBId }).populate('members.userId')
 
     if (!teamA || !teamB) {
       throw new Error('No se encontraron los equipos del partido')
     }
 
-    // Extraer los IDs de los líderes (supongamos que en members hay un campo role y userId)
-    // Ajusta según tu esquema
-    const leaderA = teamA.members.find(m => m.role === 'leader')?.userId
-    const leaderB = teamB.members.find(m => m.role === 'leader')?.userId
+    // 2. Extraer discordId de los líderes
+    const leaderA = teamA.members.find(m => m.role === 'leader')?.userId?.discordId
+    const leaderB = teamB.members.find(m => m.role === 'leader')?.userId?.discordId
 
-    const channelName = `「🎮」partido-${match.matchIndex}-${teamA.name}-vs-${teamB.name}`
-    const guildToUse = await client.guilds.fetch(guild.id)
-    const categoryId = categories.matches.id
-
-    // Construimos permisos:
-    // - everyone: no ver
-    // - líderes: enviar mensajes, multimedia, enlaces, reacciones, leer mensajes
-    // - miembros normales: solo ver, leer mensajes y añadir reacciones (no enviar)
-    // - roles de mod: gestionar mensajes completo
-
-    // Roles de mod desde configuración
-    const modRoleIds = channels.perms
-
-    // Para miembros normales, todos los miembros de ambos equipos menos los líderes
+    // 3. Miembros normales (sin incluir líderes), extraer sus discordId
     const normalMembersA = teamA.members
       .filter(m => m.role !== 'leader')
-      .map(m => m.userId)
+      .map(m => m.userId?.discordId)
+      .filter(Boolean)
 
     const normalMembersB = teamB.members
       .filter(m => m.role !== 'leader')
-      .map(m => m.userId)
+      .map(m => m.userId?.discordId)
+      .filter(Boolean)
 
-    // Define los permisos para líderes (permisos más amplios)
+    // 4. Preparar permisos
+    const modRoleIds = channels.perms
+
     const leaderPermissions = [
       PermissionsBitField.Flags.ViewChannel,
       PermissionsBitField.Flags.SendMessages,
@@ -72,7 +63,6 @@ const createMatchChannel = async ({ match, client }) => {
       PermissionsBitField.Flags.MentionEveryone
     ]
 
-    // Permisos para miembros normales (solo ver, leer, añadir reacciones)
     const normalPermissions = [
       PermissionsBitField.Flags.ViewChannel,
       PermissionsBitField.Flags.ReadMessageHistory,
@@ -81,7 +71,6 @@ const createMatchChannel = async ({ match, client }) => {
       PermissionsBitField.Flags.UseExternalStickers
     ]
 
-    // Permisos para moderadores
     const modPermissions = [
       PermissionsBitField.Flags.ViewChannel,
       PermissionsBitField.Flags.ManageMessages,
@@ -90,13 +79,12 @@ const createMatchChannel = async ({ match, client }) => {
       PermissionsBitField.Flags.ReadMessageHistory
     ]
 
-    // Construimos los permissionOverwrites
+    // 5. Construir permissionOverwrites usando IDs de Discord válidos
     const permissionOverwrites = [
       {
-        id: guildToUse.roles.everyone.id,
+        id: (await client.guilds.fetch(guild.id)).roles.everyone.id,
         deny: [PermissionsBitField.Flags.ViewChannel]
       },
-      // Líderes de equipo (permisos completos para interactuar)
       ...(leaderA ? [{
         id: leaderA,
         allow: leaderPermissions
@@ -105,30 +93,28 @@ const createMatchChannel = async ({ match, client }) => {
         id: leaderB,
         allow: leaderPermissions
       }] : []),
-
-      // Miembros normales (sin enviar mensajes)
-      ...normalMembersA.map(userId => ({
-        id: userId,
+      ...normalMembersA.map(discordId => ({
+        id: discordId,
         allow: normalPermissions,
         deny: [PermissionsBitField.Flags.SendMessages]
       })),
-      ...normalMembersB.map(userId => ({
-        id: userId,
+      ...normalMembersB.map(discordId => ({
+        id: discordId,
         allow: normalPermissions,
         deny: [PermissionsBitField.Flags.SendMessages]
       })),
-
-      // Roles de moderación (permisos elevados)
       ...modRoleIds.map(roleId => ({
         id: roleId,
         allow: modPermissions
       }))
     ]
 
+    // 6. Crear el canal en la categoría indicada
+    const guildToUse = await client.guilds.fetch(guild.id)
     const channel = await guildToUse.channels.create({
-      name: channelName,
+      name: `「🎮」partido-${match.matchIndex}-${teamA.name}-vs-${teamB.name}`,
       type: ChannelType.GuildText,
-      parent: categoryId,
+      parent: categories.matches.id,
       topic: `Partido entre ${teamA.name} y ${teamB.name} — Ronda ${match.roundIndex + 1}`,
       permissionOverwrites
     })

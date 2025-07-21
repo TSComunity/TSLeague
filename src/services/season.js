@@ -18,71 +18,50 @@ const { startDay, startHour } = round
  * @returns {Object} season - La temporada creada.
  */
 const startSeason = async ({ name, client }) => {
+  // 1. Verifica que no haya una temporada activa
+  const active = await Season.findOne({ status: 'active' });
+  if (active) throw new Error('Ya hay una temporada activa.');
 
-  const checkedSeason = await Season.findOne({ status: 'active' })
-    .populate('divisions.divisionId')
-    .populate('divisions.teams.teamId')
-    .populate({
-      path: 'divisions.rounds.matches.matchId',
-      populate: [
-        { path: 'teamA', model: 'Team' },
-        { path: 'teamB', model: 'Team' }
-      ]
-    })
-    .populate('divisions.rounds.resting.teamId')
+  // 2. Verifica que el nombre no esté repetido
+  const repeatedName = await Season.findOne({ name });
+  if (repeatedName) throw new Error('Ya existe una temporada con ese nombre.');
 
-  if (checkedSeason) {
-    throw new Error('No se puede crear una temporada si ya hay una activa.')
+  // 3. Calcula el siguiente índice
+  const lastSeason = await Season.findOne({}).sort({ seasonIndex: -1 }).lean();
+  const nextIndex = lastSeason ? lastSeason.seasonIndex + 1 : 1;
+
+  const existsIndex = await Season.findOne({ seasonIndex: nextIndex });
+if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta de nuevo.`);
+
+  // 4. Obtiene las divisiones y equipos
+  const divisions = await Division.find().sort({ tier: 1 });
+  if (!divisions.length) throw new Error('No hay divisiones creadas.');
+
+  // 5. Construye el array de divisiones para la temporada
+  const divisionsArr = [];
+  for (const division of divisions) {
+    // Equipos que pertenecen a esta división
+    const teams = await Team.find({ divisionId: division._id });
+    const divisionTeamsArr = teams.map(team => ({
+      teamId: team._id,
+      points: 0
+    }));
+
+    divisionsArr.push({
+      divisionId: division._id,
+      status: 'active',
+      teams: divisionTeamsArr,
+      rounds: []
+    });
   }
-
-  // Desactivar temporadas y divisiones activas previas
-  await Season.updateMany(
-    { status: 'active' }, // Condición: busca temporadas con status 'active'
-    {
-      $set: {
-        status: 'ended', // Cambia el status de la temporada a 'ended'
-        'divisions.$[].status': 'ended' // Cambia el status de TODAS las divisiones dentro de esas temporadas a 'ended'
-      }
-    }
-  )
-
-  // Obtener la temporada con mayor índice
-  const lastSeason = await Season.findOne().sort({ seasonIndex: -1 }).exec()
-  const newIndex = lastSeason ? lastSeason.seasonIndex + 1 : 1
-
-  // Obtener todas las divisiones
-  const divisions = await Division.find().select('_id')
-
-  if (!divisions.length) throw new Error('No existen divisiones activas para crear una temporada. Agrega divisiones primero.')
-
-  // Para cada división, obtener sus equipos y preparar la estructura
-  const divisionsData = await Promise.all(
-    divisions.map(async (div) => {
-      // Equipos que pertenecen a esta división
-      const teams = await Team.find({ divisionId: div._id }).select('_id')
-      const teamsStats = teams.map((team, index) => ({
-        teamId: team._id,
-        points: 0,
-        rank: index + 1
-      }))
-
-      return {
-        divisionId: div._id,
-        status: 'active',
-        teams: teamsStats,
-        rounds: []
-      }
-    })
-  )
 
   // Crear la nueva temporada con las divisiones completas
   const season = new Season({
-    seasonIndex: newIndex,
+    seasonIndex: nextIndex,
     name,
     startDate: new Date(),
-    endDate: null,
     status: 'active',
-    divisions: divisionsData
+    divisions: divisionsArr
   })
 
   await season.save()
@@ -98,7 +77,6 @@ const startSeason = async ({ name, client }) => {
       day: startDay,
       hour: startHour
   })
-  console.log(startDay, startHour)
 
   return season
 }
