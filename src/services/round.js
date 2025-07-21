@@ -1,3 +1,5 @@
+const Team = require('../Esquemas/Team.js')
+
 const { generateMatchmaking } = require('./matchmaking.js')
 const { generateRandomSets } = require('./sets.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
@@ -50,7 +52,9 @@ const processDivision = async ({ division, seasonId, isSeasonEnding, client }) =
     round.matches.map((match) => match.matchId)
   )
 
-  const teamsDocs = teams
+  const teamsDocs = await Promise.all(teams.map(async t => {
+    return await Team.findById(t.teamId)
+  }))
 
   const indices = division.rounds?.map(r => r.roundIndex || 0)
   const nextRoundIndex = (indices?.length ? Math.max(...indices) : 0) + 1
