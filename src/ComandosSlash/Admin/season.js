@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js')
 const { startSeason, endSeason } = require('../../services/season.js')
-const { getLastSeason } = require('../../services/seasonUtils.js')
+const { getLastSeason } = require('../../utils/season.js')
 const { addRound } = require('../../services/round.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 
@@ -54,9 +54,23 @@ module.exports = {
         })
       } else if (subcomand === 'prueba') {
         const season = await getLastSeason()
-        interaction.reply({
-          content: `\`\`\`json\n${JSON.stringify(season, null, 2).slice(0, 1900)}\n\`\`\``
-        })
+const summary = {
+  name: season.name,
+  status: season.status,
+  divisions: season.divisions.map((div) => ({
+    status: div.status,
+    rounds: div.rounds.map((round) => ({
+      roundIndex: round.roundIndex,
+      matches: round.matches.map((m) => m.matchId?.toString() ?? 'N/A'),
+      resting: round.resting.map((r) => r.teamId?.toString() ?? 'N/A')
+    }))
+  }))
+}
+
+interaction.reply({
+  content: `\`\`\`json\n${JSON.stringify(summary, null, 2).slice(0, 1900)}\n\`\`\``
+})
+
       } else if (subcomand === 'prueba2') {
         await addRound({ client })
         interaction.reply({

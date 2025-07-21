@@ -3,8 +3,9 @@ const Division = require('../Esquemas/Division.js')
 const Team = require('../Esquemas/Team.js')
 const ScheduledFunction = require('../Esquemas/ScheduledFunction.js')
 
-const { getActiveSeason } = require('./seasonUtils.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
+
+const { getActiveSeason } = require('../utils/season.js')
 
 const { sendAnnouncement } = require('../discord/send/general.js')
 const { getSeasonStartedEmbed, getSeasonEndedEmbed } = require('../discord/embeds/season.js')

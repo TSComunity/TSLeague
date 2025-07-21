@@ -1,4 +1,4 @@
-const { getActiveSeason } = require('./seasonUtils.js')
+const { getActiveSeason } = require('../utils/season.js')
 
 const gameModes = require('../configs/gameModes.json')
 
@@ -14,9 +14,11 @@ const generateRandomSets = async () => {
   const playedMapIds = new Set()
   for (const division of season.divisions) {
     const round = division.rounds[division.rounds.length - 1]
-      if (round.set1?.map) playedMapIds.add(round.set1.map)
-      if (round.set2?.map) playedMapIds.add(round.set2.map)
-      if (round.set3?.map) playedMapIds.add(round.set3.map)
+      if (round) {
+        if (round.set1?.map) playedMapIds.add(round.set1.map)
+        if (round.set2?.map) playedMapIds.add(round.set2.map)
+        if (round.set3?.map) playedMapIds.add(round.set3.map)
+      }
   }
 
   // Crear lista de modos con pesos (sin repetir modo)

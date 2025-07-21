@@ -10,7 +10,7 @@ const {
 
 const config = require('../../configs/league.js');
 
-const { getLastSeason } = require('../../services/seasonUtils.js')
+const { getLastSeason } = require('../../utils/season.js')
 const { getSeasonSummaryEmbed } = require('../embeds/season.js');
 
 const maxTeams = config.division.maxTeams;

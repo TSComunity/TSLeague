@@ -1,6 +1,6 @@
 const ScheduledFunction = require('../Esquemas/ScheduledFunction.js')
 
-const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
+const { getDate } = require('../utils/date.js')
 
 const functionMap = {
   addRound: async (params) => {
@@ -27,7 +27,7 @@ hour
 
 if (!functionName || day === undefined || hour === undefined) throw new Error('Faltan datos: functionName, day o hour.')
 
-const scheduledFor = getNextDayAndHour({ day, hour })
+const scheduledFor = getDate({ day, hour })
 
 const scheduledFunction = new ScheduledFunction({
 

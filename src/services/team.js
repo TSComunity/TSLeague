@@ -6,60 +6,12 @@ const User = require('../Esquemas/User.js')
 
 const { cancelMatch } = require('./match.js')
 
+const { findTeam } = require('../utils/team.js')
+
 const colors = require('../configs/colors.json')
 const config = require('../configs/league.js')
 const maxTeams = config.division.maxTeams
 const maxMembers = config.team.maxMembers
-
-const findTeam = async ({ teamName = null, teamCode = null, discordId = null }) => {
-  if (!teamName && !teamCode && !discordId) {
-    throw new Error('Faltan datos: teamName, teamCode o discordId.')
-  }
-
-  let team = null
-
-  // Buscar por nombre de equipo
-  if (teamName) {
-    team = await Team.findOne({ name: teamName }).populate('members.userId')
-  }
-
-  // Buscar por código de equipo
-  else if (teamCode) {
-    team = await Team.findOne({ code: teamCode }).populate('members.userId')
-  }
-
-  // Buscar por Discord ID
-  else if (discordId) {
-    const user = await User.findOne({ discordId })
-
-    if (!user) throw new Error('El usuario no esta verificado.')
-
-    // Si el usuario tiene un teamId vinculado
-    if (user.teamId) {
-      team = await Team.findById(user.teamId).populate('members.userId')
-
-      if (!team) {
-          user.teamId = null
-          await user.save()
-      }
-    }
-
-    // Si no tiene teamId, buscar por miembro directo en algún equipo
-    if (!team) {
-      team = await Team.findOne({ 'members.userId': user._id }).populate('members.userId')
-      if (team) {
-        user.teamId = team._id
-        await user.save()
-      }
-    }
-
-    if (!team) throw new Error('El usuario no se encuentra en ningún equipo.')
-  }
-
-  if (!team) throw new Error('Equipo no encontrado.')
-
-  return team
-}
 
 const checkTeamUserHasPerms = async ({ discordId }) => {
   const team = await findTeam({ discordId })
@@ -227,7 +179,7 @@ const generateTeamCode = async () => {
 
   while (exist) {
     code = ''
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 8; i++) {
       code += characters.charAt(Math.floor(Math.random() * characters.length))
     }
 
@@ -507,7 +459,6 @@ const deleteTeam = async ({ teamName = null, teamCode = null, discordId = null }
 }
 
 module.exports = {
-  findTeam,
   checkTeamUserHasPerms,
   checkTeamEligibility,
   updateAllTeamsEligibility,

@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js')
 
-const { getCurrentRoundNumber } = require('../../services/roundUtils.js')
+const { getCurrentRoundNumber } = require('../../utils/round.js')
 
 const getSeasonStartedEmbed = ({ season }) =>  {
     return (
@@ -39,9 +39,9 @@ const getSeasonSummaryEmbed = ({ season }) => {
             .setColor('Purple')
             .setDescription(`## Temporada ${name}`)
             .addFields(
-                { name: 'Indice', value: `👆 \`${seasonIndex}\``, inline: true },
+                { name: 'Índice', value: `👆 \`${seasonIndex}\``, inline: true },
                 { name: 'Estado', value: `\`${status === 'active' ? '📅 En curso' : '📅 Finalizada'}\``, inline: true },
-                { name: 'Rondas', value: `🖇️ \`${roundNumber}\``, inline: true },
+                { name: `${status === 'active' ? 'Ronda Actual' : 'Rondas'}`, value: `🖇️ \`${roundNumber}\``, inline: true },
                 { name: 'Divisiones', value: `🧩 \`${divisions.length}\``, inline: true },
                 { name: 'Equipos', value: `👥 \`${teamsLength}\``, inline: true },
                 { name: 'Partidos', value: `🎯 \`${matchesLength}\``, inline: true }

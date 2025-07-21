@@ -1,11 +1,13 @@
-const { getActiveSeason, endSeason } = require('./seasonUtils.js')
 const { generateMatchmaking } = require('./matchmaking.js')
 const { generateRandomSets } = require('./sets.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
 
+const { endSeason } = require('../services/season.js')
+const { getActiveSeason } = require('../utils/season.js')
+
 const { sendAnnouncement } = require('../discord/send/general.js')
-const { getRoundAddedEmbed, getRoundDivisionAddedEmbed } = require('../discord/embeds/round.js')
-const { getDivisionEndedEmbed } = require('../discord/embeds/division.js')
+const { getRoundAddedEmbed } = require('../discord/embeds/round.js')
+const { getDivisionEndedEmbed, getDivisionRoundAddedEmbed } = require('../discord/embeds/division.js')
 
 const { season, round, roles } = require('../configs/league.js')
 const { maxRounds } = season
@@ -26,13 +28,14 @@ const processDivision = async ({ division, seasonId, isSeasonEnding, client }) =
     return { ended: true, divisionDoc }
   }
 
-  if (rounds.length >= maxRounds) {
+  if (rounds?.length >= maxRounds) {
     division.status = 'ended'
 
     if (!isSeasonEnding) {
       client,
       // Se envia cuando se llega al limite de rondas en una division pero no en todas
       await sendAnnouncement({
+        client,
         content: `<@&${roles.ping.id}>`,
         embeds: [getDivisionEndedEmbed({ division })]
       })
@@ -49,8 +52,8 @@ const processDivision = async ({ division, seasonId, isSeasonEnding, client }) =
 
   const teamsDocs = teams
 
-  const indices = division.rounds.map(r => r.roundIndex || 0)
-  const nextRoundIndex = (indices.length ? Math.max(...indices) : 0) + 1
+  const indices = division.rounds?.map(r => r.roundIndex || 0)
+  const nextRoundIndex = (indices?.length ? Math.max(...indices) : 0) + 1
 
   const { newMatchesDocs, newRestingTeamsDocs } = generateMatchmaking({
     client,
@@ -62,13 +65,14 @@ const processDivision = async ({ division, seasonId, isSeasonEnding, client }) =
   })
 
   // Si no se han podido generar partidos, termina la división
-  if (newMatchesDocs.length === 0) {
+  if (newMatchesDocs?.length === 0 || !newMatchesDocs || !newMatchesDocs?.length) {
     division.status = 'ended'
 
     if (!isSeasonEnding) {
       client,
       // Se envia cuando termina esta division pero no todas
       await sendAnnouncement({
+        client,
         content: `<@&${roles.ping.id}>`,
         embeds: [getDivisionEndedEmbed({ division })]
       })
@@ -85,8 +89,8 @@ const processDivision = async ({ division, seasonId, isSeasonEnding, client }) =
     set1,
     set2,
     set3,
-    matches: savedMatches.map((match) => match._id),
-    resting: newRestingTeamsDocs.map((team) => team._id),
+    matches: newMatchesDocs?.map((match) => match._id),
+    resting: newRestingTeamsDocs?.map((team) => team._id),
   }
 
   division.rounds.push(newRound)
@@ -109,8 +113,6 @@ const processDivision = async ({ division, seasonId, isSeasonEnding, client }) =
 const addRound = async ({ client }) => {
   const season = await getActiveSeason()
   const seasonId = season._id
-  const seasonIndex = season.seasonIndex
-  const seasonName = season.name
 
   const divisionsSkipped = []
   const divisionsWithNewRounds = []
@@ -118,7 +120,7 @@ const addRound = async ({ client }) => {
   for (const division of season.divisions) {
 
     const activeDivisions = season.divisions.filter(d => d.status !== 'ended')
-    const isSeasonEnding = activeDivisions.every(d => d.rounds.length >= maxRounds)
+    const isSeasonEnding = activeDivisions.every(d => d.rounds?.length >= maxRounds)
 
     const result = await processDivision({ division, seasonId, isSeasonEnding, client })
 
@@ -136,7 +138,7 @@ const addRound = async ({ client }) => {
 
   await season.save()
 
-  if (divisionsSkipped.length === season.divisions.length) {
+  if (divisionsSkipped?.length === season.divisions.length) {
     return endSeason({ client })
   }
 
@@ -150,8 +152,7 @@ const addRound = async ({ client }) => {
     embeds: [
       getRoundAddedEmbed({
         divisionsWithNewRounds,
-        seasonIndex,
-        seasonName,
+        season,
         nextRoundIndex: latestRoundIndex
       })
     ]
@@ -161,11 +162,9 @@ const addRound = async ({ client }) => {
     await sendAnnouncement({
       client,
       embeds: [
-        getRoundDivisionAddedEmbed({
+        getDivisionRoundAddedEmbed({
           division,
-          seasonIndex,
-          seasonName,
-          nextRoundIndex: latestRoundIndex
+          season
         })
       ]
     })

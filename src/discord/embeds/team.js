@@ -17,6 +17,13 @@ const getTeamInfoEmbed = ({ team, perms }) => {
       }).join('\n')
 
 
+    let formattedDivision = ''
+    if (team.divisionId) {
+        formattedDivision = `${team.divisionId.emoji || '🏆'} ${team.divisionId.name || 'División sin nombre'}`
+    } else {
+        formattedDivision = 'En ninguna división'
+    }
+
     return (
         new EmbedBuilder()
             .setColor(team.color || 'Blue')
@@ -24,7 +31,7 @@ const getTeamInfoEmbed = ({ team, perms }) => {
             .setDescription(`## ${team.name}`)
             .addFields(
                 { name: `Miembros — ${team.members.length}/${config.team.maxMembers}`, value: formattedList, inline: true },
-                { name: 'Division', value: `${team.divisionId?.name ? `\`${team.divisionId.name}\`` : 'En ninguna division'}`, inline: true },
+                { name: 'División', value: `\`${formattedDivision}\``, inline: true },
                 ...(perms ? [{ name: 'Código', value: `\`${team.code}\``, inline: true }] : [])
 	    )
     )

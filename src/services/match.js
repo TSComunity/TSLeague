@@ -4,10 +4,10 @@ const Season = require('../Esquemas/Season')
 const Match = require('../Esquemas/Match')
 const Team = require('../Esquemas/Team')
 
-const { getActiveSeason } = require('./seasonUtils.js')
-const { getCurrentRoundNumber } = require('./roundUtils.js')
+const { getActiveSeason } = require('../utils/season.js')
+const { getCurrentRoundNumber } = require('../utils/round.js')
 
-const { getNextDayAndHour } = require('../utils/getNextDayAndHour.js')
+const { getDate } = require('../utils/date.js')
 
 const { guild, categories, channels, match } = require('../configs/league.js')
 const { defaultStartDay, defaultStartHour } = match
@@ -20,8 +20,8 @@ const { defaultStartDay, defaultStartHour } = match
  */
 const createMatchChannel = async ({ match, client }) => {
   try {
-    const teamA = await Team.findById(match.teamAId)
-    const teamB = await Team.findById(match.teamBId)
+    const teamA = await Team.findOne({ _id: match.teamAId })
+    const teamB = await Team.findOne({ _id: match.teamBId })
 
     if (!teamA || !teamB) {
       throw new Error('No se encontraron los equipos del partido')
@@ -172,7 +172,7 @@ const createMatch = async ({ client, seasonId, divisionId, roundIndex, teamAId, 
       teamBId,
       scoreA: 0,
       scoreB: 0,
-      scheduledAt: getNextDayAndHour({ day: defaultStartDay, hour: defaultStartHour }),
+      scheduledAt: getDate({ day: defaultStartDay, hour: defaultStartHour }),
       status: 'scheduled',
       set1: { winner: null },
       set2: { winner: null },
@@ -259,7 +259,7 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
       teamBId: teamB._id,
       scoreA: 0,
       scoreB: 0,
-      scheduledAt: getNextDayAndHour({ day: defaultStartDay, hour: defaultStartHour }),
+      scheduledAt: getDate({ day: defaultStartDay, hour: defaultStartHour }),
       status: 'scheduled',
       set1: { winner: null },
       set2: { winner: null },
@@ -395,7 +395,7 @@ const endMatch = async ({ seasonIndex, teamAName, teamBName }) => {
 const changeMatchScheduledAt = async ({ seasonIndex, teamAName, teamBName, day, hour, minute }) => {
   const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
 
-  match.scheduledAt = getNextDayAndHour({ day, hour, minute })
+  match.scheduledAt = getDate({ day, hour, minute })
 
   await match.save()
   return match

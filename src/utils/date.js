@@ -7,7 +7,7 @@ const { DateTime } = require('luxon');
  * @param {Number} minute - Minuto (0-59, opcional, por defecto 0)
  * @returns {Date} - Objeto Date en horario local con zona Madrid
  */
-const getNextDayAndHour = ({ day, hour, minute = 0 }) => {
+const getDate = ({ day, hour = 0, minute = 0 }) => {
   if (!Number.isInteger(day) || day < 0 || day > 6)
     throw new Error("El parámetro 'day' debe ser un número entre 0 y 6.");
 
@@ -41,4 +41,4 @@ const getNextDayAndHour = ({ day, hour, minute = 0 }) => {
   return scheduled.toJSDate();
 };
 
-module.exports = { getNextDayAndHour };
+module.exports = { getDate };
