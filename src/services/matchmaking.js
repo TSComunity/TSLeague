@@ -6,41 +6,56 @@ const { createMatch } = require('./match.js')
  * - Evita que un equipo juegue contra sí mismo o contra equipos ya eliminados (null).
  * - Registra qué equipos descansan esa ronda.
  *
- * @param {Array} matchesDocs - Partidos ya jugados en la temporada/división.
- * @param {Array} teamsdocs - Equipos que participan.
- * @param {ID} seasonId - ID de la temporada.
- * @param {ID} divisionId - ID de la división.
- * @param {Number} nextRoundIndex - Indice de la ronda a generar.
- * @returns {Array} newMatchesDocs - Lista de nuevos partidos generados.
- * @returns {Array} newRestingTeamsDocs - IDs de los equipos que descansan esta ronda.
+ * @param {Array} matchesDocs - Partidos ya jugados en la temporada/división (array de objetos con teamAId, teamBId poblados).
+ * @param {Array} teamsDocs - Equipos que participan (array de Team poblados).
+ * @param {Object} season - Objeto Season completo (opcional).
+ * @param {Object} division - Objeto Division completo.
+ * @param {Number} nextRoundIndex - Índice de la ronda a generar.
+ * @param {Object} client - Instancia de Discord.js.
+ * @returns {Object} { newMatchesDocs, newRestingTeamsDocs }
  */
-const generateMatchmaking = async ({ client, matchesDocs, teamsDocs, seasonId, divisionId, nextRoundIndex }) => {
-  // Evitar errores por equipos eliminados/null
-  const validTeams = teamsDocs.filter(teamDoc => teamDoc && teamDoc._id)
-  const validTeamsIds = validTeams.map(teamDoc => teamDoc._id)
+const generateMatchmaking = async ({
+  client,
+  matchesDocs,
+  teamsDocs,
+  season,
+  division,
+  nextRoundIndex
+}) => {
+  // Filtrar equipos válidos (no nulos, con ID)
+  const validTeams = Array.isArray(teamsDocs) ? teamsDocs.filter(teamDoc => teamDoc && teamDoc._id) : []
+  const validTeamsIds = validTeams.map(teamDoc => teamDoc._id.toString())
+
+  // Mezclar orden aleatorio
   validTeamsIds.sort(() => Math.random() - 0.5)
 
-
+  // Si hay menos de 2 equipos, nadie puede jugar, todos descansan
   if (validTeamsIds.length < 2) {
-    console.warn('No hay suficientes equipos válidos para generar partidos.')
     return { newMatchesDocs: [], newRestingTeamsDocs: validTeams }
   }
 
-  const alreadyPlayed = new Set()
+  // Filtrar partidos no válidos
+  const filteredMatchesDocs = Array.isArray(matchesDocs) ? matchesDocs.filter(Boolean) : []
 
-  // Marcar combinaciones ya jugadas anteriormente
-  for (const matchDoc of matchesDocs) {
-    if (!matchDoc.teamA || !matchDoc.teamB) continue
-    const key = [matchDoc.teamA.toString(), matchDoc.teamB.toString()].sort().join('-')
+  // Crear set de emparejamientos ya jugados
+  const alreadyPlayed = new Set()
+  for (const matchDoc of filteredMatchesDocs) {
+    if (!matchDoc) continue // PARCHE ANTI UNDEFINED
+    let teamA = matchDoc.teamAId
+    let teamB = matchDoc.teamBId
+    let teamAId = teamA._id
+    let teamBId = teamB._id
+
+    if (!teamAId || !teamBId) continue
+    const key = [teamAId.toString(), teamBId.toString()].sort().join('-')
     alreadyPlayed.add(key)
   }
 
   const usedThisRound = new Set()
-
   const newMatchesDocs = []
   const newRestingTeamsDocs = []
 
-  // Intentar emparejar equipos disponibles
+  // Emparejar equipos disponibles, uno por ronda
   for (let i = 0; i < validTeamsIds.length; i++) {
     const teamAId = validTeamsIds[i]
     if (usedThisRound.has(teamAId)) continue
@@ -48,36 +63,29 @@ const generateMatchmaking = async ({ client, matchesDocs, teamsDocs, seasonId, d
     for (let j = i + 1; j < validTeamsIds.length; j++) {
       const teamBId = validTeamsIds[j]
       if (usedThisRound.has(teamBId)) continue
-      if (teamAId.toString() === teamBId.toString()) continue // evitar partido contra sí mismo
+      if (teamAId === teamBId) continue // evitar partido contra sí mismo
 
-      const key = [teamAId.toString(), teamBId.toString()].sort().join('-')
+      const key = [teamAId, teamBId].sort().join('-')
       if (alreadyPlayed.has(key)) continue // evitar duplicados
 
-      // Emparejamiento válido
+      // Emparejamiento válido, crear partido
       const createdMatch = await createMatch({
         client,
-        seasonId, // El ID de la temporada
-        divisionId, // El ID de la división
-        roundIndex: nextRoundIndex, // El índice de la ronda
-        teamAId, // El ID del primer equipo
-        teamBId // El ID del segundo equipo
+        seasonId: season._id,
+        divisionId: division.divisionId._id,
+        roundIndex: nextRoundIndex,
+        teamAId,
+        teamBId
       })
 
       newMatchesDocs.push(createdMatch)
-      usedThisRound.add(teamAId)
-      usedThisRound.add(teamBId)
-      alreadyPlayed.add(key)
-
-      break // teamAId ya emparejado, pasamos al siguiente
+      usedThisRound.add(teamAId.toString())
+      usedThisRound.add(teamBId.toString())
+      alreadyPlayed.add(key.toString())
+      break // teamAId emparejado, pasamos al siguiente
     }
-  }
-
-  // Registrar equipos que no jugaron esta ronda (descansan)
-  for (const validTeam of validTeams) {
-    const teamId = validTeam._id
-    if (!usedThisRound.has(teamId)) {
-      newRestingTeamsDocs.push(validTeam)
-    }
+    // Si no se encontró pareja, descansará
+    newRestingTeamsDocs.push(validTeams.find(t => t._id.toString() === teamAId.toString()))
   }
 
   return { newMatchesDocs, newRestingTeamsDocs }

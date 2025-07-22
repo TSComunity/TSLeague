@@ -84,7 +84,6 @@ const addPingRoleToUser = async ({ client, discordId }) => {
 
         // Añadir el rol
         const updatedMember = await member.roles.add(pingRole)
-        console.log(`Rol "${pingRole.name}" añadido a ${updatedMember.user.tag} correctamente.`)
         return updatedMember
 
     } catch (error) {

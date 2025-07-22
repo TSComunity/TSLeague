@@ -61,8 +61,8 @@ const summary = {
     status: div.status,
     rounds: div.rounds.map((round) => ({
       roundIndex: round.roundIndex,
-      matches: round.matches.map((m) => m.matchId?.toString() ?? 'N/A'),
-      resting: round.resting.map((r) => r.teamId?.toString() ?? 'N/A')
+      matches: round.matches, //.map((m) => m.matchId?.toString() ?? 'N/A'),
+      resting: round, //.map((r) => r.teamId?.toString() ?? 'N/A')
     }))
   }))
 }

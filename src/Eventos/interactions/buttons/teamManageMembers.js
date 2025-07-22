@@ -1,6 +1,7 @@
 const { ActionRowBuilder } = require('discord.js')
 
-const { checkTeamUserHasPerms, findTeam } = require('../../../services/team.js')
+const { checkTeamUserHasPerms} = require('../../../services/team.js')
+const { findTeam } = require('../../../utils/team.js')
 const { getTeamAddMemberButton, getTeamChangeMemberRoleButton, getTeamKickMemberButton, getTeamCancelButton } = require('../../../discord/buttons/team.js')
 const { getErrorEmbed } = require('../../../discord/embeds/management.js')
 

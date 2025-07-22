@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js')
 
+// Embed general de jornada, robusto ante datos nulos
 const getRoundAddedEmbed = ({ divisionsWithNewRounds, season, nextRoundIndex }) => {
   const { name, seasonIndex } = season
 

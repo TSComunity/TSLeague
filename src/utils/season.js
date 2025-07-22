@@ -6,16 +6,19 @@ const Season = require('../Esquemas/Season.js')
  */
 const getActiveSeason = async () => {
   const season = await Season.findOne({ status: 'active' })
-    .populate('divisions.divisionId')
-    .populate('divisions.teams.teamId')
     .populate({
-      path: 'divisions.rounds.matches.matchId',
-      populate: [
-        { path: 'teamA', model: 'Team' },
-        { path: 'teamB', model: 'Team' }
-      ]
+      path: 'divisions.divisionId',
     })
-    .populate('divisions.rounds.resting.teamId')
+    .populate({
+      path: 'divisions.teams.teamId',
+    })
+    .populate({
+      path: 'divisions.rounds.matches',
+      populate: ['teamAId', 'teamBId']
+    })
+    .populate({
+      path: 'divisions.rounds.resting'
+    })
 
   if (!season) throw new Error('Ninguna temporada activa encontrada.')
 
@@ -30,16 +33,19 @@ const getActiveSeason = async () => {
 const getLastSeason = async () => {
   const season = await Season.findOne({})
     .sort({ startDate: -1 })
-    .populate('divisions.divisionId')
-    .populate('divisions.teams.teamId')
     .populate({
-      path: 'divisions.rounds.matches.matchId',
-      populate: [
-        { path: 'teamA', model: 'Team' },
-        { path: 'teamB', model: 'Team' }
-      ]
+      path: 'divisions.divisionId',
     })
-    .populate('divisions.rounds.resting.teamId')
+    .populate({
+      path: 'divisions.teams.teamId',
+    })
+    .populate({
+      path: 'divisions.rounds.matches',
+      populate: ['teamAId', 'teamBId']
+    })
+    .populate({
+      path: 'divisions.rounds.resting'
+    })
 
   if (!season) throw new Error('No se ha encontrado ninguna temporada.')
   return season

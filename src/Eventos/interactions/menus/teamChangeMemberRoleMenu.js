@@ -10,9 +10,10 @@ const {
 } = require('../../../discord/buttons/team.js')
 
 const {
-  findTeam,
   checkTeamUserHasPerms
 } = require('../../../services/team.js')
+
+const { findTeam } = require('../../../utils/team.js')
 
 const { getErrorEmbed } = require('../../../discord/embeds/management.js')
 

@@ -1,44 +1,67 @@
 const { EmbedBuilder } = require('discord.js')
 
+// Embed de división terminada, mostrando ranking final y nota
 const getDivisionEndedEmbed = ({ division }) =>  {
-  const { divisionId: divisionDoc, status, teams, rounds } = division
-    return (
-        new EmbedBuilder()
-            .setColor(divisionDoc.color)
-            .setDescription('Division terminada')
-    )
+  const { divisionId: divisionDoc, teams = [], rounds = [] } = division
+  // Ordenar equipos por puntos (descendente)
+  const sortedTeams = [...teams].sort((a, b) => (b.points || 0) - (a.points || 0))
+
+  let rankingMsg = sortedTeams.length
+    ? sortedTeams.map((team, idx) => {
+        const name = team.teamId?.name || 'Sin nombre'
+        const pts = typeof team.points === 'number' ? team.points : 0
+        return `\`${idx + 1}.\` **${name}** — ${pts} pts`
+      }).join('\n')
+    : 'División sin equipos.'
+
+  return new EmbedBuilder()
+    .setColor(divisionDoc?.color || 'Blue')
+    .setDescription([
+      '### Division terminada',
+      '',
+      rankingMsg
+    ].join('\n'))
+    	.setFooter({ text:'Cuando todas las divisiones hayan terminado se publicará el resumen global de la temporada.' })
+
 }
 
+// Embed de partidos de nueva ronda y descansos, robusto ante datos nulos
 const getDivisionRoundAddedEmbed = ({ division, season }) => {
-  const { divisionDoc, newMatchesDocs, newRestingTeamsDocs } = division
-
-  const divisionName = divisionDoc.name || 'División sin nombre'
+  const round = division.rounds[division.rounds.length - 1]
+  const divisionDoc = division.divisionId
+  const { matches = [], resting = [] } = round
+  const divisionName = divisionDoc?.name || 'División sin nombre'
 
   const embed = new EmbedBuilder()
-    .setColor('Blue')
+    .setColor(divisionDoc?.color || 'Blue')
     .setDescription(`### Nuevos Partidos - Division ${divisionName}`)
 
-  for (const match of newMatchesDocs) {
-    const teamAName = match.teamAId.name || 'Sin nombre'
-    const teamBName = match.teamBId.name || 'Sin nombre'
+  // Partidos nuevos
+  for (const match of matches) {
+    console.log(match)
+    const teamAName = match.teamAId?.name || 'Sin nombre'
+    const teamBName = match.teamBId?.name || 'Sin nombre'
     const channel = match.channelId ? `<#${match.channelId}>` : 'Sin canal'
-    const timestampText = match.scheduledAt instanceof Date
-      ? `<t:${Math.floor(match.scheduledAt.getTime() / 1000)}:R>`
-      : 'Sin fecha'
+    const timestampText =
+      match.scheduledAt instanceof Date
+        ? `<t:${Math.floor(match.scheduledAt.getTime() / 1000)}:R>`
+        : 'Sin fecha'
 
-
-
-    embed.addFields(
-      { name: `🆚 ${teamAName} vs ${teamBName}`, value: `💬 Canal: ${channel}\n🕛 Horario: ${timestampText}`, inline: true}
-    )
+    embed.addFields({
+      name: `🆚 ${teamAName} vs ${teamBName}`,
+      value: `💬 Canal: ${channel}\n🕛 Horario: ${timestampText}`,
+      inline: true
+    })
   }
 
-  for (const restingTeam of newRestingTeamsDocs) {
-    const teamName = restingTeam.name || 'Sin nombre'
-
-    embed.addFields(
-      { name: `💤 ${teamName}`, value: '💤 Descansa esta jornada', inline: true}
-    )
+  // Equipos en descanso
+  for (const restingTeam of resting) {
+    const teamName = restingTeam?.name || 'Sin nombre'
+    embed.addFields({
+      name: `💤 ${teamName}`,
+      value: '💤 Descansa esta jornada',
+      inline: true
+    })
   }
 
   return embed

@@ -220,7 +220,6 @@ const createTeam = async ({ name, iconURL, presidentDiscordId, color = 'Blue' })
   
   const user = await User.findOne({ discordId: presidentDiscordId })
   if (!user) throw new Error('El usuario no esta verificado.')
-  console.log(user)
   if (user.teamId) {
     throw new Error('El usuario ya se encuentra en un equipo.')
   }
@@ -260,7 +259,6 @@ const updateTeam = async ({ teamName = null, teamCode = null, discordId = null, 
     const normalizedColor = color.replace(/^\p{Extended_Pictographic}\s*/u, '').trim()
 
     const colorObj = colors.find(c => c.value === normalizedColor)
-console.log({ normalizedColor, color, colorObj, colors })
     if (!colorObj) throw new Error('Color no válido.')
 
     team.color = colorObj.value // <--- usar el value, no el label
