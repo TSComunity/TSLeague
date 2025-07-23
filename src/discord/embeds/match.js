@@ -2,62 +2,64 @@ const { EmbedBuilder } = require('discord.js')
 const modesData = require('../../configs/gameModes.json')
 
 function getModeOrMapName(id, type) {
-    if (!id) return 'N/A'; // Si no hay ID, devuelve "N/A"
+  if (!id) return 'N/A'
 
-    if (type === 'mode') {
-        const mode = modesData.find(m => m.id === id);
-        return mode ? mode.name : 'Desconocido';
-    } else if (type === 'map') {
-        // Itera sobre todos los modos para encontrar el mapa
-        for (const mode of modesData) {
-            const map = mode.maps.find(m => m.id === id);
-            if (map) return map.name;
-        }
-        return 'Desconocido';
+  if (type === 'mode') {
+    const mode = modesData.find(m => m.id === id)
+    return mode ? mode.name : 'Desconocido'
+  } else if (type === 'map') {
+    for (const mode of modesData) {
+      const map = mode.maps.find(m => m.id === id)
+      if (map) return map.name
     }
-    return 'N/A';
+    return 'Desconocido'
+  }
+
+  return 'N/A'
 }
 
 const getMatchInfoEmbed = ({ match }) => {
-    const { teamAId, teamBId, matchIndex, scoreA, scoreB, scheduledAt, status, set1, set2, set3 } = match
+  const { teamAId, teamBId, matchIndex, scoreA, scoreB, scheduledAt, status, sets } = match
 
-    const miliseconds = scheduledAt.getTime()
+  const time = Math.floor(scheduledAt.getTime() / 1000)
 
-    const time = Math.floor(miliseconds / 1000)
+  let color
+  if (status === 'scheduled') color = 'Yellow'
+  else if (status === 'cancelled') color = 'Red'
+  else if (status === 'ended') color = 'Green'
+  else color = 'Blue'
 
-    const set1ModeName = set1 ? getModeOrMapName(set1.modeId, 'mode') : 'N/A';
-    const set1MapName = set1 ? getModeOrMapName(set1.mapId, 'map') : 'N/A';
-
-    const set2ModeName = set2 ? getModeOrMapName(set2.modeId, 'mode') : 'N/A';
-    const set2MapName = set2 ? getModeOrMapName(set2.mapId, 'map') : 'N/A';
-
-    const set3ModeName = set3 ? getModeOrMapName(set3.modeId, 'mode') : 'N/A';
-    const set3MapName = set3 ? getModeOrMapName(set3.mapId, 'map') : 'N/A';
-
-    let color
-
-    if (status === 'scheduled') color = 'Yellow'
-    else if (status === 'cancelled') color = 'Red'
-    else if (status === 'ended') color = 'Green'
-    else color = 'Blue';
-    return (
-        new EmbedBuilder()
-            .setColor(color)
-            .setDescription(`## ${match.teamAId.name} vs ${match.teamBId.name}`)
-            .addFields(
-                { name: 'Indice', value: `\`${matchIndex}\``, inline: true },
-                { name: 'Horario', value: `<t:${time}>`, inline: true },
-                { name: 'Estado', value: (() => {
-                    if (status === 'scheduled') return '\`Programado\`'
-                    if (status === 'cancelled') return '\`Cancelado\`'
-                    if (status === 'ended') return '\`Terminado\`'
-                })(), inline: true },
-
-                { name: 'Set 1', value: `> Modo: \`${set1ModeName}\`\n> Mapa: \`${set1MapName}\``, inline: false },
-                { name: 'Set 2', value: `> Modo: \`${set2ModeName}\`\n> Mapa: \`${set2MapName}\``, inline: false },
-                { name: 'Set 3', value: `> Modo: \`${set3ModeName}\`\n> Mapa: \`${set3MapName}\``, inline: false }
-            )
+  const embed = new EmbedBuilder()
+    .setColor(color)
+    .setDescription(`## ${teamAId.name} vs ${teamBId.name}`)
+    .addFields(
+      { name: 'Índice', value: `\`${matchIndex}\``, inline: true },
+      { name: 'Horario', value: `<t:${time}>`, inline: true },
+      {
+        name: 'Estado',
+        value: (() => {
+          if (status === 'scheduled') return '`Programado`'
+          if (status === 'cancelled') return '`Cancelado`'
+          if (status === 'ended') return '`Terminado`'
+          return '`Desconocido`'
+        })(),
+        inline: true
+      }
     )
+
+  // 🧩 Añadir un campo por cada set
+  sets.forEach((set, index) => {
+    const modeName = getModeOrMapName(set.mode, 'mode')
+    const mapName = getModeOrMapName(set.map, 'map')
+
+    embed.addFields({
+      name: `Set ${index + 1}`,
+      value: `> Modo: \`${modeName}\`\n> Mapa: \`${mapName}\``,
+      inline: false
+    })
+  })
+
+  return embed
 }
 
 module.exports = { getMatchInfoEmbed }

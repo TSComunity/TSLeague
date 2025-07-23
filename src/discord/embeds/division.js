@@ -27,18 +27,26 @@ const getDivisionEndedEmbed = ({ division }) =>  {
 
 // Embed de partidos de nueva ronda y descansos, robusto ante datos nulos
 const getDivisionRoundAddedEmbed = ({ division, season }) => {
-  const round = division.rounds[division.rounds.length - 1]
+
+  console.log('rounds', division.rounds)
+  const rounds = Array.isArray(division.rounds) ? division.rounds : Object.values(division.rounds)
+const round = rounds[rounds.length - 1]
+console.log('round', round)
+  if (!round) throw new Error('No se ha encontrado la ronda.')
+
   const divisionDoc = division.divisionId
-  const { matches = [], resting = [] } = round
   const divisionName = divisionDoc?.name || 'División sin nombre'
+
+  const matches = round?.matches ?? []
+  const resting = round?.resting ?? []
 
   const embed = new EmbedBuilder()
     .setColor(divisionDoc?.color || 'Blue')
     .setDescription(`### Nuevos Partidos - Division ${divisionName}`)
 
   // Partidos nuevos
-  for (const match of matches) {
-    console.log(match)
+  for (const matchObj of matches) {
+    const match = matchObj.matchId
     const teamAName = match.teamAId?.name || 'Sin nombre'
     const teamBName = match.teamBId?.name || 'Sin nombre'
     const channel = match.channelId ? `<#${match.channelId}>` : 'Sin canal'
@@ -55,7 +63,8 @@ const getDivisionRoundAddedEmbed = ({ division, season }) => {
   }
 
   // Equipos en descanso
-  for (const restingTeam of resting) {
+  for (const restingTeamObj of resting) {
+    const restingTeam = restingTeamObj.teamId
     const teamName = restingTeam?.name || 'Sin nombre'
     embed.addFields({
       name: `💤 ${teamName}`,

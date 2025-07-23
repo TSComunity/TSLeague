@@ -6,19 +6,13 @@ const Season = require('../Esquemas/Season.js')
  */
 const getActiveSeason = async () => {
   const season = await Season.findOne({ status: 'active' })
+    .populate('divisions.divisionId')
+    .populate('divisions.teams.teamId')
     .populate({
-      path: 'divisions.divisionId',
+      path: 'divisions.rounds.matches.matchId', // 🔥 ojo: accede al matchId dentro del objeto
+      populate: ['teamAId', 'teamBId'] // si quieres popular también los equipos dentro del partido
     })
-    .populate({
-      path: 'divisions.teams.teamId',
-    })
-    .populate({
-      path: 'divisions.rounds.matches',
-      populate: ['teamAId', 'teamBId']
-    })
-    .populate({
-      path: 'divisions.rounds.resting'
-    })
+    .populate('divisions.rounds.resting.teamId')
 
   if (!season) throw new Error('Ninguna temporada activa encontrada.')
 

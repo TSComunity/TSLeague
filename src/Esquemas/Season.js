@@ -23,10 +23,6 @@ const SeasonSchema = new Schema({
       rounds: [
         {
           roundIndex: { type: Number, required: true }, // ej: 1 = primer finde
-          
-          set1: { mode: { type: String, required: true }, map: { type: String, required: true }, },
-          set2: { mode: { type: String, required: true }, map: { type: String, required: true }, },
-          set3: { mode: { type: String, required: true }, map: { type: String, required: true }, },
 
           matches: [
             {

@@ -1,25 +1,28 @@
 const { getActiveSeason } = require('../utils/season.js')
 
 const gameModes = require('../configs/gameModes.json')
+const configs = require('../configs/league.js')
 
 /**
- * Selecciona 3 sets aleatorios (modo + mapa) que aún no se han jugado en la temporada activa.
+ * Selecciona sets aleatorios (modo + mapa) que aún no se han jugado en la temporada activa.
  * Usa los pesos de modos y mapas definidos en el JSON.
  * @returns {Object} sets - los sets elegidos.
  */
 const generateRandomSets = async () => {
+  const defaultSetsLength = configs.match.defaultSetsLength
   const season = await getActiveSeason()
 
   // Mapas ya usados
   const playedMapIds = new Set()
   for (const division of season.divisions) {
     const round = division.rounds[division.rounds.length - 1]
-      if (round) {
-        if (round.set1?.map) playedMapIds.add(round.set1.map)
-        if (round.set2?.map) playedMapIds.add(round.set2.map)
-        if (round.set3?.map) playedMapIds.add(round.set3.map)
+    if (round && round.sets && Array.isArray(round.sets)) {
+      for (const set of round.sets) {
+        if (set?.map) playedMapIds.add(set.map)
       }
+    }
   }
+
 
   // Crear lista de modos con pesos (sin repetir modo)
   const availableModes = gameModes
@@ -34,7 +37,7 @@ const generateRandomSets = async () => {
   const selectedModes = []
   const usedModeIds = new Set()
 
-  while (selectedModes.length < 3 && weightedModes.length > 0) {
+  while (selectedModes.length < defaultSetsLength && weightedModes.length > 0) {
     const mode = weightedModes[Math.floor(Math.random() * weightedModes.length)]
     if (!usedModeIds.has(mode.id)) {
       selectedModes.push(mode)
@@ -42,13 +45,13 @@ const generateRandomSets = async () => {
     }
   }
 
-  if (selectedModes.length < 3) {
-    throw new Error('No hay suficientes modos distintos disponibles para 3 sets.')
+  if (selectedModes.length < defaultSetsLength) {
+    throw new Error(`No hay suficientes modos distintos disponibles para ${defaultSetsLength} sets.`)
   }
 
   // Para cada modo, seleccionar un mapa por peso
-  const sets = {}
-  for (let i = 0; i < 3; i++) {
+  const sets = []
+  for (let i = 0; i < defaultSetsLength; i++) {
     const mode = selectedModes[i]
     const availableMaps = mode.maps.filter(map => !playedMapIds.has(map.id))
 
@@ -63,12 +66,13 @@ const generateRandomSets = async () => {
       throw new Error(`No hay mapas disponibles para el modo ${mode.id}`)
     }
 
-    // Elegir mapa aleatorio entre los disponibles
     const map = weightedMaps[Math.floor(Math.random() * weightedMaps.length)]
-    sets[`set${i + 1}`] = {
+
+    sets.push({
       mode: mode.id,
-      map: map.id
-    }
+      map: map.id,
+      winner: null
+    })
   }
 
   return sets

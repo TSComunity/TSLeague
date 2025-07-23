@@ -71,7 +71,8 @@ module.exports = {
   },
   "match": {
     "defaultStartDay": 6,
-    "defaultStartHour": 19
+    "defaultStartHour": 19,
+    "defaultSetsLength": 3
   },
   "team": {
     "maxMembers": 5

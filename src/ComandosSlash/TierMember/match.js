@@ -1,11 +1,13 @@
 const { SlashCommandBuilder } = require('discord.js')
 const {
   createMatchManually,
-  getMatchInfo,
   cancelMatch,
   endMatch,
   changeMatchScheduledAt
 } = require('../../services/match.js')
+
+const { getLastSeason } = require('../../utils/season.js')
+const { findMatchByNamesAndSeason } = require('../../utils/match.js')
 
 const { getMatchInfoEmbed } = require('../../discord/embeds/match.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
@@ -48,8 +50,6 @@ module.exports = {
         .setName('cancelar')
         .setDescription('Cancela un partido')
         .addStringOption(opt =>
-            opt.setName('indice-temporada').setDescription('El indice de la temporada').setRequired(true))
-        .addStringOption(opt =>
             opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
         .addStringOption(opt =>
             opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
@@ -63,8 +63,6 @@ module.exports = {
         .setName('terminar')
         .setDescription('Termina un partido')
         .addStringOption(opt =>
-            opt.setName('indice-temporada').setDescription('El indice de la temporada').setRequired(true))
-        .addStringOption(opt =>
             opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
         .addStringOption(opt =>
             opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
@@ -76,22 +74,15 @@ module.exports = {
         .setName('cambiar-horario')
         .setDescription('Cambia el horario de un partido')
         .addStringOption(opt =>
-            opt.setName('indice-temporada').setDescription('El indice de la temporada').setRequired(true))
-        .addStringOption(opt =>
             opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
         .addStringOption(opt =>
             opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
         .addIntegerOption(opt =>
           opt.setName('dia').setDescription('Dia del partido').setRequired(true)
             .addChoices(
-                { name: 'Lunes', value: 1 },
-                { name: 'Martesr', value: 2 },
-                { name: 'Miércoles', value: 3 },
-                { name: 'Jueves', value: 4 },
                 { name: 'Viernes', value: 5 },
                 { name: 'Sábado', value: 6 },
                 { name: 'Domingo', value: 0 }
-
             ))
         .addIntegerOption(opt =>
             opt.setName('hora').setDescription('Hora del partido').setRequired(true)
@@ -151,11 +142,12 @@ module.exports = {
 
     try {
       if (sub === 'crear') {
+        await interaction.deferReply({ ephemeral: false })
         const teamAName = interaction.options.getString('nombre-equipo-a')
         const teamBName = interaction.options.getString('nombre-equipo-b')
 
         const match = await createMatchManually({ client, teamAName, teamBName })
-        await interaction.reply({
+        await interaction.followUp({
             embeds: [getSuccesEmbed({ message: `Partido <#${match.channelId}> creado.` })]
         })
       }
@@ -164,13 +156,13 @@ module.exports = {
         const teamAName = interaction.options.getString('nombre-equipo-a')
         const teamBName = interaction.options.getString('nombre-equipo-b')
 
-        const match = await getMatchInfo({ seasonIndex, teamAName, teamBName })
+        const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
         await interaction.reply({
             embeds: [getMatchInfoEmbed({ match })]
         })
 
       } else if (sub === 'cancelar') {
-        const seasonIndex = interaction.options.getString('indice-temporada')
+        const seasonIndex = (await getLastSeason()).seasonIndex
         const teamAName = interaction.options.getString('nombre-equipo-a')
         const teamBName = interaction.options.getString('nombre-equipo-b')
         const reason = interaction.options.getString('motivo')
@@ -181,7 +173,7 @@ module.exports = {
         })
 
       } else if (sub === 'terminar') {
-        const seasonIndex = interaction.options.getString('indice-temporada')
+        const seasonIndex = (await getLastSeason()).seasonIndex
         const teamAName = interaction.options.getString('nombre-equipo-a')
         const teamBName = interaction.options.getString('nombre-equipo-b')
 
@@ -191,16 +183,12 @@ module.exports = {
         })
 
       } else if (sub === 'cambiar-horario') {
-        const seasonIndex = interaction.options.getString('indice-temporada')
+        const seasonIndex = (await getLastSeason()).seasonIndex
         const teamAName = interaction.options.getString('nombre-equipo-a')
         const teamBName = interaction.options.getString('nombre-equipo-b')
         const day = interaction.options.getInteger('dia')
         const hour = interaction.options.getInteger('hora')
         const minute = interaction.options.getInteger('minuto')
-
-        if (![5, 6, 0].includes(day)) {
-          throw new RangeError("El día debe ser viernes, sábado o domingo.")
-        }
 
         const match = await changeMatchScheduledAt({ seasonIndex, teamAName, teamBName, day, hour, minute })
         await interaction.reply({

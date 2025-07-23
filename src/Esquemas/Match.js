@@ -6,7 +6,7 @@ const MatchSchema = new Schema({
   
   seasonId: { type: Types.ObjectId, ref: 'Season', required: true },
   divisionId: { type: Types.ObjectId, ref: 'Division', required: true },
-  channelId: { type: Number },
+  channelId: { type: String },
 
   teamAId: { type: Types.ObjectId, ref: 'Team' },
   teamBId: { type: Types.ObjectId, ref: 'Team' },
@@ -23,9 +23,13 @@ const MatchSchema = new Schema({
   },
   reason: { type: String },
 
-  set1: { winner: { type: String, enum: ['A', 'B', 'draw', null], default: null } },//aqui se pueden añadir los star players
-  set2: { winner: { type: String, enum: ['A', 'B', 'draw', null], default: null } },
-  set3: { winner: { type: String, enum: ['A', 'B', 'draw', null], default: null } },
+  sets: [
+    {
+      map: { type: String, required: true },
+      mode: { type: String, required: true },
+      winner: { type: Schema.Types.ObjectId, ref: "Team", default: null }
+    }
+  ],
 
   imageURL: { type: String }
 })

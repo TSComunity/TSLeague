@@ -1,5 +1,7 @@
 const { createMatch } = require('./match.js')
 
+const { generateRandomSets } = require('./sets.js')
+
 /**
  * Genera los partidos para una ronda en una división, evitando repeticiones y permitiendo descansos.
  * - Asegura que cada equipo solo juegue un partido por ronda.
@@ -36,7 +38,6 @@ const generateMatchmaking = async ({
 
   // Filtrar partidos no válidos
   const filteredMatchesDocs = Array.isArray(matchesDocs) ? matchesDocs.filter(Boolean) : []
-
   // Crear set de emparejamientos ya jugados
   const alreadyPlayed = new Set()
   for (const matchDoc of filteredMatchesDocs) {
@@ -68,6 +69,8 @@ const generateMatchmaking = async ({
       const key = [teamAId, teamBId].sort().join('-')
       if (alreadyPlayed.has(key)) continue // evitar duplicados
 
+      const sets = await generateRandomSets()
+
       // Emparejamiento válido, crear partido
       const createdMatch = await createMatch({
         client,
@@ -75,7 +78,8 @@ const generateMatchmaking = async ({
         divisionId: division.divisionId._id,
         roundIndex: nextRoundIndex,
         teamAId,
-        teamBId
+        teamBId,
+        sets
       })
 
       newMatchesDocs.push(createdMatch)
@@ -85,9 +89,11 @@ const generateMatchmaking = async ({
       break // teamAId emparejado, pasamos al siguiente
     }
     // Si no se encontró pareja, descansará
-    newRestingTeamsDocs.push(validTeams.find(t => t._id.toString() === teamAId.toString()))
+// Si no se emparejó en este bucle, descansará
+    if (!usedThisRound.has(teamAId)) {
+      newRestingTeamsDocs.push(validTeams.find(t => t._id.toString() === teamAId.toString()))
+    }
   }
-
   return { newMatchesDocs, newRestingTeamsDocs }
 }
 

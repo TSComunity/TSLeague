@@ -6,10 +6,10 @@ const Team = require('../Esquemas/Team')
 
 const { getActiveSeason } = require('../utils/season.js')
 const { getCurrentRoundNumber } = require('../utils/round.js')
-
+const { findMatchByNamesAndSeason } = require('../utils/match.js')
 const { getDate } = require('../utils/date.js')
 
-const { guild, categories, channels, match } = require('../configs/league.js')
+const { guild: guildConfig, categories, channels, match } = require('../configs/league.js')
 const { defaultStartDay, defaultStartHour } = match
 
 /**
@@ -20,9 +20,26 @@ const { defaultStartDay, defaultStartHour } = match
  */
 const createMatchChannel = async ({ match, client }) => {
   try {
+const matchToUpd = await Match.findOne({ _id: match._id })
+  .populate({
+    path: 'teamAId',
+    populate: {
+      path: 'members.userId',  // aquí populamos dentro de members el userId
+      model: 'User'            // opcional, si mongoose no infiere bien el modelo
+    }
+  })
+  .populate({
+    path: 'teamBId',
+    populate: {
+      path: 'members.userId',
+      model: 'User'
+    }
+  })
+
+    if (!matchToUpd) throw new Error('No se encontro el partido.')
     // 1. Poblamos equipos con miembros y sus usuarios (para discordId)
-    const teamA = await Team.findOne({ _id: match.teamAId }).populate('members.userId')
-    const teamB = await Team.findOne({ _id: match.teamBId }).populate('members.userId')
+    const teamA = matchToUpd.teamAId
+    const teamB = matchToUpd.teamBId
 
     if (!teamA || !teamB) {
       throw new Error('No se encontraron los equipos del partido')
@@ -43,6 +60,12 @@ const createMatchChannel = async ({ match, client }) => {
       .map(m => m.userId?.discordId)
       .filter(Boolean)
 
+      console.log('leaderA', leaderA)
+      console.log('leaderB', leaderB)
+      console.log('normalMembersA', normalMembersA)
+      console.log('normalMembersB', normalMembersB)
+
+      const guild = await client.guilds.fetch(guildConfig.id)
     // 4. Preparar permisos
     const modRoleIds = channels.perms
 
@@ -82,7 +105,7 @@ const createMatchChannel = async ({ match, client }) => {
     // 5. Construir permissionOverwrites usando IDs de Discord válidos
     const permissionOverwrites = [
       {
-        id: (await client.guilds.fetch(guild.id)).roles.everyone.id,
+        id: guild.roles.everyone.id,
         deny: [PermissionsBitField.Flags.ViewChannel]
       },
       ...(leaderA ? [{
@@ -109,22 +132,38 @@ const createMatchChannel = async ({ match, client }) => {
       }))
     ]
 
+    for (const overwrite of permissionOverwrites) {
+  try { const resolved =  
+     guild.roles.cache.get(overwrite.id)
+      || await guild.members.fetch(overwrite.id).catch(() => null);
+
+    if (!resolved) {
+      console.warn(`❌ ID no encontrado: ${overwrite.id}`);
+    } else {
+      console.log(`✅ ID válido: ${overwrite.id}`);
+    }
+  } catch (err) {
+    console.error(`💥 Error al verificar ID ${overwrite.id}:`, err);
+  }
+}
+
+
     // 6. Crear el canal en la categoría indicada
     const guildToUse = await client.guilds.fetch(guild.id)
     const channel = await guildToUse.channels.create({
-      name: `「🎮」partido-${match.matchIndex}-${teamA.name}-vs-${teamB.name}`,
+      name: `「🎮」partido-${matchToUpd.matchIndex}`,
       type: ChannelType.GuildText,
       parent: categories.matches.id,
-      topic: `Partido entre ${teamA.name} y ${teamB.name} — Ronda ${match.roundIndex + 1}`,
+      topic: `Partido entre ${teamA.name} y ${teamB.name} — Ronda ${matchToUpd.roundIndex + 1}`,
       permissionOverwrites
     })
 
-    match.channelId = channel.id
-    await match.save()
+    matchToUpd.channelId = channel.id
+    await matchToUpd.save()
 
-    await channel.send(`📢 ¡Bienvenidos al partido entre **${teamA.name}** y **${teamB.name}**! Ronda ${match.roundIndex + 1}. ¡Buena suerte!`)
+    await channel.send(`📢 ¡Bienvenidos al partido entre **${teamA.name}** y **${teamB.name}**! Ronda ${matchToUpd.roundIndex}. ¡Buena suerte!`)
 
-    return match
+    return matchToUpd
   } catch (error) {
     console.error('Error al crear canal del partido:', error)
     throw error
@@ -140,7 +179,7 @@ const createMatchChannel = async ({ match, client }) => {
  * @param {ObjectId} teamBId - ID del equipo B
  * @returns {Match} Instancia de partido (sin guardar)
  */
-const createMatch = async ({ client, seasonId, divisionId, roundIndex, teamAId, teamBId }) => {
+const createMatch = async ({ client, seasonId, divisionId, roundIndex, teamAId, teamBId, sets }) => {
   // Calcular matchIndex según los partidos existentes en la división y ronda
   const existingMatchesCount = await Match.countDocuments()
 
@@ -160,9 +199,7 @@ const createMatch = async ({ client, seasonId, divisionId, roundIndex, teamAId, 
       scoreB: 0,
       scheduledAt: getDate({ day: defaultStartDay, hour: defaultStartHour }),
       status: 'scheduled',
-      set1: { winner: null },
-      set2: { winner: null },
-      set3: { winner: null },
+      sets,
       imageURL: null
     })
 
@@ -171,7 +208,7 @@ const createMatch = async ({ client, seasonId, divisionId, roundIndex, teamAId, 
 
     return updatedMatch
   } catch (error) {
-    // Si hubo error y ya se creó el match, borrarlo para no dejar basura
+    // Si hubo error y ya se creó el match, borrarlo para no dejar basura y escoria
     if (match && match._id) {
       await Match.findByIdAndDelete(match._id)
     }
@@ -233,6 +270,22 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
   const existingMatchesCount = await Match.countDocuments()
   const matchIndex = existingMatchesCount + 1
 
+  const targetDivision = season.divisions.find(d => d.divisionId.equals(divisionId))
+  const lastRound = targetDivision.rounds.at(-1)
+  if (!lastRound) throw new Error('No hay rondas en esta división aún.')
+
+  const referenceMatchId = lastRound.matches[0]?.matchId
+  if (!referenceMatchId) throw new Error('No hay partidos en la última ronda para copiar sets.')
+
+  const referenceMatch = await Match.findById(referenceMatchId)
+  if (!referenceMatch || !referenceMatch.sets) throw new Error('El partido de referencia no tiene sets definidos.')
+
+  const sets = referenceMatch.sets.map(set => ({
+    mode: set.mode,
+    map: set.map,
+    winner: null
+  }))
+
   let match
 
   try {
@@ -247,9 +300,7 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
       scoreB: 0,
       scheduledAt: getDate({ day: defaultStartDay, hour: defaultStartHour }),
       status: 'scheduled',
-      set1: { winner: null },
-      set2: { winner: null },
-      set3: { winner: null },
+      sets,
       imageURL: null
     })
 
@@ -269,77 +320,6 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
       await Match.findByIdAndDelete(match._id)
     }
     throw new Error(`Error al crear el partido: ${error.message}`)
-  }
-}
-
-const findMatchByNamesAndSeason = async ({ seasonIndex, teamAName, teamBName }) => {
-  const season = await Season.findOne({ seasonIndex })
-  if (!season) throw new Error('Temporada no encontrada')
-
-  const teamA = await Team.findOne({ name: teamAName })
-  const teamB = await Team.findOne({ name: teamBName })
-  if (!teamA || !teamB) throw new Error('Algún equipo no existe')
-
-  const match = await Match.findOne({
-    seasonId: season._id,
-    $or: [
-      { teamAId: teamA._id, teamBId: teamB._id },
-      { teamAId: teamB._id, teamBId: teamA._id }
-    ]
-  }).populate({
-      path: 'teamAId',
-      populate: { path: 'members.userId' }
-    })
-    .populate({
-      path: 'teamBId',
-      populate: { path: 'members.userId' }
-    })
-    .populate('seasonId divisionId')
-
-  if (!match) throw new Error('Partido no encontrado')
-
-  return match
-}
-
-/**
- * Busca y devuelve un partido poblado y con sets enriquecidos con modo y mapa.
- * @param {Number} seasonIndex
- * @param {String} teamAName
- * @param {String} teamBName
- * @returns {Promise<Object|null>} Partido con sets enriquecidos
- */
-const getMatchInfo = async ({ seasonIndex, teamAName, teamBName }) => {
-  const season = await Season.findOne({ seasonIndex })
-
-  const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
-  if (!match) return null
-
-  // 4. Busca la división y ronda de la Season donde está el partido
-  const division = season.divisions.find(d =>
-    d.divisionId.toString() === (match.divisionId._id || match.divisionId).toString()
-  )
-  if (!division) throw new Error('División no encontrada en la temporada.')
-
-  const round = division.rounds.find(r =>
-    r.roundIndex === match.roundIndex
-  )
-  if (!round) throw new Error('Ronda no encontrada en la división.')
-
-  // 5. Crea el objeto de sets enriquecidos
-const sets = [1, 2, 3].map(i => ({
-  ...match[`set${i}`]?._doc,
-  mode: round[`set${i}`]?.mode,
-  map: round[`set${i}`]?.map
-}))
-
-  // 6. Devuelve el partido poblado y con sets enriquecidos
-  return {
-    ...match._doc,
-    teamA: match.teamAId,
-    teamB: match.teamBId,
-    season: match.seasonId,
-    division: match.divisionId,
-    sets
   }
 }
 
@@ -379,6 +359,7 @@ const endMatch = async ({ seasonIndex, teamAName, teamBName }) => {
  * cambia la fecha de un partido
  */
 const changeMatchScheduledAt = async ({ seasonIndex, teamAName, teamBName, day, hour, minute }) => {
+
   const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
 
   match.scheduledAt = getDate({ day, hour, minute })
@@ -392,7 +373,6 @@ module.exports = {
   createMatch,
   createMatchManually,
   findMatchByNamesAndSeason,
-  getMatchInfo,
   cancelMatch,
   endMatch,
   changeMatchScheduledAt

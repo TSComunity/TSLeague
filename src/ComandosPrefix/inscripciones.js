@@ -15,11 +15,61 @@ module.exports = {
   aliases: ['ins'],
   args: false,
   run: async (message, client, args) => {
-    const textoReglas = `
-pepe haz esto (estoy probando si funcionan los botones)
-`;
 
-    const text = new TextDisplayBuilder().setContent(textoReglas);
+const text1 = new TextDisplayBuilder().setContent(
+`### Registro de equipos
+
+Desde este panel puedes gestionar todo lo relacionado con los equipos de la liga:  
+crear uno nuevo, unirte a uno ya existente o ver tu equipo actual.
+
+Antes de gestionar o unirse a un equipo, es necesario vincular tu cuenta de Brawl Stars.  
+Este paso nos permite acceder a tus estadísticas en tiempo real y ofrecer información precisa tanto a tu equipo como al resto de participantes de la liga.`
+)
+
+const text2 = new TextDisplayBuilder().setContent(
+  `### Crear Equipo
+
+Pulsa el botón **"Crear equipo"** para iniciar el proceso. Se te pedirá:
+
+- Un nombre para el equipo  
+- Un enlace al icono (imagen que lo represente)
+
+Una vez creado, el equipo recibirá un **código de invitación único**, este sirve para invitar a nuevos miembros al equipo.  
+Este código solo será visible para el líder y los sublíderes.`
+)
+
+
+const text3 = new TextDisplayBuilder().setContent(
+  `### Ver Equipo
+
+Al pulsar **"Ver equipo"**, podrás consultar la información de tu equipo.  
+Dependiendo de tu rol, verás diferentes opciones:
+
+**Miembros del equipo:**  
+- Visualizar los integrantes y datos publicos del equipo
+- Salir del equipo
+
+**Líderes y sublíderes:**  
+- Cambiar el nombre 
+- Cambiar el icono  
+- Cambiar el color  
+- Gestionar miembros (asignar roles o expulsar)  
+- Regenerar el código de invitación
+
+El acceso a estas opciones está restringido según el rol para garantizar una gestión organizada.`
+)
+
+
+const text4 = new TextDisplayBuilder().setContent(
+  `### Unirse a un Equipo
+
+Para unirte a un equipo existente, necesitarás el **código de invitación del equipo**.  
+Este código lo proporcionan el líder o los sublíderes del mismo.  
+
+Introduce el código en el formulario y pasarás a formar parte del equipo al instante.`
+)
+
+    
     const separator = new SeparatorBuilder();
 
     const crearTeam = new ButtonBuilder()
@@ -56,7 +106,9 @@ pepe haz esto (estoy probando si funcionan los botones)
     const container = new ContainerBuilder()
       .addMediaGalleryComponents([mediaGallery])
       .addSeparatorComponents(separator)
-      .addTextDisplayComponents(text)
+      .addTextDisplayComponents(text1)
+      .addSeparatorComponents(separator)
+      .addTextDisplayComponents(text2, text3, text4)
       .addSeparatorComponents(separator)
       .setAccentColor(0x1bfc62)
       .addActionRowComponents(actionRow)

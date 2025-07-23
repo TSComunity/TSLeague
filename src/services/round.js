@@ -1,6 +1,5 @@
 const Team = require('../Esquemas/Team.js')
 const { generateMatchmaking } = require('./matchmaking.js')
-const { generateRandomSets } = require('./sets.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
 const { endSeason } = require('./season.js')
 const { getActiveSeason } = require('../utils/season.js')
@@ -13,7 +12,7 @@ const { maxRounds } = season
 const { startDay, startHour } = round
 
 const addRound = async ({ client }) => {
-  const season = await getActiveSeason()
+  let season = await getActiveSeason()
 
   const divisionsSkipped = []
   const divisionsWithNewRounds = []
@@ -49,13 +48,13 @@ const addRound = async ({ client }) => {
       continue
     }
 
-    // Poblar equipos
-    const teamsDocs = await Promise.all(teams.map(async t => Team.findById(t.teamId)))
+    const matchesDocs = rounds.flatMap(r => r.matches.map(m => m.matchId))
+    const teamsDocs = teams.map(t => t.teamId);
 
     // Generar emparejamientos
     const matchmakingResult = await generateMatchmaking({
       client,
-      matchesDocs: rounds.flatMap((round) => round?.matches.map((match) => match.matchId)),
+      matchesDocs,
       teamsDocs,
       season,
       division,
@@ -64,7 +63,8 @@ const addRound = async ({ client }) => {
 
     newMatchesDocs = matchmakingResult.newMatchesDocs || []
     newRestingTeamsDocs = matchmakingResult.newRestingTeamsDocs || []
-
+    console.log('newMatchesDocs', newMatchesDocs)
+    console.log('newRestingTeamsDocs', newRestingTeamsDocs)
     // Si no hay partidos posibles, terminar la división
     if (!newMatchesDocs.length) {
       division.status = 'ended'
@@ -74,13 +74,8 @@ const addRound = async ({ client }) => {
       continue
     }
 
-    // Generar sets y añadir la ronda
-    const { set1, set2, set3 } = await generateRandomSets()
     const newRound = {
       roundIndex: nextRoundIndex,
-      set1,
-      set2,
-      set3,
       matches: newMatchesDocs.map((match) => ({ matchId: match._id })),
       resting: newRestingTeamsDocs.map((team) => ({ teamId: team._id }))
     }
@@ -99,16 +94,18 @@ const addRound = async ({ client }) => {
   }
 
   await season.save()
-  const populatedSeason = await getActiveSeason()
-  console.log(populatedSeason)
+  season = await getActiveSeason()
+  console.log('season')
+  console.log(JSON.stringify(season, null, 2));
+
   // Si todas las divisiones están terminadas, termina la temporada
-  if (divisionsSkipped.length === populatedSeason.divisions.length) {
+  if (divisionsSkipped.length === season.divisions.length) {
     await endSeason({ client })
     return season
   }
 
   // 1. Ordena las divisiones por tier
-  const orderedDivisions = [...populatedSeason.divisions].sort((a, b) => a.divisionId.tier - b.divisionId.tier)
+  const orderedDivisions = [...season.divisions].sort((a, b) => a.divisionId.tier - b.divisionId.tier)
 
   // 2. Si hay al menos una con nueva ronda, envía embed general
   if (divisionsWithNewRounds.length > 0) {
@@ -120,7 +117,7 @@ const addRound = async ({ client }) => {
       client,
       content: `<@&${roles.ping.id}>`,
       embeds: [
-        getRoundAddedEmbed({ divisionsWithNewRounds, season: populatedSeason, nextRoundIndex: latestRoundIndex })
+        getRoundAddedEmbed({ divisionsWithNewRounds, season, nextRoundIndex: latestRoundIndex })
       ]
     })
   }
@@ -138,17 +135,14 @@ const addRound = async ({ client }) => {
       })
       continue
     }
-
-    // Si tiene nuevos partidos, embed con partidos
-    const populatedDivision = populatedSeason.divisions.find(
-      d => String(d.divisionId._id) === String(divisionId._id)
-    )
-    if (populatedDivision) {
-      await sendAnnouncement({
-        client,
-        embeds: [getDivisionRoundAddedEmbed({ division: populatedDivision, season: populatedSeason })]
-      })
-      continue
+    
+    const hasRounds = divisionsWithNewRounds.find(d => String(d.divisionDoc._id) === String(divisionId._id))
+    if (hasRounds) {
+    await sendAnnouncement({
+      client,
+      embeds: [getDivisionRoundAddedEmbed({ division, season })]
+    })
+    continue
     }
   }
 
@@ -159,7 +153,7 @@ const addRound = async ({ client }) => {
     hour: startHour
   })
 
-  return populatedSeason
+  return season
 }
 
 module.exports = { addRound }

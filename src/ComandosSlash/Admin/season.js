@@ -53,22 +53,12 @@ module.exports = {
           embeds: [getSuccesEmbed({ message: `Temporada **${season.name}** terminada.` })]
         })
       } else if (subcomand === 'prueba') {
-        const season = await getLastSeason()
-const summary = {
-  name: season.name,
-  status: season.status,
-  divisions: season.divisions.map((div) => ({
-    status: div.status,
-    rounds: div.rounds.map((round) => ({
-      roundIndex: round.roundIndex,
-      matches: round.matches, //.map((m) => m.matchId?.toString() ?? 'N/A'),
-      resting: round, //.map((r) => r.teamId?.toString() ?? 'N/A')
-    }))
-  }))
-}
+        const Match = require('../../Esquemas/Match.js')
+   const match = await Match.findOne().sort({ _id: -1 }) // orden descendente por _id
+
 
 interaction.reply({
-  content: `\`\`\`json\n${JSON.stringify(summary, null, 2).slice(0, 1900)}\n\`\`\``
+  content: `\`\`\`json\n${JSON.stringify(match, null, 2).slice(0, 1900)}\n\`\`\``
 })
 
       } else if (subcomand === 'prueba2') {
