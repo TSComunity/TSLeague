@@ -166,7 +166,7 @@ function buildDivisionContainer(division, teams) {
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent('** **')
       )
-      .setButtonAccessory(getTeamStatsButton({ i: name }))
+      .setButtonAccessory(getTeamStatsButton({ teamName: name }))
 
     container
       .addSeparatorComponents(new SeparatorBuilder())

@@ -140,10 +140,10 @@ const getTeamCancelButton = () => {
     )
 }
 
-const getTeamStatsButton = ({ i }) => {
+const getTeamStatsButton = ({ teamName }) => {
     return (
         new ButtonBuilder()
-        .setCustomId(`teamStats-${i}`)
+        .setCustomId(`teamStats-${teamName}`)
         .setLabel('Ver Estadísticas')
         .setEmoji('👀')
         .setStyle(ButtonStyle.Primary)

@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js')
 const config  = require('../../configs/league.js')
+const { BRAWL_STARS_API_KEY } = require('../../configs/configs.js')
 
 const getTeamInfoEmbed = ({ team, perms }) => {
 
@@ -67,4 +68,43 @@ const getTeamsSummaryEmbed = ({ divisionsCount, teamsInDivisionsCount, teamsCoun
     )
 }
 
-module.exports = { getTeamInfoEmbed, getAddMemberInfoEmbed, getTeamsSummaryEmbed }
+const getTeamStatsEmbeds = async ({ team }) => {
+    const { name, iconURL, color, members } = team
+
+    let totalTrophies = 0
+    let totalWins3vs3 = 0
+
+    for (const member of members) {
+        const brawlId = member.userId.brawlId
+        const encodedId = encodeURIComponent(brawlId)
+
+        try {
+            const res = await fetch(`https://api.brawlstars.com/v1/players/${encodedId}`, {
+                headers: {
+                    Authorization: `Bearer ${BRAWL_STARS_API_KEY}`,
+                },
+            })
+
+            if (!res.ok) {
+                throw new Error(`No se pudo obtener datos para ${brawlId}`)
+            }
+
+            const data = await res.json()
+            totalTrophies += data.trophies || 0
+            totalWins3vs3 += data['3vs3Victories'] || 0
+        } catch (error) {
+            console.error(`Error con ${brawlId}:`, error)
+        }
+    }
+
+    return new EmbedBuilder()
+        .setColor(color)
+        .setThumbnail(iconURL)
+        .setDescription(`### ${name} — ${members.length}/${config.team.maxMembers}`)
+        .addFields(
+            { name: 'Copas Totales', value: `\`${totalTrophies}\`` },
+            { name: 'Victorias Totales 3v3', value: `\`${totalWins3vs3}\`` }
+        )
+}
+
+module.exports = { getTeamInfoEmbed, getAddMemberInfoEmbed, getTeamsSummaryEmbed, getTeamStatsEmbeds }

@@ -75,7 +75,7 @@ Introduce el código en el formulario y pasarás a formar parte del equipo al in
     const crearTeam = new ButtonBuilder()
       .setCustomId('teamCreate')
       .setLabel('Crear Equipo')
-      .setEmoji('📋')
+      .setEmoji('<:teamCreate:1396237918003007588>')
       .setStyle(ButtonStyle.Secondary);
 
     const verTeam = new ButtonBuilder()
