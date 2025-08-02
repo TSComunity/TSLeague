@@ -53,8 +53,13 @@ module.exports = {
           embeds: [getSuccesEmbed({ message: `Temporada **${season.name}** terminada.` })]
         })
       } else if (subcomand === 'prueba') {
-        const Match = require('../../Esquemas/Match.js')
-   const match = await Match.findOne().sort({ _id: -1 }) // orden descendente por _id
+        const ScheduledFunction = require('../../Esquemas/ScheduledFunction.js')
+        const functions = await ScheduledFunction.find()
+        for (const f of functions) {
+          await interaction.reply({
+   content: `\`\`\`json\n${JSON.stringify(f, null, 2).slice(0, 1900)}\n\`\`\``
+          })
+        }
 
 
 interaction.reply({
