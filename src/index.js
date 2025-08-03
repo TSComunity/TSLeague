@@ -56,7 +56,7 @@ module.exports = client
 // Logica de la liga
 
 const { updateRankingsEmbed } = require('./discord/update/rankings.js')
-const { updateTeamsEmbed } = require('./discord/update/teams.js')
+const { updateDivisionsEmbed } = require('./discord/update/divisions.js')
 const { updateAllTeamsEligibility, deleteAllEmptyTeams } = require('./services/team.js')
 const { executeDueScheduledFunctions } = require('./services/scheduledFunction.js')
 const { updateUsersPingRole } = require('./services/user.js')

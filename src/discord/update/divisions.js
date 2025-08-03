@@ -21,7 +21,7 @@ const { getTeamStatsMenu } = require('../menus/team.js')
 
 const maxTeams = config.division.maxTeams;
 
-const updateTeamsEmbed = async ({ client }) => {
+const updateDivisionsEmbed = async ({ client }) => {
   const isV2 = (msg) =>
     (msg.flags & MessageFlags.IsComponentsV2) === MessageFlags.IsComponentsV2;
 
@@ -212,4 +212,4 @@ async function buildDivisionContainer(division, teams, guild) {
   return container
 }
 
-module.exports = { updateTeamsEmbed }
+module.exports = { updateDivisionsEmbed }

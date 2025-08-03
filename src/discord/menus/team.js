@@ -43,4 +43,4 @@ const getTeamStatsMenu = ({ options }) => {
 }
 
 
-module.exports = { getTeamChangeColorMenu, getTeamKickMemberMenu, getTeamChangeMemberRoleMenu }
+module.exports = { getTeamChangeColorMenu, getTeamKickMemberMenu, getTeamChangeMemberRoleMenu, getTeamStatsMenu }
