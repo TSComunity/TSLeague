@@ -18,7 +18,7 @@ module.exports = {
         if (!team) throw new Error('No se ha encontrado el equipo.')
 
         interaction.reply({
-            embeds: [getTeamStatsEmbed]
+            embeds: [getTeamStatsEmbed()]
         })
     } catch (error) {
       console.error(error)
