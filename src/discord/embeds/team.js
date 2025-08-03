@@ -96,7 +96,7 @@ const getTeamStatsEmbed = async ({ team }) => {
             console.error(`Error con ${brawlId}:`, error)
         }
     }
-
+    
     return new EmbedBuilder()
         .setColor(color)
         .setThumbnail(iconURL)

@@ -33,5 +33,14 @@ const getTeamChangeMemberRoleMenu = ({ options }) => {
     )
 }
 
+const getTeamStatsMenu = ({ options }) => {
+    return (
+        new StringSelectMenuBuilder()
+        .setCustomId('teamStats')
+        .setPlaceholder('Ver Estadísticas')
+        .addOptions(options)
+    )
+}
+
 
 module.exports = { getTeamChangeColorMenu, getTeamKickMemberMenu, getTeamChangeMemberRoleMenu }

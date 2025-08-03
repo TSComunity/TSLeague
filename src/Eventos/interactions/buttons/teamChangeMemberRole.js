@@ -55,7 +55,7 @@ module.exports = {
           description: rolesJSON[m.role],
           value: m.userId.discordId,
         }))
-      );
+      )
 
       const row = new ActionRowBuilder().addComponents(getTeamChangeMemberRoleMenu({ options }));
       const row2 = new ActionRowBuilder().addComponents(getTeamCancelButton());
