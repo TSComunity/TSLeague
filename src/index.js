@@ -63,7 +63,7 @@ const { updateUsersPingRole } = require('./services/user.js')
 
 setInterval(() => {
   updateRankingsEmbed({ client }).catch(error => console.error(error))
-  updateTeamsEmbed({ client }).catch(error => console.error(error))
+  updateDivisionsEmbed({ client }).catch(error => console.error(error))
   updateAllTeamsEligibility().catch(error => console.error(error))
   deleteAllEmptyTeams().catch(error => console.error(error))
   executeDueScheduledFunctions({ client }).catch(error => console.error(error))
