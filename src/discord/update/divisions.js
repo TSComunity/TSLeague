@@ -25,6 +25,7 @@ const updateTeamsEmbed = async ({ client }) => {
   const isV2 = (msg) =>
     (msg.flags & MessageFlags.IsComponentsV2) === MessageFlags.IsComponentsV2;
 
+  const guild = await client.guilds.fetch(config.guild.id)
   const channel = await client.channels.fetch(config.channels.teams.id);
   if (!channel || !channel.isTextBased())
     throw new Error('Canal no encontrado o no es de texto.');
@@ -86,7 +87,7 @@ const updateTeamsEmbed = async ({ client }) => {
         .sort({ name: 1 })
         .exec();
 
-      const container = await buildDivisionContainer(division, teams);
+      const container = await buildDivisionContainer(division, teams, guild);
       await channel.send({
         components: [container],
         flags: MessageFlags.IsComponentsV2
@@ -107,7 +108,7 @@ const updateTeamsEmbed = async ({ client }) => {
       .sort({ name: 1 })
       .exec();
 
-    const container = await buildDivisionContainer(division, teams);
+    const container = await buildDivisionContainer(division, teams, guild);
     await msg.edit({
       components: [container],
       flags: MessageFlags.IsComponentsV2
@@ -123,7 +124,7 @@ const updateTeamsEmbed = async ({ client }) => {
 };
 
 // 🧠 Utilidad para construir el embed de una división
-async function buildDivisionContainer(division, teams) {
+async function buildDivisionContainer(division, teams, guild) {
   const container = new ContainerBuilder()
     .setAccentColor(parseInt(division.color.replace('#', ''), 16))
     .addTextDisplayComponents(
@@ -190,7 +191,7 @@ async function buildDivisionContainer(division, teams) {
             const data = await res.json()
 
             return {
-              label: await getUserDisplayName({ guild: interaction.guild, discordId: m.userId.discordId }),
+              label: await getUserDisplayName({ guild, discordId: m.userId.discordId }),
               description: data.name,
               value: m.userId.discordId,
             }
