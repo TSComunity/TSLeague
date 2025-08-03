@@ -198,6 +198,7 @@ async function buildDivisionContainer(division, teams, guild) {
             }
         } catch (error) {
             console.error(`Error con ${brawlId}:`, error)
+            return undefined
         }
       })
     )
@@ -206,7 +207,7 @@ async function buildDivisionContainer(division, teams, guild) {
       .addSeparatorComponents(new SeparatorBuilder())
       .addSectionComponents(sectionComponent)
       .addActionRowComponents(
-        new ActionRowBuilder().addComponents(getTeamStatsMenu({ options }))
+        new ActionRowBuilder().addComponents(getTeamStatsMenu({ options: options.filter(Boolean) }))
       )
   }
 
