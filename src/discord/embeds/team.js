@@ -68,7 +68,7 @@ const getTeamsSummaryEmbed = ({ divisionsCount, teamsInDivisionsCount, teamsCoun
     )
 }
 
-const getTeamStatsEmbeds = async ({ team }) => {
+const getTeamStatsEmbed = async ({ team }) => {
     const { name, iconURL, color, members } = team
 
     let totalTrophies = 0
@@ -107,4 +107,4 @@ const getTeamStatsEmbeds = async ({ team }) => {
         )
 }
 
-module.exports = { getTeamInfoEmbed, getAddMemberInfoEmbed, getTeamsSummaryEmbed, getTeamStatsEmbeds }
+module.exports = { getTeamInfoEmbed, getAddMemberInfoEmbed, getTeamsSummaryEmbed, getTeamStatsEmbed }
