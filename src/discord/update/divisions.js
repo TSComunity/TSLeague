@@ -10,9 +10,7 @@ const {
 } = require('discord.js');
 
 const Division = require('../../Esquemas/Division.js');
-const Team = require('../../Esquemas/Team.js');
 const config = require('../../configs/league.js');
-
 
 const { getUserDisplayName } = require('../../services/user.js')
 
@@ -20,6 +18,9 @@ const { getTeamsSummaryEmbed } = require('../embeds/team.js');
 const { getTeamStatsMenu } = require('../menus/team.js')
 
 const maxTeams = config.division.maxTeams;
+
+const Team = require('../../Esquemas/Team.js');
+const { BRAWL_STARS_API_KEY } = require('../../configs/configs.js')
 
 const updateDivisionsEmbed = async ({ client }) => {
   const isV2 = (msg) =>
