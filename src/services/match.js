@@ -9,6 +9,9 @@ const { getCurrentRoundNumber } = require('../utils/round.js')
 const { findMatchByNamesAndSeason } = require('../utils/match.js')
 const { getDate } = require('../utils/date.js')
 
+const { getMatchInfoEmbed } = require('../discord/embeds/match.js')
+
+
 const { guild: guildConfig, categories, channels, match } = require('../configs/league.js')
 const { defaultStartDay, defaultStartHour } = match
 
@@ -133,18 +136,18 @@ const matchToUpd = await Match.findOne({ _id: match._id })
     ]
 
     for (const overwrite of permissionOverwrites) {
-  try { const resolved =  
-     guild.roles.cache.get(overwrite.id)
-      || await guild.members.fetch(overwrite.id).catch(() => null);
+  // try { const resolved =  
+  //    guild.roles.cache.get(overwrite.id)
+  //     || await guild.members.fetch(overwrite.id).catch(() => null);
 
-    if (!resolved) {
-      console.warn(`❌ ID no encontrado: ${overwrite.id}`);
-    } else {
-      console.log(`✅ ID válido: ${overwrite.id}`);
-    }
-  } catch (err) {
-    console.error(`💥 Error al verificar ID ${overwrite.id}:`, err);
-  }
+  //   if (!resolved) {
+  //     console.warn(`❌ ID no encontrado: ${overwrite.id}`);
+  //   } else {
+  //     console.log(`✅ ID válido: ${overwrite.id}`);
+  //   }
+  // } catch (err) {
+  //   console.error(`💥 Error al verificar ID ${overwrite.id}:`, err);
+  // }
 }
 
 
@@ -161,7 +164,9 @@ const matchToUpd = await Match.findOne({ _id: match._id })
     matchToUpd.channelId = channel.id
     await matchToUpd.save()
 
-    await channel.send(`📢 ¡Bienvenidos al partido entre **${teamA.name}** y **${teamB.name}**! Ronda ${matchToUpd.roundIndex}. ¡Buena suerte!`)
+    await channel.send({
+      embeds: [getMatchInfoEmbed({ match: matchToUpd })]
+    })
 
     return matchToUpd
   } catch (error) {
