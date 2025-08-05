@@ -1,4 +1,4 @@
-const { ChannelType, PermissionsBitField } = require('discord.js')
+const { ChannelType, PermissionsBitField, MessageFlags } = require('discord.js')
 
 const Season = require('../Esquemas/Season')
 const Match = require('../Esquemas/Match')
@@ -165,7 +165,8 @@ const matchToUpd = await Match.findOne({ _id: match._id })
     await matchToUpd.save()
 
     await channel.send({
-      embeds: [getMatchInfoEmbed({ match: matchToUpd })]
+      components: [getMatchInfoEmbed({ match })],
+      flags: MessageFlags.IsComponentsV2
     })
 
     return matchToUpd

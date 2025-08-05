@@ -1,4 +1,15 @@
-const { EmbedBuilder } = require('discord.js')
+const {
+  ButtonBuilder,
+  ButtonStyle,
+  ContainerBuilder,
+  TextDisplayBuilder,
+  SeparatorBuilder,
+  ActionRowBuilder,
+  MessageFlags,
+  MediaGalleryBuilder,
+  MediaGalleryItemBuilder
+} = require('discord.js')
+
 const modesData = require('../../configs/gameModes.json')
 
 function getModeOrMapName(id, type) {
@@ -19,47 +30,58 @@ function getModeOrMapName(id, type) {
 }
 
 const getMatchInfoEmbed = ({ match }) => {
-  const { teamAId, teamBId, matchIndex, scoreA, scoreB, scheduledAt, status, sets } = match
+  const { teamAId, teamBId, matchIndex, scoreA, scoreB, scheduledAt, status, sets, imageURL } = match
+  
+    const separator = new SeparatorBuilder()
 
-  const time = Math.floor(scheduledAt.getTime() / 1000)
+    const image = new MediaGalleryItemBuilder()
+      .setURL(imageURL)
+      .setDescription(`Imagén del partido entre ${teamAId} y ${teamBId}`)
 
-  let color
-  if (status === 'scheduled') color = 'Yellow'
-  else if (status === 'cancelled') color = 'Red'
-  else if (status === 'ended') color = 'Green'
-  else color = 'Blue'
+    const mediaGallery = new MediaGalleryBuilder()
+      .setId(1)
+      .addItems([image])
 
-  const embed = new EmbedBuilder()
-    .setColor(color)
-    .setDescription(`## ${teamAId.name} vs ${teamBId.name}`)
-    .addFields(
-      { name: 'Índice', value: `\`${matchIndex}\``, inline: true },
-      { name: 'Horario', value: `<t:${time}>`, inline: true },
-      {
-        name: 'Estado',
-        value: (() => {
+    const estado = (() => {
           if (status === 'scheduled') return '`Programado`'
           if (status === 'cancelled') return '`Cancelado`'
           if (status === 'ended') return '`Terminado`'
           return '`Desconocido`'
-        })(),
-        inline: true
-      }
-    )
+        })()
 
-  // 🧩 Añadir un campo por cada set
-  sets.forEach((set, index) => {
+    const time = Math.floor(scheduledAt.getTime() / 1000)
+
+    let setsText = ['', '', '']
+    sets.forEach((set, index) => {
     const modeName = getModeOrMapName(set.mode, 'mode')
     const mapName = getModeOrMapName(set.map, 'map')
-
-    embed.addFields({
-      name: `Set ${index + 1}`,
-      value: `> Modo: \`${modeName}\`\n> Mapa: \`${mapName}\``,
-      inline: false
-    })
+    
+    const separator = (index + 1) === sets.length ? '' : '  '
+    setsText[0] += `Set ${index + 1}`.padEnd(12)
+    setsText[1] += `Modo: \`${modeName}\``.padEnd(12)
+    setsText[2] += `Mapa \`${mapMode}\``.padEnd(12)
   })
 
-  return embed
+  const text = new TextDisplayBuilder().setContent([
+    `### ${teamAId.name} vs ${teamBId.name}`,
+    `Estado: ${estado.padEnd(11)}  |  Horario: <t:${time}>`,
+    ...setsText
+  ].join('\n'))
+      
+
+  let color
+  if (status === 'scheduled') color = 0xFFFF00
+  else if (status === 'cancelled') color = 0xED4245
+  else if (status === 'ended') color = 0x57F287
+  else color = 0x3498DB
+
+  const container = new ContainerBuilder()
+      .addMediaGalleryComponents([mediaGallery])
+      .addSeparatorComponents(separator)
+      .addTextDisplayComponents(text)
+      .setAccentColor(color)
+
+  return container
 }
 
 module.exports = { getMatchInfoEmbed }

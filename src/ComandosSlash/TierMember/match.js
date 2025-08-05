@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js')
+const { SlashCommandBuilder, MessageFlags } = require('discord.js')
 const {
   createMatchManually,
   cancelMatch,
@@ -157,8 +157,10 @@ module.exports = {
         const teamBName = interaction.options.getString('nombre-equipo-b')
 
         const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
+
         await interaction.reply({
-            embeds: [getMatchInfoEmbed({ match })]
+          components: [getMatchInfoEmbed({ match })],
+          flags: MessageFlags.IsComponentsV2
         })
 
       } else if (sub === 'cancelar') {
