@@ -1,7 +1,7 @@
 {
   "main": "src/index.js",
   "dependencies": {
-    "axios": "^1.9.0",
+    "axios": "^1.11.0",
     "canvas": "^3.1.0",
     "colors": "^1.4.0",
     "discord.js": "^14.19.1",

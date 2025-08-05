@@ -8,9 +8,9 @@ const { getActiveSeason } = require('../utils/season.js')
 const { getCurrentRoundNumber } = require('../utils/round.js')
 const { findMatchByNamesAndSeason } = require('../utils/match.js')
 const { getDate } = require('../utils/date.js')
+const { generateCustomImage } = require('../utils/canvas.js')
 
 const { getMatchInfoEmbed } = require('../discord/embeds/match.js')
-
 
 const { guild: guildConfig, categories, channels, match } = require('../configs/league.js')
 const { defaultStartDay, defaultStartHour } = match
@@ -185,12 +185,73 @@ const matchToUpd = await Match.findOne({ _id: match._id })
  * @param {ObjectId} teamBId - ID del equipo B
  * @returns {Match} Instancia de partido (sin guardar)
  */
-const createMatch = async ({ client, seasonId, divisionId, roundIndex, teamAId, teamBId, sets }) => {
+const createMatch = async ({ client, seasonId, divisionDoc, roundIndex, teamADoc, teamBDoc, sets }) => {
   // Calcular matchIndex según los partidos existentes en la división y ronda
   const existingMatchesCount = await Match.countDocuments()
 
   const matchIndex = existingMatchesCount + 1 // siguiente índice
 
+  const imageURL = await generateCustomImage({
+    background: '../../assets/matchInfo.png',
+    texts: [
+      {
+        text: `DIVISIÓN ${divisionDoc.name.toUpperCase()}`,
+        x: 500,
+        y: 100,
+        font: 'bold 48px Arial',
+        color: divisionDoc.color,
+        strokeColor: 'black',
+        lineWidth: 4,
+        align: 'center'
+      },
+      {
+        text: `JORNADA ${roundIndex}`,
+        x: 500,
+        y: 400,
+        font: 'bold 32px Arial',
+        color: 'yellow',
+        strokeColor: 'black',
+        lineWidth: 2,
+        align: 'center'
+      },
+      {
+        text: teamADoc.name,
+        x: 500,
+        y: 100,
+        font: 'bold 32px Arial',
+        color: teamADoc.color,
+        strokeColor: 'black',
+        lineWidth: 2,
+        align: 'center'
+      },
+      {
+        text: teamBDoc.name,
+        x: 500,
+        y: 100,
+        font: 'bold 32px Arial',
+        color: teamBDoc.color,
+        strokeColor: 'black',
+        lineWidth: 2,
+        align: 'center'
+      }
+    ],
+    images: [
+      {
+        src: teamADoc.iconURL,
+        x: 200,
+        y: 400,
+        width: 100,
+        height: 100,
+      },
+      {
+        src: teamBDoc.iconURL,
+        x: 500,
+        y: 400,
+        width: 100,
+        height: 100,
+      },
+    ]
+  })
   // Crear el partido
   let match
   try {
@@ -198,15 +259,15 @@ const createMatch = async ({ client, seasonId, divisionId, roundIndex, teamAId, 
       matchIndex,
       roundIndex,
       seasonId,
-      divisionId,
-      teamAId,
-      teamBId,
+      divisionId: divisionDoc._id,
+      teamAId: teamADoc._id,
+      teamBId: teamBDoc._id,
       scoreA: 0,
       scoreB: 0,
       scheduledAt: getDate({ day: defaultStartDay, hour: defaultStartHour }),
       status: 'scheduled',
       sets,
-      imageURL: null
+      imageURL
     })
 
     // Crear canal de Discord y actualizar el match con channelId
@@ -292,6 +353,68 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
     winner: null
   }))
 
+  const imageURL = await generateCustomImage({
+    background: '../../assets/matchInfo.png',
+    texts: [
+      {
+        text: `DIVISIÓN ${divisionDoc.name.toUpperCase()}`,
+        x: 500,
+        y: 100,
+        font: 'bold 48px Arial',
+        color: divisionDoc.color,
+        strokeColor: 'black',
+        lineWidth: 4,
+        align: 'center'
+      },
+      {
+        text: `JORNADA ${roundIndex}`,
+        x: 500,
+        y: 400,
+        font: 'bold 32px Arial',
+        color: 'yellow',
+        strokeColor: 'black',
+        lineWidth: 2,
+        align: 'center'
+      },
+      {
+        text: teamADoc.name,
+        x: 500,
+        y: 100,
+        font: 'bold 32px Arial',
+        color: teamADoc.color,
+        strokeColor: 'black',
+        lineWidth: 2,
+        align: 'center'
+      },
+      {
+        text: teamBDoc.name,
+        x: 500,
+        y: 100,
+        font: 'bold 32px Arial',
+        color: teamBDoc.color,
+        strokeColor: 'black',
+        lineWidth: 2,
+        align: 'center'
+      }
+    ],
+    images: [
+      {
+        src: teamADoc.iconURL,
+        x: 200,
+        y: 400,
+        width: 100,
+        height: 100,
+      },
+      {
+        src: teamBDoc.iconURL,
+        x: 500,
+        y: 400,
+        width: 100,
+        height: 100,
+      },
+    ]
+  })
+  
   let match
 
   try {

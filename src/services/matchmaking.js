@@ -71,14 +71,17 @@ const generateMatchmaking = async ({
 
       const sets = await generateRandomSets()
 
+      const teamADoc = validTeams.find(t => t._id.toString() === teamAId)
+      const teamBDoc = validTeams.find(t => t._id.toString() === teamBId)
+
       // Emparejamiento válido, crear partido
       const createdMatch = await createMatch({
         client,
         seasonId: season._id,
-        divisionId: division.divisionId._id,
+        divisionDoc: division.divisionId,
         roundIndex: nextRoundIndex,
-        teamAId,
-        teamBId,
+        teamADoc,
+        teamBDoc,
         sets
       })
 

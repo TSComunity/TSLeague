@@ -1,11 +1,7 @@
 const {
-  ButtonBuilder,
-  ButtonStyle,
   ContainerBuilder,
   TextDisplayBuilder,
   SeparatorBuilder,
-  ActionRowBuilder,
-  MessageFlags,
   MediaGalleryBuilder,
   MediaGalleryItemBuilder
 } = require('discord.js')
@@ -35,7 +31,7 @@ const getMatchInfoEmbed = ({ match }) => {
     const separator = new SeparatorBuilder()
 
     const image = new MediaGalleryItemBuilder()
-      .setURL(imageURL)
+      .setFile({ attachment: buffer, name: 'match.png' })
       .setDescription(`Imagén del partido entre ${teamAId} y ${teamBId}`)
 
     const mediaGallery = new MediaGalleryBuilder()
@@ -56,10 +52,9 @@ const getMatchInfoEmbed = ({ match }) => {
     const modeName = getModeOrMapName(set.mode, 'mode')
     const mapName = getModeOrMapName(set.map, 'map')
     
-    const separator = (index + 1) === sets.length ? '' : '  '
     setsText[0] += `Set ${index + 1}`.padEnd(12)
     setsText[1] += `Modo: \`${modeName}\``.padEnd(12)
-    setsText[2] += `Mapa \`${mapMode}\``.padEnd(12)
+    setsText[2] += `Mapa \`${mapName}\``.padEnd(12)
   })
 
   const text = new TextDisplayBuilder().setContent([
