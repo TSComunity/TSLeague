@@ -315,7 +315,8 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
     throw new Error('Ambos equipos deben estar en la misma división activa.')
   }
 
-  const divisionId = division.divisionId
+  const divisionId = division.divisionId._id
+  const divisionDoc = division.divisionId
   const seasonId = season._id
 
   const roundIndex = getCurrentRoundNumber({ season })
@@ -377,21 +378,21 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
         align: 'center'
       },
       {
-        text: teamADoc.name,
+        text: teamA.name,
         x: 500,
         y: 100,
         font: 'bold 32px Arial',
-        color: teamADoc.color,
+        color: teamA.color,
         strokeColor: 'black',
         lineWidth: 2,
         align: 'center'
       },
       {
-        text: teamBDoc.name,
+        text: teamB.name,
         x: 500,
         y: 100,
         font: 'bold 32px Arial',
-        color: teamBDoc.color,
+        color: teamB.color,
         strokeColor: 'black',
         lineWidth: 2,
         align: 'center'
@@ -414,7 +415,7 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
       },
     ]
   })
-  
+
   let match
 
   try {
@@ -430,7 +431,7 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
       scheduledAt: getDate({ day: defaultStartDay, hour: defaultStartHour }),
       status: 'scheduled',
       sets,
-      imageURL: null
+      imageURL
     })
 
     // Agregar a la última ronda de la división
