@@ -1,5 +1,5 @@
 const {
-  ActionRowBuilder,
+  ActionRowComponentBuilder,
   ContainerBuilder,
   TextDisplayBuilder,
   MediaComponentBuilder,
@@ -207,7 +207,7 @@ async function buildDivisionContainer(division, teams, guild) {
       .addSeparatorComponents(new SeparatorBuilder())
       .addSectionComponents(sectionComponent)
       .addActionRowComponents(
-        new ActionRowBuilder().addComponents(getTeamStatsMenu({ options: options.filter(Boolean) }))
+        new ActionRowComponentBuilder().addComponents(getTeamStatsMenu({ options: options.filter(Boolean) }))
       )
   }
 
