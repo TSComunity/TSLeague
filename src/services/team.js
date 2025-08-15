@@ -6,6 +6,7 @@ const User = require('../Esquemas/User.js')
 
 const { cancelMatch } = require('./match.js')
 
+const { getActiveSeason } = require('../utils/season.js')
 const { findTeam } = require('../utils/team.js')
 
 const colors = require('../configs/colors.json')
@@ -456,6 +457,42 @@ const deleteTeam = async ({ teamName = null, teamCode = null, discordId = null }
   return team
 }
 
+const addPointsToTeam = async ({ teamName, points }) => {
+  const season = await getActiveSeason()
+  let finded = false
+  for (const division of season.divisions) {
+    for (const team of division.teams) {
+      if (team.teamId.name === teamName) {
+        finded = true
+        team.points += parseInt(points)
+      }
+    }
+  }
+  if (!finded) {
+    throw new Error('No se ha encontrado el equipo.')
+  }
+  await season.save()
+  return season
+}
+
+const removePointsFromTeam = async ({ teamName, points }) => {
+  const season = await getActiveSeason()
+  let finded = false
+  for (const division of season.divisions) {
+    for (const team of division.teams) {
+      if (team.teamId.name === teamName) {
+        finded = true
+        team.points -= parseInt(points)
+      }
+    }
+  }
+  if (!finded) {
+    throw new Error('No se ha encontrado el equipo.')
+  }
+  await season.save()
+  return season
+}
+
 module.exports = {
   checkTeamUserHasPerms,
   checkTeamEligibility,
@@ -470,5 +507,7 @@ module.exports = {
   addMemberToTeam,
   removeMemberFromTeam,
   changeMemberRole,
-  deleteTeam
+  deleteTeam,
+  addPointsToTeam,
+  removePointsFromTeam
 }

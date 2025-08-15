@@ -1,3 +1,4 @@
+const { EmbedBuilder } = require('discord.js')
 const { channels } = require('../configs/league.js')
 const { logs } = channels
 
@@ -9,16 +10,17 @@ const { logs } = channels
  * @param {Client} options.client - Instancia de Discord.js
  */
 
-const sendLog = async ({ client, content = '', files = [], embeds = [], components = [], client }) => {
+const sendLog = async ({ content, client }) => {
   const channel = await client.channels.fetch(logs.id)
 
   if (!channel) throw new Error('No se ha encontrado el canal')
 
+  const embed = new EmbedBuilder()
+    .setColor('Yellow')
+    .setDescription(content || 'No se ha proporcionado ningun mensaje.')
+
   await channel.send({
-    content,
-    files,
-    embeds,
-    components
+    embeds: [embed]
   })
 }
 

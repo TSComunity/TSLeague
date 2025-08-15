@@ -7,7 +7,9 @@ const {
     addTeamToDivision,
     removeTeamFromDivision,
     removeMemberFromTeam,
-    changeMemberRole
+    changeMemberRole,
+    addPointsToTeam,
+    removePointsFromTeam
 } = require('../../services/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
@@ -122,6 +124,40 @@ module.exports = {
         .setDescription('Cambia el código de un equipo')
         .addStringOption(opt =>
           opt.setName('nombre-equipo').setDescription('Nombre del equipo').setRequired(true))
+    )
+    
+    .addSubcommand(sub =>
+      sub
+        .setName('añadir-puntos')
+        .setDescription('Añade puntos a un equipo')
+        .addStringOption(opt =>
+          opt.setName('nombre-equipo').setDescription('Nombre del equipo').setRequired(true))
+        .addStringOption(opt =>
+          opt.setName('puntos').setDescription('Puntos a añadir').setRequired(true)
+            .addChoices(
+              { name: '1', value: '1' },
+              { name: '2', value: '2' },
+              { name: '3', value: '3' },
+              { name: '4', value: '4' },
+              { name: '5', value: '5' }
+            ))
+    )
+    
+    .addSubcommand(sub =>
+      sub
+        .setName('remover-puntos')
+        .setDescription('Remueve puntos de un equipo')
+        .addStringOption(opt =>
+          opt.setName('nombre-equipo').setDescription('Nombre del equipo').setRequired(true))
+        .addStringOption(opt =>
+          opt.setName('puntos').setDescription('Puntos a remover').setRequired(true)
+            .addChoices(
+              { name: '1', value: '1' },
+              { name: '2', value: '2' },
+              { name: '3', value: '3' },
+              { name: '4', value: '4' },
+              { name: '5', value: '5' }
+            ))
     ),
 
   async execute(interaction) {
@@ -210,6 +246,22 @@ module.exports = {
         await team.save()
         await interaction.reply({
           embeds: [getSuccesEmbed({ message:`Nuevo código generado para el equipo **${team.name}**: \`${team.code}\`` })],
+          ephemeral: true
+        })
+      } else if (sub === 'añadir-puntos') {
+        const teamName = interaction.options.getString('nombre-equipo')
+        const points = interaction.options.getString('puntos')
+        await addPointsToTeam({ teamName, points })
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message: `Se han añadido \`${points}\` puntos al equipo **${team.name}**.` })],
+          ephemeral: true
+        })
+      } else if (sub === 'remover-puntos') {
+        const teamName = interaction.options.getString('nombre-equipo')
+        const points = interaction.options.getString('puntos')
+        await removePointsFromTeam({ teamName, points })
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message: `Se han removido \`${points}\` puntos del equipo **${team.name}**.` })],
           ephemeral: true
         })
       }

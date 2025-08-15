@@ -176,168 +176,158 @@ module.exports = {
             });
 
         } else if (subcommand === "git") {
-            // 🆕 Git pull con auto-detección automática de rutas PM2
-            await message.channel.send("🔍 Detectando rutas de los bots automáticamente...");
+            // 🆕 NUEVA FUNCIONALIDAD: Git pull con auto-detección de rutas
+            const embed = new EmbedBuilder()
+                .setTitle("Actualizar desde Git")
+                .setColor("#f39c12")
+                .setDescription("Selecciona qué repositorio deseas actualizar:")
+                .setFooter({ text: "💡 Si no sabes las rutas, usa 'Detectar rutas' primero" });
 
-            exec("pm2 jlist", async (error, stdout, stderr) => {
-                if (error) {
-                    return message.channel.send(`❌ Error obteniendo info de PM2: \`${error.message}\``);
-                }
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId("git_detect")
+                    .setLabel("Detectar rutas PM2")
+                    .setStyle(ButtonStyle.Secondary)
+                    .setEmoji("🔍"),
 
-                try {
-                    const processes = JSON.parse(stdout);
-                    const botPaths = new Map();
-                    
-                    // Detectar rutas de los bots configurados
-                    processes.forEach(proc => {
-                        if (proc.pm_id === 1) { // TS Comunity
-                            botPaths.set('comunity', {
-                                name: 'TS Comunity',
-                                path: proc.pm2_env?.cwd,
-                                pm_id: 1
-                            });
-                        } else if (proc.pm_id === 10) { // TS League
-                            botPaths.set('league', {
-                                name: 'TS League', 
-                                path: proc.pm2_env?.cwd,
-                                pm_id: 10
-                            });
+            );
+
+            await message.channel.send({ embeds: [embed], components: [row] });
+
+            const filter = i =>
+                ["git_current", "git_detect", "git_manual"].includes(i.customId) &&
+                i.user.id === message.author.id;
+            const collector = message.channel.createMessageComponentCollector({ filter, time: 30000, max: 1 });
+
+            collector.on("collect", async interaction => {
+                const selection = interaction.customId;
+                
+                if (selection === "git_detect") {
+                    // Opción 2: Auto-detectar rutas usando PM2
+                    await interaction.update({
+                        content: "🔍 Detectando rutas de los procesos PM2...",
+                        embeds: [],
+                        components: []
+                    });
+
+                    exec("pm2 jlist", (error, stdout, stderr) => {
+                        if (error) {
+                            return message.channel.send(`❌ Error obteniendo info de PM2: \`${error.message}\``);
                         }
-                    });
 
-                    if (botPaths.size === 0) {
-                        return message.channel.send("❌ No se encontraron los bots con ID 1 y 10 en PM2");
-                    }
-
-                    // Mostrar rutas detectadas
-                    let detectedInfo = "🔍 **Rutas detectadas:**\n\n";
-                    botPaths.forEach(bot => {
-                        const pathStatus = bot.path ? `\`${bot.path}\`` : "❌ No detectada";
-                        detectedInfo += `**${bot.name}** (PM2 ID: ${bot.pm_id}): ${pathStatus}\n`;
-                    });
-                    detectedInfo += "\n💡 Selecciona qué repositorio actualizar:";
-
-                    const embed = new EmbedBuilder()
-                        .setTitle("Git Pull - Rutas Detectadas")
-                        .setColor("#f39c12")
-                        .setDescription(detectedInfo);
-
-                    // Crear botones solo para los bots detectados con ruta válida
-                    const row = new ActionRowBuilder();
-                    let validBots = 0;
-
-                    if (botPaths.has('comunity') && botPaths.get('comunity').path) {
-                        row.addComponents(
-                            new ButtonBuilder()
-                                .setCustomId("git_comunity_auto")
-                                .setLabel("TS Comunity")
-                                .setStyle(ButtonStyle.Primary)
-                                .setEmoji("📁")
-                        );
-                        validBots++;
-                    }
-
-                    if (botPaths.has('league') && botPaths.get('league').path) {
-                        row.addComponents(
-                            new ButtonBuilder()
-                                .setCustomId("git_league_auto")
-                                .setLabel("TS League")
-                                .setStyle(ButtonStyle.Secondary)
-                                .setEmoji("📁")
-                        );
-                        validBots++;
-                    }
-
-                    // Solo agregar botón "Ambos" si hay al menos 2 bots válidos
-                    if (validBots >= 2) {
-                        row.addComponents(
-                            new ButtonBuilder()
-                                .setCustomId("git_both_auto")
-                                .setLabel("Ambos proyectos")
-                                .setStyle(ButtonStyle.Success)
-                                .setEmoji("🚀")
-                        );
-                    }
-
-                    if (validBots === 0) {
-                        return message.channel.send("❌ No se detectaron rutas válidas para ningún bot");
-                    }
-
-                    await message.channel.send({ embeds: [embed], components: [row] });
-
-                    // Collector para manejar la selección
-                    const filter = i =>
-                        ["git_comunity_auto", "git_league_auto", "git_both_auto"].includes(i.customId) &&
-                        i.user.id === message.author.id;
-                    const collector = message.channel.createMessageComponentCollector({ filter, time: 20000, max: 1 });
-
-                    collector.on("collect", async interaction => {
-                        const selection = interaction.customId;
-                        
-                        if (selection === "git_both_auto") {
-                            // Actualizar ambos proyectos
-                            await interaction.update({
-                                content: "🔄 Actualizando **ambos repositorios** automáticamente...",
-                                embeds: [],
-                                components: []
-                            });
-
-                            let results = [];
-                            for (const [botType, botInfo] of botPaths.entries()) {
-                                if (botInfo.path) {
-                                    results.push(`\n📁 **${botInfo.name}** (\`${botInfo.path}\`):`);
-                                    
-                                    try {
-                                        const output = await new Promise((resolve, reject) => {
-                                            exec(`cd "${botInfo.path}" && git pull`, (error, stdout, stderr) => {
-                                                if (error) reject(error);
-                                                else resolve(stdout || stderr || "Sin salida");
-                                            });
-                                        });
-                                        results.push(`✅ \`\`\`bash\n${output}\`\`\``);
-                                    } catch (error) {
-                                        results.push(`❌ Error: \`${error.message}\``);
-                                    }
-                                }
-                            }
+                        try {
+                            const processes = JSON.parse(stdout);
+                            let detectedPaths = "🔍 **Rutas detectadas:**\n\n";
                             
-                            const finalMessage = results.join('\n');
-                            if (finalMessage.length > 1900) {
-                                message.channel.send("📋 **Resultados:**" + finalMessage.slice(0, 1900) + "\n...(truncado)");
-                            } else {
-                                message.channel.send("📋 **Resultados:**" + finalMessage);
-                            }
-                            
-                        } else {
-                            // Actualizar un solo proyecto
-                            const botType = selection.includes('comunity') ? 'comunity' : 'league';
-                            const botInfo = botPaths.get(botType);
-
-                            await interaction.update({
-                                content: `🔄 Actualizando **${botInfo.name}** automáticamente...\n📁 Ruta: \`${botInfo.path}\``,
-                                embeds: [],
-                                components: []
-                            });
-
-                            exec(`cd "${botInfo.path}" && git pull`, (error, stdout, stderr) => {
-                                if (error) {
-                                    return message.channel.send(`❌ Error actualizando ${botInfo.name}: \`${error.message}\``);
+                            processes.forEach(proc => {
+                                if ([1, 10].includes(proc.pm_id)) {
+                                    const botName = proc.pm_id === 1 ? "TS Comunity" : "TS League";
+                                    const cwd = proc.pm2_env?.cwd || "No detectada";
+                                    detectedPaths += `**${botName}** (ID: ${proc.pm_id}):\n\`${cwd}\`\n\n`;
                                 }
+                            });
+                            
+                            detectedPaths += "💡 **¿Quieres hacer git pull en alguna de estas rutas?**";
+                            message.channel.send(detectedPaths);
+                            
+                            // Crear botones para las rutas detectadas
+                            const pathButtons = new ActionRowBuilder();
+                            processes.forEach(proc => {
+                                if ([1, 10].includes(proc.pm_id) && proc.pm2_env?.cwd) {
+                                    const botName = proc.pm_id === 1 ? "Comunity" : "League";
+                                    pathButtons.addComponents(
+                                        new ButtonBuilder()
+                                            .setCustomId(`gitpath_${proc.pm_id}`)
+                                            .setLabel(`Git pull ${botName}`)
+                                            .setStyle(ButtonStyle.Primary)
+                                    );
+                                }
+                            });
+                            
+                            if (pathButtons.components.length > 0) {
+                                message.channel.send({ 
+                                    content: "Selecciona en qué proyecto hacer git pull:",
+                                    components: [pathButtons] 
+                                });
                                 
-                                const output = stdout || stderr || "Sin salida";
-                                message.channel.send(`✅ **${botInfo.name} actualizado:**\n\`\`\`bash\n${output}\n\`\`\``);
-                            });
+                                // Collector para los botones de rutas
+                                const pathFilter = i => 
+                                    i.customId.startsWith('gitpath_') && 
+                                    i.user.id === message.author.id;
+                                const pathCollector = message.channel.createMessageComponentCollector({ 
+                                    filter: pathFilter, 
+                                    time: 15000, 
+                                    max: 1 
+                                });
+                                
+                                pathCollector.on("collect", async pathInteraction => {
+                                    const pm2Id = pathInteraction.customId.split('_')[1];
+                                    const targetProcess = processes.find(p => p.pm_id == pm2Id);
+                                    const targetPath = targetProcess.pm2_env.cwd;
+                                    const botName = pm2Id === "1" ? "TS Comunity" : "TS League";
+                                    
+                                    await pathInteraction.update({
+                                        content: `🔄 Ejecutando git pull en **${botName}**...\n📁 Ruta: \`${targetPath}\``,
+                                        components: []
+                                    });
+                                    
+                                    exec(`cd "${targetPath}" && git pull`, (error, stdout, stderr) => {
+                                        if (error) {
+                                            return message.channel.send(`❌ Error en ${botName}: \`${error.message}\``);
+                                        }
+                                        
+                                        const output = stdout || stderr || "Sin salida";
+                                        message.channel.send(`✅ **${botName} actualizado:**\n\`\`\`bash\n${output}\n\`\`\``);
+                                    });
+                                });
+                            }
+                            
+                        } catch (parseError) {
+                            message.channel.send(`❌ Error parseando datos de PM2: \`${parseError.message}\``);
                         }
                     });
+                    
+                } else if (selection === "git_manual") {
+                    // Opción 3: Especificar ruta manualmente
+                    await interaction.update({
+                        content: "✏️ **Especificar ruta manualmente:**\n\nResponde con la ruta donde quieres hacer git pull.\n\n💡 Ejemplos:\n• `~/mi-proyecto`\n• `/home/usuario/ts-bot`\n• `../otro-directorio`\n\n⏰ Tienes 30 segundos...",
+                        embeds: [],
+                        components: []
+                    });
 
-                    collector.on("end", collected => {
+                    const msgFilter = m => m.author.id === message.author.id;
+                    const msgCollector = message.channel.createMessageCollector({ 
+                        filter: msgFilter, 
+                        time: 30000, 
+                        max: 1 
+                    });
+
+                    msgCollector.on('collect', userMsg => {
+                        const userPath = userMsg.content.trim();
+                        
+                        userMsg.reply(`🔄 Ejecutando git pull en: \`${userPath}\``);
+                        
+                        exec(`cd "${userPath}" && git pull`, (error, stdout, stderr) => {
+                            if (error) {
+                                return message.channel.send(`❌ Error: \`${error.message}\`\n💡 Verifica que la ruta existe y es un repositorio git`);
+                            }
+                            
+                            const output = stdout || stderr || "Sin salida";
+                            message.channel.send(`✅ **Git pull completado en** \`${userPath}\`:\n\`\`\`bash\n${output}\n\`\`\``);
+                        });
+                    });
+
+                    msgCollector.on('end', collected => {
                         if (collected.size === 0) {
-                            message.channel.send("⏰ No se recibió selección, operación cancelada.");
+                            message.channel.send("⏰ Tiempo agotado. No se especificó ninguna ruta.");
                         }
                     });
+                }
+            });
 
-                } catch (parseError) {
-                    message.channel.send(`❌ Error procesando datos de PM2: \`${parseError.message}\``);
+            collector.on("end", collected => {
+                if (collected.size === 0) {
+                    message.channel.send("⏰ No se recibió confirmación, operación cancelada.");
                 }
             });
 
