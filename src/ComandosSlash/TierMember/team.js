@@ -13,6 +13,7 @@ const {
 } = require('../../services/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
+const { sendLog } = require('../../discord/send/staff.js')
 
 const colors = require('../../configs/colors.json')
 const { commands } = require('../../configs/league.js')
@@ -182,12 +183,22 @@ module.exports = {
         await interaction.reply({
           embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** creado.` })]
         })
+        await sendLog({
+          content: `🟢 El usuario <@${interaction.user.id}> ha creado el equipo **${team.name}**\n- Color: ${team.color}\n- Icon URL: ${team.iconURL}\n- Presidente Discord ID: <@${team.presidentDiscordId}> (${team.presidentDiscordId})`,
+          client: interaction.client,
+          type: 'success'
+        })
 
       } else if (sub === 'eliminar') {
           const teamName = interaction.options.getString('nombre')
           const team = await deleteTeam({ teamName })
           await interaction.reply({
-            embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** eliminado.` })]
+            embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** eliminado.` })]
+          })
+          await sendLog({
+            content: `🔴 El usuario <@${interaction.user.id}> ha eliminado el equipo **${teamName}**.\n- Presidente Discord ID: <@${team.presidentDiscordId}> (${team.presidentDiscordId})`,
+            client: interaction.client,
+            type: 'danger'
           })
 
       } else if (sub === 'actualizar') {
@@ -198,7 +209,12 @@ module.exports = {
         const color = interaction.options.getString('nuevo-color')
         const team = await updateTeam({ teamName, name, iconURL, color })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** actualizado.` })]
+          embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** actualizado.` })]
+        })
+        await sendLog({
+          content: `🟡 El usuario <@${interaction.user.id}> ha actualizado el equipo **${teamName}**\n- Nuevo nombre: ${name || 'Sin cambio'}\n- Nuevo color: ${color || 'Sin cambio'}\n- Nuevo icon URL: ${iconURL || 'Sin cambio'}`,
+          client: interaction.client,
+          type: 'warning'
         })
 
       } else if (sub === 'añadir-division') {
@@ -206,14 +222,24 @@ module.exports = {
         const divisionName = interaction.options.getString('nombre-division')
         const team = await addTeamToDivision({ teamName, divisionName })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** añadido a la división **${team.divisionId.name}**.` })]
+          embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** añadido a la división **${team.divisionId.name}**.` })]
+        })
+        await sendLog({
+          content: `🟦 El usuario <@${interaction.user.id}> ha añadido el equipo **${teamName}** a la división **${divisionName}**.`,
+          client: interaction.client,
+          type: 'info'
         })
 
       } else if (sub === 'eliminar-division') {
         const teamName = interaction.options.getString('nombre-equipo')
         const team = await removeTeamFromDivision({ teamName })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** eliminado de su división.` })]
+          embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** eliminado de su división.` })]
+        })
+        await sendLog({
+          content: `🟧 El usuario <@${interaction.user.id}> ha eliminado el equipo **${teamName}** de su división.`,
+          client: interaction.client,
+          type: 'warning'
         })
 
       } else if (sub === 'expulsar-miembro') {
@@ -221,7 +247,7 @@ module.exports = {
         const discordId = user.id
         const team = await removeMemberFromTeam({ discordId })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message:`Miembro <@${discordId}> expulsado de **${team.name}**.` })]
+          embeds: [getSuccesEmbed({ message:`Miembro <@${discordId}> expulsado de **${teamName}**.` })]
         })
 
       } else if (sub === 'cambiar-rol-miembro') {
@@ -237,7 +263,7 @@ module.exports = {
           throw new Error('No se ha proporcionado un rol valido.')
         }
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message:`Rol del usuario <@${discordId}> actualizado en el equipo **${team.name}** a \`${role}\`.` })]
+          embeds: [getSuccesEmbed({ message:`Rol del usuario <@${discordId}> actualizado en el equipo **${teamName}** a \`${role}\`.` })]
         })
 
       } else if (sub === 'regenerar-codigo') {
@@ -245,7 +271,7 @@ module.exports = {
         const team = await updateTeamCode({ teamName })
         await team.save()
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message:`Nuevo código generado para el equipo **${team.name}**: \`${team.code}\`` })],
+          embeds: [getSuccesEmbed({ message:`Nuevo código generado para el equipo **${teamName}**: \`${team.code}\`` })],
           ephemeral: true
         })
       } else if (sub === 'añadir-puntos') {
@@ -253,16 +279,26 @@ module.exports = {
         const points = interaction.options.getString('puntos')
         await addPointsToTeam({ teamName, points })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `Se han añadido \`${points}\` puntos al equipo **${team.name}**.` })],
+          embeds: [getSuccesEmbed({ message: `Se han añadido \`${points}\` puntos al equipo **${teamName}**.` })],
           ephemeral: true
+        })
+        await sendLog({
+          content: `🟩 El usuario <@${interaction.user.id}> ha añadido \\`${points}\\` puntos al equipo **${teamName}**.`,
+          client: interaction.client,
+          type: 'success'
         })
       } else if (sub === 'remover-puntos') {
         const teamName = interaction.options.getString('nombre-equipo')
         const points = interaction.options.getString('puntos')
         await removePointsFromTeam({ teamName, points })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `Se han removido \`${points}\` puntos del equipo **${team.name}**.` })],
+          embeds: [getSuccesEmbed({ message: `Se han removido \`${points}\` puntos del equipo **${teamName}**.` })],
           ephemeral: true
+        })
+        await sendLog({
+          content: `🟥 El usuario <@${interaction.user.id}> ha removido \\`${points}\\` puntos del equipo **${teamName}**.`,
+          client: interaction.client,
+          type: 'danger'
         })
       }
 

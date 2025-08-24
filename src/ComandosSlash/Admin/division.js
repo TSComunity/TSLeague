@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js')
 const { createDivision, deleteDivision, updateDivision } = require('../../services/division.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
+const { sendLog } = require('../../discord/send/staff.js')
 
 const colors = require('../../configs/colors.json')
 
@@ -95,6 +96,11 @@ module.exports = {
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `División **${división.emoji} ${división.name}** creada.` })]
         })
+        await sendLog({
+          content: `🟢 El usuario <@${interaction.user.id}> ha creado la división **${división.emoji} ${división.name}**\n- Tier: ${división.tier}\n- Color: ${división.color}\n- Emoji: ${división.emoji}`,
+          client: interaction.client,
+          type: 'success'
+        })
       }
 
       else if (subcomand === 'eliminar') {
@@ -102,6 +108,11 @@ module.exports = {
         const división = await deleteDivision({ name })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `División **${división.emoji} ${división.name}** eliminada.` })]
+        })
+        await sendLog({
+          content: `🔴 El usuario <@${interaction.user.id}> ha eliminado la división **${división.emoji} ${división.name}**\n- Tier: ${división.tier}\n- Color: ${división.color}\n- Emoji: ${división.emoji}`,
+          client: interaction.client,
+          type: 'danger'
         })
       }
 
@@ -115,6 +126,11 @@ module.exports = {
         const división = await updateDivision({ name, newName, newTier, newEmoji, newColor })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `División **${división.emoji} ${división.name}** actualizada.` })]
+        })
+        await sendLog({
+          content: `🟡 El usuario <@${interaction.user.id}> ha actualizado la división **${división.emoji} ${división.name}**\n- Nuevo nombre: ${newName || 'Sin cambio'}\n- Nuevo tier: ${newTier || 'Sin cambio'}\n- Nuevo color: ${newColor || 'Sin cambio'}\n- Nuevo emoji: ${newEmoji || 'Sin cambio'}`,
+          client: interaction.client,
+          type: 'warning'
         })
       }
     } catch (error) {

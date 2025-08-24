@@ -3,6 +3,7 @@ const { startSeason, endSeason } = require('../../services/season.js')
 const { getLastSeason } = require('../../utils/season.js')
 const { addRound } = require('../../services/round.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
+const { sendLog } = require('../../discord/send/staff.js')
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -45,12 +46,22 @@ module.exports = {
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `Temporada ** ${season.name}** comenzada.` })]
         })
+        await sendLog({
+          content: `🟢 El usuario <@${interaction.user.id}> ha comenzado la temporada **${season.name}**\n- ID: ${season._id || 'N/A'}\n- Fecha de inicio: ${season.startDate || 'N/A'}`,
+          client: interaction.client,
+          type: 'success'
+        })
       }
 
       else if (subcomand === 'terminar') {
         const season = await endSeason({ client })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `Temporada **${season.name}** terminada.` })]
+        })
+        await sendLog({
+          content: `🔴 El usuario <@${interaction.user.id}> ha terminado la temporada **${season.name}**\n- ID: ${season._id || 'N/A'}\n- Fecha de fin: ${season.endDate || 'N/A'}`,
+          client: interaction.client,
+          type: 'danger'
         })
       } else if (subcomand === 'prueba') {
         const ScheduledFunction = require('../../Esquemas/ScheduledFunction.js')
