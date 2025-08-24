@@ -23,6 +23,15 @@ const checkTeamUserHasPerms = async ({ discordId }) => {
   return (member.role === 'leader' || member.role === 'sub-leader')
 }
 
+const checkTeamUserIsLeader = async ({ discordId }) => {
+  const team = await findTeam({ discordId })
+
+  const member = team.members.find(m => m.userId.discordId === discordId)
+  if (!member) return false
+
+  return (member.role === 'leader')
+}
+
 /**
  * Actualiza la elegibilidad de un equipo dependiendo de si tiene al menos 3 miembros y devuelve su elegibilidad.
  * @param {Object} team - Equipo a checkear.
@@ -495,6 +504,7 @@ const removePointsFromTeam = async ({ teamName, points }) => {
 
 module.exports = {
   checkTeamUserHasPerms,
+  checkTeamUserIsLeader,
   checkTeamEligibility,
   updateAllTeamsEligibility,
   deleteAllEmptyTeams,

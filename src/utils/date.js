@@ -1,4 +1,4 @@
-const { DateTime } = require('luxon');
+const { DateTime } = require('luxon')
 
 /**
  * Devuelve la fecha del siguiente día y hora en horario de Madrid.
@@ -9,24 +9,24 @@ const { DateTime } = require('luxon');
  */
 const getDate = ({ day, hour = 0, minute = 0 }) => {
   if (!Number.isInteger(day) || day < 0 || day > 6)
-    throw new Error("El parámetro 'day' debe ser un número entre 0 y 6.");
+    throw new Error("El parámetro 'day' debe ser un número entre 0 y 6.")
 
   if (!Number.isInteger(hour) || hour < 0 || hour > 23)
-    throw new Error("El parámetro 'hour' debe estar entre 0 y 23.");
+    throw new Error("El parámetro 'hour' debe estar entre 0 y 23.")
 
   if (!Number.isInteger(minute) || minute < 0 || minute > 59)
-    throw new Error("El parámetro 'minute' debe estar entre 0 y 59.");
+    throw new Error("El parámetro 'minute' debe estar entre 0 y 59.")
 
   // Fecha actual en zona Madrid
-  const now = DateTime.now().setZone('Europe/Madrid');
+  const now = DateTime.now().setZone('Europe/Madrid')
 
   // Día de la semana actual (0 = domingo)
-  const todayWeekday = now.weekday % 7;
+  const todayWeekday = now.weekday % 7
 
   // Cuántos días faltan hasta el próximo día solicitado
-  let daysToAdd = (day - todayWeekday + 7) % 7;
+  let daysToAdd = (day - todayWeekday + 7) % 7
   if (daysToAdd === 0 && (hour < now.hour || (hour === now.hour && minute <= now.minute))) {
-    daysToAdd = 7; // Si es hoy pero ya pasó la hora, ir a la semana siguiente
+    daysToAdd = 7 // Si es hoy pero ya pasó la hora, ir a la semana siguiente
   }
 
   // Crear el DateTime objetivo
@@ -35,10 +35,10 @@ const getDate = ({ day, hour = 0, minute = 0 }) => {
     minute,
     second: 0,
     millisecond: 0,
-  });
+  })
 
   // Convertir a objeto Date para guardar en Mongo
-  return scheduled.toJSDate();
-};
+  return scheduled.toJSDate()
+}
 
-module.exports = { getDate };
+module.exports = { getDate }

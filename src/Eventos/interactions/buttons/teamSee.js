@@ -1,7 +1,11 @@
 const { ActionRowBuilder } = require('discord.js')
 
+const { checkUserVerification } = require('../../../services/user.js')
 const { checkTeamUserHasPerms } = require('../../../services/team.js')
 const { findTeam } = require('../../../utils/team.js')
+
+const { getUserVerifyModal } = require('../../../discord/modals/user.js')
+const { getUserBrawlIdInput } = require('../../../discord/inputs/user.js')
 
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
 const { getErrorEmbed } = require('../../../discord/embeds/management.js')
@@ -20,6 +24,17 @@ module.exports = {
 
   async execute(interaction) {
     try {
+        const isVerified = await checkUserVerification({ discordId: interaction.user.id })
+
+        if (!isVerified) {
+            const modal = getUserVerifyModal()
+
+            const modalRow = new ActionRowBuilder().addComponents(getUserBrawlIdInput())
+            modal.addComponents(modalRow)
+
+            return interaction.showModal(modal)
+        }
+
         const discordId = interaction.user.id
         const team = await findTeam({ discordId })
         const perms = await checkTeamUserHasPerms({ discordId })

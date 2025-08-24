@@ -7,7 +7,7 @@ const {
   MediaGalleryItemBuilder
 } = require('discord.js')
 
-const { getMatchChangeSchedule } = require('../buttons/match.js')
+const { getMatchChangeScheduleButton } = require('../buttons/match.js')
 const modesData = require('../../configs/gameModes.json')
 
 function getModeOrMapName(id, type) {
@@ -169,7 +169,7 @@ const getMatchInfoEmbed = ({ match, showButtons = false }) => {
     if (status === 'scheduled') {
       // Botones para partidos programados
       buttons.push(
-        getMatchChangeSchedule()
+        getMatchChangeScheduleButton({ matchIndex})
       )
     } else if (status === 'played') {
       // Botones para partidos terminados

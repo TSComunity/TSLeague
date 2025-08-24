@@ -1,32 +1,40 @@
 const { ActionRowBuilder } = require('discord.js')
 
-const { checkTeamUserHasPerms } = require('../../../services/team.js')
+const Match = require('../../../Esquemas/Match.js')
+
+const { checkTeamUserIsLeader } = require('../../../services/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
-const { getTeamChangeIconModal } = require('../../../discord/modals/team.js')
-const { getTeamIconInput } = require('../../../discord/inputs/team.js')
+const { getMatchSelectDayMenu } = require('../../../discord/menus/match.js')
 
 module.exports = {
-  customId: 'matchChangeSchedule',
+  condition: (id) => id.startsWith('teamChangeSchedule'),
 
   async execute(interaction) {
     try {
-        const discordId = interaction.user.id
-        const perms = await checkTeamUserHasPerms({ discordId })
+      
+        const perms = await checkTeamUserIsLeader({ discordId: interaction.user.id })
 
         if (!perms) {
             return interaction.reply({
                 ephemeral: true,
-                embeds: [getErrorEmbed({ error: 'No tienes permisos para utilizar esta interaccion.' })]
+                embeds: [getErrorEmbed({ error: 'Solo los líderes de los equipos pueden utilizar esta interacción.' })]
             })
         }
 
-        const modal = getTeamChangeIconModal()
+        const splittedId = interaction.customId.split(':')
+        const matchIndex = splittedId[1]
 
-        const modalRow = new ActionRowBuilder().addComponents(getTeamIconInput())
-        modal.addComponents(modalRow)
+        const match = await Match.findOne({ matchIndex })
+        if (!match) {
+            throw new Error('No se ha encontrado el partido-')
+        }
 
-        await interaction.showModal(modal)
+        await interaction.reply({
+          ephemeral: true,
+          content: 'Selecciona un día para el partido.',
+          components: [new ActionRowBuilder().addComponents(getMatchSelectDayMenu({ matchIndex: match.matchIndex}))],
+        })
     } catch (error) {
       console.error(error)
       return interaction.reply({

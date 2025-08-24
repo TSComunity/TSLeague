@@ -165,7 +165,7 @@ const matchToUpd = await Match.findOne({ _id: match._id })
     await matchToUpd.save()
 
     await channel.send({
-      components: [getMatchInfoEmbed({ match })],
+      components: [getMatchInfoEmbed({ match, showButtons: true })],
       flags: MessageFlags.IsComponentsV2
     })
 
@@ -393,7 +393,6 @@ module.exports = {
   createMatchChannel,
   createMatch,
   createMatchManually,
-  findMatchByNamesAndSeason,
   cancelMatch,
   endMatch,
   changeMatchScheduledAt

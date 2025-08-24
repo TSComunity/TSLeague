@@ -1,7 +1,7 @@
 const { model, Schema, Types } = require('mongoose')
 
 const MatchSchema = new Schema({
-  matchIndex: { type: Number, required: true },
+  matchIndex: { type: Number, required: true, unique: true },
   roundIndex: { type: Number, required: true },
   
   seasonId: { type: Types.ObjectId, ref: 'Season', required: true },
@@ -24,7 +24,7 @@ const MatchSchema = new Schema({
   reason: { type: String },
 
   sets: [
-    {
+    { 
       map: { type: String, required: true },
       mode: { type: String, required: true },
       winner: { type: Schema.Types.ObjectId, ref: "Team", default: null }
@@ -32,7 +32,13 @@ const MatchSchema = new Schema({
   ],
 
   previewImageURL: { type: String },
-  resultsImageURL: { type: String}
+  resultsImageURL: { type: String},
+
+  proposedSchedule: {
+    newDate: { type: Date },
+    proposedBy: { type: Types.ObjectId, ref: 'User' },
+    status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' }
+  }
 })
 
 module.exports = model('Match', MatchSchema)
