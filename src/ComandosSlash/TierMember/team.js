@@ -283,7 +283,7 @@ module.exports = {
           ephemeral: true
         })
         await sendLog({
-          content: `🟩 El usuario <@${interaction.user.id}> ha añadido \\`${points}\\` puntos al equipo **${teamName}**.`,
+          content: `🟩 El usuario <@${interaction.user.id}> ha añadido \`${points}\` puntos al equipo **${teamName}**.`,
           client: interaction.client,
           type: 'success'
         })
@@ -296,7 +296,7 @@ module.exports = {
           ephemeral: true
         })
         await sendLog({
-          content: `🟥 El usuario <@${interaction.user.id}> ha removido \\`${points}\\` puntos del equipo **${teamName}**.`,
+          content: `🟥 El usuario <@${interaction.user.id}> ha removido \`${points}\` puntos del equipo **${teamName}**.`,
           client: interaction.client,
           type: 'danger'
         })
