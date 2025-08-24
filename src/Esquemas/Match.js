@@ -31,7 +31,8 @@ const MatchSchema = new Schema({
     }
   ],
 
-  imageURL: { type: String }
+  previewImageURL: { type: String },
+  resultsImageURL: { type: String}
 })
 
 module.exports = model('Match', MatchSchema)

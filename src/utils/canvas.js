@@ -81,5 +81,74 @@ async function generateCustomImage({
   const url = await uploadToImgBB(buffer)
   return url
 }
+const generateMatchPreviewImageURL = async ({
+    divisionDoc,
+    roundIndex,
+    teamADoc,
+    teamBDoc
+  }) => {
+  const previewImageURL = await generateCustomImage({
+    background: '../../assets/matchInfo.png',
+    texts: [
+      {
+        text: `DIVISIÓN ${divisionDoc.name.toUpperCase()}`,
+        x: 500,
+        y: 100,
+        font: 'bold 48px Arial',
+        color: divisionDoc.color,
+        strokeColor: 'black',
+        lineWidth: 4,
+        align: 'center'
+      },
+      {
+        text: `JORNADA ${roundIndex}`,
+        x: 500,
+        y: 400,
+        font: 'bold 32px Arial',
+        color: 'yellow',
+        strokeColor: 'black',
+        lineWidth: 2,
+        align: 'center'
+      },
+      {
+        text: teamADoc.name,
+        x: 500,
+        y: 100,
+        font: 'bold 32px Arial',
+        color: teamADoc.color,
+        strokeColor: 'black',
+        lineWidth: 2,
+        align: 'center'
+      },
+      {
+        text: teamBDoc.name,
+        x: 500,
+        y: 100,
+        font: 'bold 32px Arial',
+        color: teamBDoc.color,
+        strokeColor: 'black',
+        lineWidth: 2,
+        align: 'center'
+      }
+    ],
+    images: [
+      {
+        src: teamADoc.iconURL,
+        x: 200,
+        y: 400,
+        width: 100,
+        height: 100,
+      },
+      {
+        src: teamBDoc.iconURL,
+        x: 500,
+        y: 400,
+        width: 100,
+        height: 100,
+      },
+    ]
+  })
+  return previewImageURL
+}
 
-module.exports = { generateCustomImage }
+module.exports = { generateCustomImage, generateMatchPreviewImageURL }

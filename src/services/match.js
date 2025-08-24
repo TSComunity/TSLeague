@@ -8,7 +8,7 @@ const { getActiveSeason } = require('../utils/season.js')
 const { getCurrentRoundNumber } = require('../utils/round.js')
 const { findMatchByNamesAndSeason } = require('../utils/match.js')
 const { getDate } = require('../utils/date.js')
-const { generateCustomImage } = require('../utils/canvas.js')
+const { generateMatchPreviewImageURL } = require('../utils/canvas.js')
 
 const { getMatchInfoEmbed } = require('../discord/embeds/match.js')
 
@@ -135,20 +135,20 @@ const matchToUpd = await Match.findOne({ _id: match._id })
       }))
     ]
 
-    for (const overwrite of permissionOverwrites) {
-  // try { const resolved =  
-  //    guild.roles.cache.get(overwrite.id)
-  //     || await guild.members.fetch(overwrite.id).catch(() => null);
+//     for (const overwrite of permissionOverwrites) {
+//   // try { const resolved =  
+//   //    guild.roles.cache.get(overwrite.id)
+//   //     || await guild.members.fetch(overwrite.id).catch(() => null);
 
-  //   if (!resolved) {
-  //     console.warn(`❌ ID no encontrado: ${overwrite.id}`);
-  //   } else {
-  //     console.log(`✅ ID válido: ${overwrite.id}`);
-  //   }
-  // } catch (err) {
-  //   console.error(`💥 Error al verificar ID ${overwrite.id}:`, err);
-  // }
-}
+//   //   if (!resolved) {
+//   //     console.warn(`❌ ID no encontrado: ${overwrite.id}`);
+//   //   } else {
+//   //     console.log(`✅ ID válido: ${overwrite.id}`);
+//   //   }
+//   // } catch (err) {
+//   //   console.error(`💥 Error al verificar ID ${overwrite.id}:`, err);
+//   // }
+// }
 
 
     // 6. Crear el canal en la categoría indicada
@@ -191,67 +191,13 @@ const createMatch = async ({ client, seasonId, divisionDoc, roundIndex, teamADoc
 
   const matchIndex = existingMatchesCount + 1 // siguiente índice
 
-  const imageURL = await generateCustomImage({
-    background: '../../assets/matchInfo.png',
-    texts: [
-      {
-        text: `DIVISIÓN ${divisionDoc.name.toUpperCase()}`,
-        x: 500,
-        y: 100,
-        font: 'bold 48px Arial',
-        color: divisionDoc.color,
-        strokeColor: 'black',
-        lineWidth: 4,
-        align: 'center'
-      },
-      {
-        text: `JORNADA ${roundIndex}`,
-        x: 500,
-        y: 400,
-        font: 'bold 32px Arial',
-        color: 'yellow',
-        strokeColor: 'black',
-        lineWidth: 2,
-        align: 'center'
-      },
-      {
-        text: teamADoc.name,
-        x: 500,
-        y: 100,
-        font: 'bold 32px Arial',
-        color: teamADoc.color,
-        strokeColor: 'black',
-        lineWidth: 2,
-        align: 'center'
-      },
-      {
-        text: teamBDoc.name,
-        x: 500,
-        y: 100,
-        font: 'bold 32px Arial',
-        color: teamBDoc.color,
-        strokeColor: 'black',
-        lineWidth: 2,
-        align: 'center'
-      }
-    ],
-    images: [
-      {
-        src: teamADoc.iconURL,
-        x: 200,
-        y: 400,
-        width: 100,
-        height: 100,
-      },
-      {
-        src: teamBDoc.iconURL,
-        x: 500,
-        y: 400,
-        width: 100,
-        height: 100,
-      },
-    ]
+  const previewImageURL = await generateMatchPreviewImageURL({
+    divisionDoc,
+    roundIndex,
+    teamADoc,
+    teamBDoc
   })
+
   // Crear el partido
   let match
   try {
@@ -267,7 +213,7 @@ const createMatch = async ({ client, seasonId, divisionDoc, roundIndex, teamADoc
       scheduledAt: getDate({ day: defaultStartDay, hour: defaultStartHour }),
       status: 'scheduled',
       sets,
-      imageURL
+      previewImageURL
     })
 
     // Crear canal de Discord y actualizar el match con channelId
@@ -354,66 +300,11 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
     winner: null
   }))
 
-  const imageURL = await generateCustomImage({
-    background: '../../assets/matchInfo.png',
-    texts: [
-      {
-        text: `DIVISIÓN ${divisionDoc.name.toUpperCase()}`,
-        x: 500,
-        y: 100,
-        font: 'bold 48px Arial',
-        color: divisionDoc.color,
-        strokeColor: 'black',
-        lineWidth: 4,
-        align: 'center'
-      },
-      {
-        text: `JORNADA ${roundIndex}`,
-        x: 500,
-        y: 400,
-        font: 'bold 32px Arial',
-        color: 'yellow',
-        strokeColor: 'black',
-        lineWidth: 2,
-        align: 'center'
-      },
-      {
-        text: teamA.name,
-        x: 500,
-        y: 100,
-        font: 'bold 32px Arial',
-        color: teamA.color,
-        strokeColor: 'black',
-        lineWidth: 2,
-        align: 'center'
-      },
-      {
-        text: teamB.name,
-        x: 500,
-        y: 100,
-        font: 'bold 32px Arial',
-        color: teamB.color,
-        strokeColor: 'black',
-        lineWidth: 2,
-        align: 'center'
-      }
-    ],
-    images: [
-      {
-        src: teamADoc.iconURL,
-        x: 200,
-        y: 400,
-        width: 100,
-        height: 100,
-      },
-      {
-        src: teamBDoc.iconURL,
-        x: 500,
-        y: 400,
-        width: 100,
-        height: 100,
-      },
-    ]
+  const previewImageURL = await generateMatchPreviewImageURL({
+    divisionDoc,
+    roundIndex,
+    teamADoc,
+    teamBDoc
   })
 
   let match
@@ -431,7 +322,7 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
       scheduledAt: getDate({ day: defaultStartDay, hour: defaultStartHour }),
       status: 'scheduled',
       sets,
-      imageURL
+      previewImageURL
     })
 
     // Agregar a la última ronda de la división
