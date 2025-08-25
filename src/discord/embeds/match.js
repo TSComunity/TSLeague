@@ -10,6 +10,13 @@ const {
 const { getMatchChangeScheduleButton } = require('../buttons/match.js')
 const modesData = require('../../configs/gameModes.json')
 
+const getMapImageURL = (modeId, mapId) => {
+  const mode = modesData.find(m => m.id === modeId);
+  if (!mode) return '';
+  const map = mode.maps.find(mp => mp.id === mapId);
+  return map ? map.imageURL : '';
+}
+
 function getModeOrMapName(id, type) {
   if (!id) return 'N/A'
 
@@ -28,179 +35,117 @@ function getModeOrMapName(id, type) {
 }
 
 const getMatchInfoEmbed = ({ match, showButtons = false }) => {
-  const { 
-    teamAId, 
-    teamBId, 
-    matchIndex, 
-    scoreA, 
-    scoreB, 
-    scheduledAt, 
-    status, 
+  const {
+    teamAId,
+    teamBId,
+    matchIndex,
+    scoreA,
+    scoreB,
+    scheduledAt,
+    status,
     sets,
     previewImageURL,
     resultsImageURL,
     reason
   } = match
-  console.log(match)
-  // Determinar qué imagen usar según el estado
+
   const getImageData = () => {
     if (status === 'played' && resultsImageURL) {
-      return {
-        url: resultsImageURL,
-        description: `Resultados: ${teamAId.name} ${scoreA} - ${scoreB} ${teamBId.name}`
-      }
+      return { url: resultsImageURL, description: `Resultados: ${teamAId.name} ${scoreA} - ${scoreB} ${teamBId.name}` }
     } else if ((status === 'scheduled' || status === 'cancelled') && previewImageURL) {
-      return {
-        url: previewImageURL,
-        description: `${status === 'cancelled' ? 'Partido cancelado' : 'Próximo partido'}: ${teamAId.name} vs ${teamBId.name}`
-      }
+      return { url: previewImageURL, description: `${status === 'cancelled' ? 'Partido cancelado' : 'Próximo partido'}: ${teamAId.name} vs ${teamBId.name}` }
     }
     return null
   }
 
-  // Información del estado con emojis y colores
   const getStatusInfo = () => {
     switch (status) {
-      case 'scheduled':
-        return { text: '📅 `Programado`', color: 0xFFFF00 }
-      case 'played':
-        return { text: '✅ `Terminado`', color: 0x57F287 }
-      case 'cancelled':
-        return { text: '❌ `Cancelado`', color: 0xED4245 }
-      default:
-        return { text: '❓ `Desconocido`', color: 0x3498DB }
+      case 'scheduled': return { text: '📅 Programado', color: 0xFFFF00 }
+      case 'played': return { text: '✅ Terminado', color: 0x57F287 }
+      case 'cancelled': return { text: '❌ Cancelado', color: 0xED4245 }
+      default: return { text: '❓ Desconocido', color: 0x3498DB }
     }
   }
 
-  // Construir el contenido según el estado
-  const buildContent = () => {
-    const time = Math.floor(scheduledAt.getTime() / 1000)
-    
-    let content = [
-      `### ${teamAId.name} vs ${teamBId.name}`,
-      `Estado: ${getStatusInfo().text}  |  Horario: <t:${time}>`
-    ]
+  const time = Math.floor(scheduledAt.getTime() / 1000)
 
-    if (status === 'played') {
-      // Partido jugado - mostrar resultados
-      content.push(`**Resultado final:** \`${scoreA} - ${scoreB}\``)
-      
-      // Mostrar ganador
-      if (scoreA > scoreB) {
-        content.push(`🏆 **Ganador:** ${teamAId.name}`)
-      } else if (scoreB > scoreA) {
-        content.push(`🏆 **Ganador:** ${teamBId.name}`)
-      } else {
-        content.push(`🤝 **Empate**`)
-      }
+  // --- Datos principales en líneas separadas ---
+  const pad = 18 // Ajusta para alineación
+  const teamLine = `${teamAId.name.padEnd(pad)} vs ${teamBId.name}`
+  const statusLine = `Estado: ${getStatusInfo().text}`
+  const scheduleLine = `Horario: <t:${time}:F>`
+  const scoreLine = status === 'played' ? `Resultado: ${scoreA.toString().padEnd(3)} - ${scoreB}` : null
+  const winnerLine = status === 'played' && scoreA !== scoreB ? `🏆 Ganador: ${scoreA > scoreB ? teamAId.name : teamBId.name}` : (status === 'played' ? '🤝 Empate' : null)
+  const reasonLine = status === 'cancelled' && reason ? `Razón: ${reason}` : null
 
-      // Información de sets si existen
-      if (sets && sets.length > 0) {
-        content.push('\n**📋 Sets jugados:**')
-        
-        sets.forEach((set, index) => {
-          const modeName = getModeOrMapName(set.mode, 'mode')
-          const mapName = getModeOrMapName(set.map, 'map')
-          
-          let setLine = `**Set ${index + 1}:** \`${modeName}\` en \`${mapName}\``
-          
-          // Mostrar ganador del set si existe
-          if (set.winner) {
-            const winnerName = set.winner.toString() === teamAId._id.toString() 
-              ? teamAId.name 
-              : teamBId.name
-            setLine += ` → 🏆 ${winnerName}`
-          }
-          
-          content.push(setLine)
-        })
-      }
+  const mainContent = [teamLine, statusLine, scheduleLine, scoreLine, winnerLine, reasonLine].filter(Boolean).join('\n')
 
-    } else if (status === 'scheduled') {
-      // Partido programado - mostrar información previa
-      content.push(`⏰ **Programado para:** <t:${time}:F>`)
-      
-      // Información de sets si están definidos
-      if (sets && sets.length > 0) {
-        content.push('\n**📋 Sets programados:**')
-        
-        sets.forEach((set, index) => {
-          const modeName = getModeOrMapName(set.mode, 'mode')
-          const mapName = getModeOrMapName(set.map, 'map')
-          content.push(`**Set ${index + 1}:** \`${modeName}\` en \`${mapName}\``)
-        })
-      }
+  const textDisplay = new TextDisplayBuilder().setContent(mainContent)
 
-    } else if (status === 'cancelled') {
-      // Partido cancelado
-      content.push(`**Programado para:** <t:${time}:F>`)
-      
-      if (reason) {
-        content.push(`**Razón de cancelación:** ${reason}`)
-      }
-    }
-
-    return content.join('\n')
-  }
-
-  const separator = new SeparatorBuilder()
+  // --- Imagen principal ---
   const imageData = getImageData()
-  const statusInfo = getStatusInfo()
-
-  // Crear MediaGallery solo si tenemos imagen
   let mediaGallery = null
-  if (imageData && imageData.url) {
+  if (imageData) {
     const image = new MediaGalleryItemBuilder()
       .setURL(imageData.url)
-      .setDescription(imageData.description || 'imagen')
-
-    mediaGallery = new MediaGalleryBuilder()
-      .setId(1)
-      .addItems([image])
+      .setDescription(imageData.description || 'imagen principal')
+    mediaGallery = new MediaGalleryBuilder().setId(1).addItems([image])
   }
 
-  const text = new TextDisplayBuilder().setContent(buildContent())
+  // --- Sets con mini-imágenes ---
+  let setsGallery = null
+  if (sets && sets.length > 0) {
+    const items = sets.map((set, idx) => {
+      const modeName = getModeOrMapName(set.mode, 'mode')
+      const mapName = getModeOrMapName(set.map, 'map')
+      const winnerName = set.winner
+        ? set.winner.toString() === teamAId._id.toString() ? teamAId.name : teamBId.name
+        : null
 
-  // Crear botones si es necesario
+      let description = `Set ${idx + 1}: ${modeName} en ${mapName}`
+      if (winnerName) description += ` → 🏆 ${winnerName}`
+
+      return new MediaGalleryItemBuilder()
+        .setURL(getMapImageURL(set.mode, set.map))
+        .setDescription(description)
+    })
+
+    setsGallery = new MediaGalleryBuilder().setId(2).addItems(items)
+  }
+
+  // --- Botones ---
   let buttonRow = null
   if (showButtons) {
     const buttons = []
-    
-    if (status === 'scheduled') {
-      // Botones para partidos programados
-      buttons.push(
-        getMatchChangeScheduleButton({ matchIndex})
-      )
-    } else if (status === 'played') {
-      // Botones para partidos terminados
-
-    } else if (status === 'cancelled') {
-      // Botones para partidos cancelados
-
-    }
-
-    if (buttons.length > 0) {
-      buttonRow = new ActionRowBuilder().addComponents(buttons)
-    }
+    if (status === 'scheduled') buttons.push(getMatchChangeScheduleButton({ matchIndex }))
+    if (buttons.length) buttonRow = new ActionRowBuilder().addComponents(buttons)
   }
 
-  // Construir el container
-  const containerBuilder = new ContainerBuilder()
-    .addSeparatorComponents(separator)
-    .addTextDisplayComponents(text)
-    .setAccentColor(statusInfo.color)
+  // --- Construir contenedor ---
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(textDisplay)
+    .setAccentColor(getStatusInfo().color)
 
-  // Solo agregar MediaGallery si tenemos imagen
-  if (mediaGallery) {
-    containerBuilder.addMediaGalleryComponents([mediaGallery])
-  }
-
-  // Agregar botones si existen
+  if (mediaGallery) container.addMediaGalleryComponents([mediaGallery])
+  if (setsGallery) container.addMediaGalleryComponents([setsGallery])
   if (buttonRow) {
-    containerBuilder.addActionRowComponents(buttonRow)
+    // Separador antes de los botones
+    const separator = new SeparatorBuilder()
+    container.addSeparatorComponents(separator)
+    container.addActionRowComponents(buttonRow)
   }
 
-  return containerBuilder
+  return container
 }
 
-module.exports = { getMatchInfoEmbed }
+const getMatchProposedScheduleEmbed = ({ interaction, oldTimestampUnix, timestampUnix}) => {
+  return new EmbedBuilder()
+    .setColor('Yellow')
+    .setDescription(`### <@${interaction.user.id}> ha propuesto cambiar la hora del partido.`)
+    .addFields(
+      { name: 'Hora Actual', value: `<t:${oldTimestampUnix}:F>`, inline: true },
+      { name: 'Hora Propuesta', value: `<t:${timestampUnix}:F>`, inline: true }
+    )
+}
+
+module.exports = { getMatchInfoEmbed, getMatchProposedScheduleEmbed }

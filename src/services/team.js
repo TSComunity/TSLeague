@@ -33,20 +33,6 @@ const checkTeamUserIsLeader = async ({ discordId }) => {
 }
 
 /**
- * Actualiza la elegibilidad de un equipo dependiendo de si tiene al menos 3 miembros y devuelve su elegibilidad.
- * @param {Object} team - Equipo a checkear.
- * @returns {Boolean} isEligible - Si es elegible o no.
- */
-const checkTeamEligibility = async ({ teamName = null, teamCode = null, discordId = null }) => {
-  const team = await findTeam({ teamName, teamCode, discordId })
-
-  const isEligible = (team.members && team.members.length >= 3)
-  team.isEligible = isEligible
-  await team.save()
-  return isEligible
-}
-
-/**
  * Expulsa a un miembro del equipo usando su Discord ID.
  * @param {Object} params
  * @param {String} params.teamName - Nombre del equipo.
@@ -92,19 +78,6 @@ const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordI
     user.teamId = null;
     await user.save();
     return team;
-  }
-}
-
-/**
- * Actualiza la elegibilidad de todos los equipos en la base de datos.
- * Recorre todos los equipos, actualiza su propiedad isEligible y guarda los cambios.
- */
-const updateAllTeamsEligibility = async () => {
-  const teams = await Team.find({})
-  for (const team of teams) {
-    const isEligible = (team.members && team.members.length >= 3)
-    team.isEligible = isEligible
-    await team.save()
   }
 }
 
@@ -505,8 +478,6 @@ const removePointsFromTeam = async ({ teamName, points }) => {
 module.exports = {
   checkTeamUserHasPerms,
   checkTeamUserIsLeader,
-  checkTeamEligibility,
-  updateAllTeamsEligibility,
   deleteAllEmptyTeams,
   generateTeamCode,
   updateTeamCode,

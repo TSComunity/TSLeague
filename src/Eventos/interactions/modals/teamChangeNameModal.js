@@ -3,7 +3,7 @@ const { findTeam } = require('../../../utils/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
-const { sendLog } = require('../../../discord/logs.js')
+const { sendLog } = require('../../../discord/send/staff.js')
 
 module.exports = {
   customId: 'teamChangeNameModal',

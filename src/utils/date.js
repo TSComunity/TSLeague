@@ -1,4 +1,5 @@
 const { DateTime } = require('luxon')
+const configs = require('../configs/league.js')
 
 /**
  * Devuelve la fecha del siguiente día y hora en horario de Madrid.
@@ -41,4 +42,38 @@ const getDate = ({ day, hour = 0, minute = 0 }) => {
   return scheduled.toJSDate()
 }
 
-module.exports = { getDate }
+/**
+ * Checks if the deadline for proposing/accepting a schedule has already passed
+ * and calculates the default date in case no agreement is reached.
+ * 
+ * @param {Date} [now=new Date()] - Current date
+ * @returns {Object} { passed, deadline, defaultDate }
+ */
+function checkDeadline(match, now = new Date()) {
+  if (match.scheduledAt) {
+    // Ya tiene fecha, no hace falta aplicar la por defecto
+    return { passed: false, deadline: null, defaultDate: match.scheduledAt }
+  }
+
+  // Deadline (jueves 23:59, por ejemplo)
+  const deadline = getDate({
+    day: configs.match.deadlineDay,
+    hour: configs.match.deadlineHour,
+    minute: configs.match.deadlineMinute
+  })
+
+  // Fecha por defecto (sábado 19:00, por ejemplo)
+  const defaultDate = getDate({
+    day: configs.match.defaultStartDay,
+    hour: configs.match.defaultStartHour,
+    minute: 0
+  })
+
+  return {
+    passed: now > deadline,
+    deadline,
+    defaultDate
+  }
+}
+
+module.exports = { getDate, checkDeadline }

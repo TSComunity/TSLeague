@@ -14,7 +14,7 @@ const MatchSchema = new Schema({
   scoreA: { type: Number, default: 0 },
   scoreB: { type: Number, default: 0 },
 
-  scheduledAt: { type: Date, required: true },
+  scheduledAt: { type: Date },
 
   status: {
     type: String,

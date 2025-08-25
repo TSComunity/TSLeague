@@ -1,19 +1,17 @@
 const { ChannelType, PermissionsBitField, MessageFlags } = require('discord.js')
 
-const Season = require('../Esquemas/Season')
 const Match = require('../Esquemas/Match')
 const Team = require('../Esquemas/Team')
 
 const { getActiveSeason } = require('../utils/season.js')
 const { getCurrentRoundNumber } = require('../utils/round.js')
 const { findMatchByNamesAndSeason } = require('../utils/match.js')
-const { getDate } = require('../utils/date.js')
+const { getDate, checkDeadline } = require('../utils/date.js')
 const { generateMatchPreviewImageURL } = require('../utils/canvas.js')
 
 const { getMatchInfoEmbed } = require('../discord/embeds/match.js')
 
 const { guild: guildConfig, categories, channels, match } = require('../configs/league.js')
-const { defaultStartDay, defaultStartHour } = match
 
 /**
  * Crea un canal de Discord para un partido.
@@ -132,15 +130,15 @@ const matchToUpd = await Match.findOne({ _id: match._id })
     // for (const overwrite of permissionOverwrites) {
     //   try { const resolved =  
     //     guild.roles.cache.get(overwrite.id)
-    //       || await guild.members.fetch(overwrite.id).catch(() => null);
+    //       || await guild.members.fetch(overwrite.id).catch(() => null)
 
     //     if (!resolved) {
-    //       console.warn(`❌ ID no encontrado: ${overwrite.id}`);
+    //       console.warn(`❌ ID no encontrado: ${overwrite.id}`)
     //     } else {
-    //       console.log(`✅ ID válido: ${overwrite.id}`);
+    //       console.log(`✅ ID válido: ${overwrite.id}`)
     //     }
     //   } catch (err) {
-    //     console.error(`💥 Error al verificar ID ${overwrite.id}:`, err);
+    //     console.error(`💥 Error al verificar ID ${overwrite.id}:`, err)
     //   }
     // }
 
@@ -159,7 +157,7 @@ const matchToUpd = await Match.findOne({ _id: match._id })
     await matchToUpd.save()
 
     await channel.send({
-      components: [getMatchInfoEmbed({ match, showButtons: true })],
+      components: [getMatchInfoEmbed({ match: matchToUpd, showButtons: true })],
       flags: MessageFlags.IsComponentsV2
     })
 
@@ -204,7 +202,6 @@ const createMatch = async ({ client, seasonId, divisionDoc, roundIndex, teamADoc
       teamBId: teamBDoc._id,
       scoreA: 0,
       scoreB: 0,
-      scheduledAt: getDate({ day: defaultStartDay, hour: defaultStartHour }),
       status: 'scheduled',
       sets,
       previewImageURL
@@ -212,14 +209,23 @@ const createMatch = async ({ client, seasonId, divisionDoc, roundIndex, teamADoc
 
     // Crear canal de Discord y actualizar el match con channelId
     const updatedMatch = await createMatchChannel({ match, client })
+    channelCreated = true; // Marcamos que ya se creó el canal
 
     return updatedMatch
   } catch (error) {
-    // Si hubo error y ya se creó el match, borrarlo para no dejar basura y escoria
-    if (match && match._id) {
-      await Match.findByIdAndDelete(match._id)
+  // Si hubo error y ya se creó el match, borrarlo
+  if (match.channelId) {
+    try {
+      const channel = await client.channels.fetch(match.channelId);
+      if (channel) await channel.delete('Error al crear el partido, limpieza de canal');
+    } catch (err) {
+      console.error('No se pudo eliminar el canal tras error:', err);
     }
-    throw error
+  }
+
+  // Luego eliminar el match de la base de datos
+  await Match.findByIdAndDelete(match._id);
+  throw error
   }
 }
 
@@ -313,7 +319,6 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
       teamBId: teamB._id,
       scoreA: 0,
       scoreB: 0,
-      scheduledAt: getDate({ day: defaultStartDay, hour: defaultStartHour }),
       status: 'scheduled',
       sets,
       previewImageURL
@@ -383,11 +388,45 @@ const changeMatchScheduledAt = async ({ seasonIndex, teamAName, teamBName, day, 
   return match
 }
 
+const applyDefaultDates = async ({ client }) => {
+  const now = new Date()
+
+  // Traer partidos sin fecha programada
+  const matches = await Match.find({ scheduledAt: { $exists: false } })
+      .populate('teamAId teamBId divisionId seasonId')
+
+  for (const match of matches) {
+    const { passed, deadline, defaultDate } = checkDeadline(match, now)
+
+    if (passed) {
+      // Aplicar fecha por defecto
+      match.scheduledAt = defaultDate
+      await match.save()
+
+     let channel = client.channels.cache.get(match.channelId);
+     if (!channel) channel = await client.channels.fetch(match.channelId)
+
+      if (channel && channel.isTextBased()) {
+        channel.send({
+          content: `⚠️ **Fecha asignada automáticamente**\n\n` +
+                  `El plazo para modificar el horario ha pasado (<t:${Math.floor(deadline.getTime() / 1000)}:F>), ` +
+                  `por lo que se ha aplicado la fecha por defecto.\n` +
+                  `**Fecha:** <t:${Math.floor(match.scheduledAt.getTime() / 1000)}:F>\n` +
+                  `Revisa el embed para más detalles del partido.`,
+          components: [getMatchInfoEmbed({ match })],
+        flags: MessageFlags.IsComponentsV2
+        })
+      }
+    }
+  }
+}
+
 module.exports = {
   createMatchChannel,
   createMatch,
   createMatchManually,
   cancelMatch,
   endMatch,
-  changeMatchScheduledAt
+  changeMatchScheduledAt,
+  applyDefaultDates
 }

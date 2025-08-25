@@ -1,6 +1,8 @@
 const { ActionRowBuilder, EmbedBuilder } = require('discord.js')
 const Match = require('../../../Esquemas/Match.js')
 const { getDate } = require('../../../utils/date.js')
+const { findMatchByIndex } = require('../../../utils/match.js')
+const { getMatchProposedScheduleEmbed } = require('../../../discord/embeds/match.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getMatchAcceptScheduleButton, getMatchRejectScheduleButton } = require('../../../discord/buttons/match.js') 
 
@@ -17,23 +19,7 @@ module.exports = {
       const minute = splittedValues[1]
 
       // Buscar el partido
-      const match = await Match.findOne({ matchIndex })
-        .populate({
-          path: 'teamAId',
-          select: 'members',
-          populate: {
-            path: 'members.userId',
-            select: 'discordId'
-          }
-        })
-        .populate({
-          path: 'teamBId',
-          select: 'members',
-          populate: {
-            path: 'members.userId',
-            select: 'discordId'
-          }
-        })
+      const match = await findMatchByIndex({ matchIndex })
 
       if (!match) throw new Error('No se ha encontrado el partido.')
 
@@ -86,21 +72,12 @@ module.exports = {
         components: []
       })
 
-      // Crear embed para el canal del partido
-      const embed = new EmbedBuilder()
-        .setColor('Yellow')
-        .setDescription(`### <@${interaction.user.id}> ha propuesto cambiar la hora del partido.`)
-        .addFields(
-          { name: 'Hora Actual', value: `<t:${oldTimestampUnix}:F>`, inline: true },
-          { name: 'Hora Propuesta', value: `<t:${timestampUnix}:F>`, inline: true }
-        )
-
       const row = new ActionRowBuilder().addComponents(
         getMatchAcceptScheduleButton({ matchIndex: match.matchIndex, leaderId: opponentLeader.userId.discordId }),
         getMatchRejectScheduleButton({ matchIndex: match.matchIndex, leaderId: opponentLeader.userId.discordId })
       )
 
-      await interaction.channel.send({ content: `<@${opponentLeader.userId.discordId}>`, embeds: [embed], components: [row] })
+      await interaction.channel.send({ content: `<@${opponentLeader.userId.discordId}>`, embeds: [getMatchProposedScheduleEmbed({ interaction, oldTimestampUnix, timestampUnix })], components: [row] })
 
       // --- Opcional: enviar DM ---
       // const user = await interaction.client.users.fetch(opponentLeader.userId.discordId)

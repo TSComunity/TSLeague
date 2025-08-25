@@ -4,7 +4,7 @@ const { addMemberToTeam } = require('../../../services/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamSeeButton, getTeamLeftButton } = require('../../../discord/buttons/team.js')
-const { sendLog } = require('../../../utils/logger.js')
+const { sendLog } = require('../../../discord/send/staff.js')
 
 module.exports = {
   customId: 'teamJoinModal',

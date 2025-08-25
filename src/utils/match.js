@@ -26,9 +26,26 @@ const findMatchByNamesAndSeason = async ({ seasonIndex, teamAName, teamBName }) 
     })
     .populate('seasonId divisionId')
 
-  if (!match) throw new Error('Partido no encontrado')
+  if (!match) throw new Error('Partido no encontrado.')
 
   return match
 }
 
-module.exports = { findMatchByNamesAndSeason }
+const findMatchByIndex = async ({ matchIndex }) => {
+
+  const match = await Match.findOne({ matchIndex }).populate({
+      path: 'teamAId',
+      populate: { path: 'members.userId' }
+    })
+    .populate({
+      path: 'teamBId',
+      populate: { path: 'members.userId' }
+    })
+    .populate('seasonId divisionId')
+
+  if (!match) throw new Error('Partido no encontrado.')
+
+  return match
+}
+
+module.exports = { findMatchByNamesAndSeason, findMatchByIndex }

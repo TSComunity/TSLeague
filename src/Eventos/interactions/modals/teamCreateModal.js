@@ -13,7 +13,7 @@ const {
     getTeamManageMembersButton,
     getTeamReGenerateCodeButton
 } = require('../../../discord/buttons/team.js')
-const { sendLog } = require('../../../services/log.js')
+const { sendLog } = require('../../../discord/send/staff.js')
 
 module.exports = {
   customId: 'teamCreateModal',

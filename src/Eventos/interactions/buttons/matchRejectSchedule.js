@@ -1,5 +1,7 @@
 const { ActionRowBuilder } = require('discord.js')
 const Match = require('../../../Esquemas/Match.js')
+const { checkDeadline } = require('../../../utils/date.js')
+const { findMatchByIndex } = require('../../../utils/match.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 
 module.exports = {
@@ -9,6 +11,22 @@ module.exports = {
     try {
       const splittedId = interaction.customId.split(':')
       const matchIndex = splittedId[1]
+
+      const match = await findMatchByIndex({ matchIndex })
+
+        const { passed, deadline, defaultDate } = checkDeadline(match)
+
+        if (passed) {
+          return interaction.reply({
+            ephemeral: true,
+            embeds: [getErrorEmbed({
+              error: `Ya ha pasado el plazo para modificar el horario.\n\n` +
+                    `**Fecha límite:** <t:${Math.floor(deadline.getTime() / 1000)}:F>\n` +
+                    `**Horario aplicado por defecto:** <t:${Math.floor(defaultDate.getTime() / 1000)}:F>`
+            })]
+          })
+        }
+
       const leaderId = splittedId[2]
 
       // Solo el líder correspondiente puede rechazar
@@ -18,9 +36,6 @@ module.exports = {
           embeds: [getErrorEmbed({ error: `Solo <@${leaderId}> puede aceptar la propuesta.` })]
         })
       }
-
-      const match = await Match.findOne({ matchIndex })
-      if (!match) throw new Error('No se ha encontrado el partido.')
 
       // Verificar si hay propuesta pendiente
       if (!match.proposedSchedule || match.proposedSchedule.status !== 'pending') {

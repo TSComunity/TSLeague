@@ -2,7 +2,7 @@ const { updateTeam, checkTeamUserHasPerms } = require('../../../services/team.js
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
-const { sendLog } = require('../../../discord/logs/sendLog.js')
+const { sendLog } = require('../../../discord/send/staff.js')
 
 module.exports = {
   customId: 'teamChangeIconModal',

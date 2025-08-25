@@ -57,15 +57,19 @@ module.exports = client
 
 const { updateRankingsEmbed } = require('./discord/update/rankings.js')
 const { updateDivisionsEmbed } = require('./discord/update/divisions.js')
-const { updateAllTeamsEligibility, deleteAllEmptyTeams } = require('./services/team.js')
+const { deleteAllEmptyTeams } = require('./services/team.js')
 const { executeDueScheduledFunctions } = require('./services/scheduledFunction.js')
 const { updateUsersPingRole } = require('./services/user.js')
+const { applyDefaultDates } = require('./services/match.js')
 
 setInterval(() => {
   updateRankingsEmbed({ client }).catch(error => console.error(error))
   updateDivisionsEmbed({ client }).catch(error => console.error(error))
-  updateAllTeamsEligibility().catch(error => console.error(error))
+  updateUsersPingRole({ client }).catch(error => console.error(error))
+}, 1000 * 60) // cada 1 minuto
+
+setInterval(() => {
   deleteAllEmptyTeams().catch(error => console.error(error))
   executeDueScheduledFunctions({ client }).catch(error => console.error(error))
-  updateUsersPingRole({ client }).catch(error => console.error(error))
-}, 1000 * 30)
+  applyDefaultDates({ client }).catch(error => console.error(error))
+}, 1000 * 60 * 15) // cada 15 minutos

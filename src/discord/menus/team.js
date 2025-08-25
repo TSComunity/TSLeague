@@ -1,4 +1,4 @@
-const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder, StringSelectMenuComponentBuilder } = require('discord.js')
+const { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js')
 const colors = require('../../configs/colors.json')
 
 const getTeamChangeColorMenu = () => {
@@ -35,7 +35,7 @@ const getTeamChangeMemberRoleMenu = ({ options }) => {
 
 const getTeamStatsMenu = ({ options }) => {
     return (
-        new StringSelectMenuComponentBuilder()
+        new StringSelectMenuBuilder()
         .setCustomId('teamStats')
         .setPlaceholder('Ver Estadísticas')
         .addOptions(options)

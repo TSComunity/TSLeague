@@ -27,15 +27,11 @@ const getMatchSelectHourMenu = ({ matchIndex, day }) => {
     .setCustomId(`matchSelectHourMenu:${matchIndex}:${day}`)
     .setPlaceholder("Elige una hora (horario español)")
     .addOptions([
-    // Madrugada primero (intervalos de 30 min)
-    { label: '00:30', value: '00:30' },
-    { label: '01:00', value: '01:00' },
-    { label: '01:30', value: '01:30' },
-    { label: '02:00', value: '02:00' },
-    { label: '02:30', value: '02:30' },
-    { label: '03:00', value: '03:00' },
-
-    // Tarde - noche (14:00 a 23:30 cada 30 min)
+    { label: '12:00', value: '12:00' },
+    { label: '12:30', value: '12:30' },
+    { label: '13:00', value: '13:00' },
+    { label: '13:30', value: '13:30' },
+    { label: '14:00', value: '14:00' },
     { label: '14:30', value: '14:30' },
     { label: '15:00', value: '15:00' },
     { label: '15:30', value: '15:30' },
