@@ -37,7 +37,7 @@ const MatchSchema = new Schema({
   proposedSchedule: {
     newDate: { type: Date },
     proposedBy: { type: Types.ObjectId, ref: 'User' },
-    status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' }
+    status: { type: String, enum: ['pending', 'accepted', 'rejected'] }
   }
 })
 

@@ -4,7 +4,7 @@ const getMatchChangeScheduleButton = ({ matchIndex }) => {
     return (
         new ButtonBuilder()
           .setCustomId(`matchChangeSchedule:${matchIndex}`)
-          .setLabel('Cambiar Horario')
+          .setLabel('Proponer horario')
           .setEmoji('<:subleader:1395916298025832519>')
           .setStyle(ButtonStyle.Primary)
     )
@@ -29,14 +29,14 @@ const getMatchRejectScheduleButton = ({ matchIndex, leaderId }) => {
 }
 
 
-const getMatchInteractionCancelButton = () => {
+const getMatchCancelInteractionButton = () => {
     return (
         new ButtonBuilder()
-        .setCustomId('matchInteractionCancel') 
+        .setCustomId('matchCancelInteraction') 
         .setLabel('Cancelar')
         .setEmoji('❌')
         .setStyle(ButtonStyle.Danger)
     )
 }
 
-module.exports = { getMatchChangeScheduleButton, getMatchInteractionCancelButton, getMatchAcceptScheduleButton, getMatchRejectScheduleButton }
+module.exports = { getMatchChangeScheduleButton, getMatchCancelInteractionButton, getMatchAcceptScheduleButton, getMatchRejectScheduleButton }

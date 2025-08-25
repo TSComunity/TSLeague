@@ -1,6 +1,6 @@
-const { EmbedBuilder } = require('discord.js');
-const { channels, guild } = require('../../configs/league.js');
-const { logs } = channels;
+const { EmbedBuilder } = require('discord.js')
+const { channels, guild } = require('../../configs/league.js')
+const { logs } = channels
 
 const EMOJI_MAP = {
   season: { emoji: '📅', title: 'Logs de Temporada' },
@@ -8,7 +8,7 @@ const EMOJI_MAP = {
   team: { emoji: '👥', title: 'Logs de Equipo' },
   points: { emoji: '⭐', title: 'Logs de Puntos' },
   default: { emoji: 'ℹ️', title: 'Logs del Sistema' }
-};
+}
 
 const COLOR_MAP = {
   success: 'Green',
@@ -16,7 +16,7 @@ const COLOR_MAP = {
   danger: 'Red',
   info: 'Blue',
   default: 'Grey',
-};
+}
 
 /**
  * Envía un log al canal específico de logs
@@ -27,36 +27,39 @@ const COLOR_MAP = {
  * @param {String} [eventType] - Tipo de evento: 'season', 'division', 'team', 'points', 'default'.
  */
 const sendLog = async ({ content, client, type = 'default', userId, eventType = 'default' }) => {
-  const channel = await client.channels.fetch(logs.id);
-  if (!channel) throw new Error('No se ha encontrado el canal');
+  const channel = await client.channels.fetch(logs.id)
+  if (!channel) throw new Error('No se ha encontrado el canal')
 
-  let authorData = {};
+  let footerData = {}
   if (userId && guild?.id) {
     try {
-      const guildObj = await client.guilds.fetch(guild.id);
-      const member = await guildObj.members.fetch(userId);
-      authorData = {
-        name: member.displayName,
+      const guildObj = await client.guilds.fetch(guild.id)
+      const member = await guildObj.members.fetch(userId)
+      footerData = {
+        text: member.displayName,
         iconURL: member.displayAvatarURL()
-      };
+      }
     } catch (e) {
-      authorData = { name: `ID: ${userId}` };
+      footerData = { text: `@${userId}` }
     }
   }
 
-  const { emoji, title } = EMOJI_MAP[eventType] || EMOJI_MAP.default;
+  const { emoji, title } = EMOJI_MAP[eventType] || EMOJI_MAP.default
   // Formatear cada línea de la descripción con '> '
   const formattedContent = (content || 'No se ha proporcionado ningun mensaje.')
-    .split('\n').map(line => `> ${line}`).join('\n');
+    .split('\n').map(line => `> ${line}`).join('\n')
 
   const embed = new EmbedBuilder()
     .setColor(COLOR_MAP[type] || COLOR_MAP.default)
     .setTitle(`${emoji} ${title}`)
-    .setDescription(formattedContent);
+    .setDescription(formattedContent)
 
-  if (authorData.name) embed.setAuthor(authorData);
+  if (footerData.name) {
+    embed.setFooter(footerData)
+    embed.setTimestamp()
+  }
 
-  await channel.send({ embeds: [embed] });
-};
+  await channel.send({ embeds: [embed] })
+}
 
-module.exports = { sendLog };
+module.exports = { sendLog }
