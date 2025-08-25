@@ -2,6 +2,7 @@ const { updateTeam, checkTeamUserHasPerms } = require('../../../services/team.js
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
+const { sendLog } = require('../../../discord/logs/sendLog.js')
 
 module.exports = {
   customId: 'teamChangeIconModal',
@@ -30,6 +31,14 @@ module.exports = {
       }
 
       const team = await updateTeam({ discordId, iconURL })
+
+      await sendLog({
+        content: `El usuario <@${discordId}> ha cambiado el icono del equipo **${team.name}** a: ${iconURL}`,
+        client: interaction.client,
+        type: 'info',
+        userId: discordId,
+        eventType: 'team'
+      })
 
       const perms = await checkTeamUserHasPerms({ discordId })
 

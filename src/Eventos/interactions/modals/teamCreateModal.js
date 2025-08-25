@@ -13,6 +13,7 @@ const {
     getTeamManageMembersButton,
     getTeamReGenerateCodeButton
 } = require('../../../discord/buttons/team.js')
+const { sendLog } = require('../../../services/log.js')
 
 module.exports = {
   customId: 'teamCreateModal',
@@ -42,6 +43,14 @@ module.exports = {
 
       const team = await createTeam({ name, iconURL, presidentDiscordId: interaction.user.id })
       const perms = await checkTeamUserHasPerms({ discordId: interaction.user.id })
+
+      await sendLog({
+        content: `El usuario <@${interaction.user.id}> ha creado el equipo **${team.name}** con icono: ${iconURL}`,
+        client,
+        type: 'success',
+        userId: interaction.user.id,
+        eventType: 'team'
+      })
 
         let components = []
 

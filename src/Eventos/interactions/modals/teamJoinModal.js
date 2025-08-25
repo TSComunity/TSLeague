@@ -4,6 +4,7 @@ const { addMemberToTeam } = require('../../../services/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamSeeButton, getTeamLeftButton } = require('../../../discord/buttons/team.js')
+const { sendLog } = require('../../../utils/logger.js')
 
 module.exports = {
   customId: 'teamJoinModal',
@@ -15,7 +16,15 @@ module.exports = {
 
       const team = await addMemberToTeam({ discordId, teamCode })
 
-        const teamRow = new ActionRowBuilder().addComponents(
+      await sendLog({
+        content: `El usuario <@${discordId}> se ha unido al equipo **${team.name}**.`,
+        client,
+        type: 'success',
+        userId: discordId,
+        eventType: 'join'
+      })
+
+      const teamRow = new ActionRowBuilder().addComponents(
         getTeamSeeButton(),
         getTeamLeftButton()
     )

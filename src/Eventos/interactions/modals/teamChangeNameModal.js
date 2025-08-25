@@ -3,6 +3,7 @@ const { findTeam } = require('../../../utils/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
+const { sendLog } = require('../../../discord/logs.js')
 
 module.exports = {
   customId: 'teamChangeNameModal',
@@ -14,6 +15,14 @@ module.exports = {
 
       const previewTeam = await findTeam({ discordId })
       const team = await updateTeam({ discordId, name })
+
+      await sendLog({
+        content: `El usuario <@${discordId}> ha cambiado el nombre del equipo de **${previewTeam.name}** a **${team.name}**.`,
+        client: interaction.client,
+        type: 'info',
+        userId: discordId,
+        eventType: 'team'
+      })
 
       const perms = await checkTeamUserHasPerms({ discordId })
 
