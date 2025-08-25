@@ -184,9 +184,11 @@ module.exports = {
           embeds: [getSuccesEmbed({ message:`Equipo **${team.name}** creado.` })]
         })
         await sendLog({
-          content: `🟢 El usuario <@${interaction.user.id}> ha creado el equipo **${team.name}**\n- Color: ${team.color}\n- Icon URL: ${team.iconURL}\n- Presidente Discord ID: <@${team.presidentDiscordId}> (${team.presidentDiscordId})`,
+          content: `El equipo **${team.name}** ha sido creado.\nColor: ${team.color}\nIcon URL: ${team.iconURL}`,
           client: interaction.client,
-          type: 'success'
+          type: 'success',
+          userId: interaction.user.id,
+          eventType: 'team'
         })
 
       } else if (sub === 'eliminar') {
@@ -196,9 +198,11 @@ module.exports = {
             embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** eliminado.` })]
           })
           await sendLog({
-            content: `🔴 El usuario <@${interaction.user.id}> ha eliminado el equipo **${teamName}**.\n- Presidente Discord ID: <@${team.presidentDiscordId}> (${team.presidentDiscordId})`,
+            content: `El equipo **${teamName}** ha sido eliminado.\nPresidente: <@${team.presidentDiscordId}>`,
             client: interaction.client,
-            type: 'danger'
+            type: 'danger',
+            userId: interaction.user.id,
+            eventType: 'team'
           })
 
       } else if (sub === 'actualizar') {
@@ -212,9 +216,11 @@ module.exports = {
           embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** actualizado.` })]
         })
         await sendLog({
-          content: `🟡 El usuario <@${interaction.user.id}> ha actualizado el equipo **${teamName}**\n- Nuevo nombre: ${name || 'Sin cambio'}\n- Nuevo color: ${color || 'Sin cambio'}\n- Nuevo icon URL: ${iconURL || 'Sin cambio'}`,
+          content: `El equipo **${teamName}** ha sido actualizado.\nNuevo nombre: ${name || 'Sin cambio'}\nNuevo color: ${color || 'Sin cambio'}\nNuevo icon URL: ${iconURL || 'Sin cambio'}`,
           client: interaction.client,
-          type: 'warning'
+          type: 'warning',
+          userId: interaction.user.id,
+          eventType: 'team'
         })
 
       } else if (sub === 'añadir-division') {
@@ -225,9 +231,11 @@ module.exports = {
           embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** añadido a la división **${team.divisionId.name}**.` })]
         })
         await sendLog({
-          content: `🟦 El usuario <@${interaction.user.id}> ha añadido el equipo **${teamName}** a la división **${divisionName}**.`,
+          content: `El equipo **${teamName}** ha sido añadido a la división **${divisionName}**.`,
           client: interaction.client,
-          type: 'info'
+          type: 'info',
+          userId: interaction.user.id,
+          eventType: 'division'
         })
 
       } else if (sub === 'eliminar-division') {
@@ -237,9 +245,11 @@ module.exports = {
           embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** eliminado de su división.` })]
         })
         await sendLog({
-          content: `🟧 El usuario <@${interaction.user.id}> ha eliminado el equipo **${teamName}** de su división.`,
+          content: `El equipo **${teamName}** ha sido eliminado de su división.`,
           client: interaction.client,
-          type: 'warning'
+          type: 'warning',
+          userId: interaction.user.id,
+          eventType: 'division'
         })
 
       } else if (sub === 'expulsar-miembro') {
@@ -282,9 +292,11 @@ module.exports = {
           embeds: [getSuccesEmbed({ message: `Se han añadido \`${points}\` puntos al equipo **${teamName}**.` })]
         })
         await sendLog({
-          content: `🟩 El usuario <@${interaction.user.id}> ha añadido \`${points}\` puntos al equipo **${teamName}**.`,
+          content: `Se han añadido ${points} puntos al equipo **${teamName}**.`,
           client: interaction.client,
-          type: 'success'
+          type: 'success',
+          userId: interaction.user.id,
+          eventType: 'points'
         })
       } else if (sub === 'remover-puntos') {
         const teamName = interaction.options.getString('nombre-equipo')
@@ -294,9 +306,11 @@ module.exports = {
           embeds: [getSuccesEmbed({ message: `Se han removido \`${points}\` puntos del equipo **${teamName}**.` })]
         })
         await sendLog({
-          content: `🟥 El usuario <@${interaction.user.id}> ha removido \`${points}\` puntos del equipo **${teamName}**.`,
+          content: `Se han removido ${points} puntos del equipo **${teamName}**.`,
           client: interaction.client,
-          type: 'danger'
+          type: 'danger',
+          userId: interaction.user.id,
+          eventType: 'points'
         })
       }
 

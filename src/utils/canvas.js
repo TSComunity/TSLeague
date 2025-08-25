@@ -107,13 +107,26 @@ async function generateCustomImage({
 async function generateMatchPreviewImageURL({ divisionDoc, roundIndex, teamADoc, teamBDoc }) {
   const backgroundPath = path.resolve(__dirname, '../assets/matchPreview.png')
 
+  const maxTextWidth = 200; // ancho máximo permitido para los nombres
+  const baseFontSize = 32;
+
+  function fitText(ctx, text, maxWidth, baseFont) {
+    let fontSize = baseFont;
+    ctx.font = `bold ${fontSize}px Arial`;
+    while (ctx.measureText(text).width > maxWidth && fontSize > 12) {
+      fontSize -= 1;
+      ctx.font = `bold ${fontSize}px Arial`;
+    }
+    return fontSize;
+  }
+
   const previewImageURL = await generateCustomImage({
     background: backgroundPath,
     texts: [
       {
-        text: `DIVISIÓN ${divisionDoc.name.toUpperCase()}`,
+        text: `1ª DIVISIÓN ${divisionDoc.name.toUpperCase()}`,
         x: 500,
-        y: 100,
+        y: 60,
         font: 'bold 48px Arial',
         color: divisionDoc.color,
         strokeColor: 'black',
@@ -123,37 +136,39 @@ async function generateMatchPreviewImageURL({ divisionDoc, roundIndex, teamADoc,
       {
         text: `JORNADA ${roundIndex}`,
         x: 500,
-        y: 180,
-        font: 'bold 32px Arial',
+        y: 480,
+        font: 'bold 40px Arial',
         color: 'yellow',
         strokeColor: 'black',
-        lineWidth: 2,
+        lineWidth: 3,
         align: 'center'
       },
       {
         text: teamADoc.name,
-        x: 300,
+        x: 200,
         y: 300,
-        font: 'bold 32px Arial',
+        font: `bold ${baseFontSize}px Arial`,
         color: teamADoc.color,
         strokeColor: 'black',
         lineWidth: 2,
-        align: 'center'
+        align: 'center',
+        maxWidth: maxTextWidth
       },
       {
         text: teamBDoc.name,
-        x: 700,
+        x: 800,
         y: 300,
-        font: 'bold 32px Arial',
+        font: `bold ${baseFontSize}px Arial`,
         color: teamBDoc.color,
         strokeColor: 'black',
         lineWidth: 2,
-        align: 'center'
+        align: 'center',
+        maxWidth: maxTextWidth
       }
     ],
     images: [
-      { src: teamADoc.iconURL, x: 250, y: 400, width: 100, height: 100 },
-      { src: teamBDoc.iconURL, x: 650, y: 400, width: 100, height: 100 }
+      { src: teamADoc.iconURL, x: 150, y: 150, width: 150, height: 150 },
+      { src: teamBDoc.iconURL, x: 750, y: 150, width: 150, height: 150 }
     ]
   })
 

@@ -47,9 +47,11 @@ module.exports = {
           embeds: [getSuccesEmbed({ message: `Temporada ** ${season.name}** comenzada.` })]
         })
         await sendLog({
-          content: `🟢 El usuario <@${interaction.user.id}> ha comenzado la temporada **${season.name}**\n- ID: ${season._id || 'N/A'}\n- Fecha de inicio: ${season.startDate || 'N/A'}`,
+          content: `Temporada **${season.name}** comenzada.`,
           client: interaction.client,
-          type: 'success'
+          type: 'success',
+          userId: interaction.user.id,
+          eventType: 'season'
         })
       }
 
@@ -59,9 +61,11 @@ module.exports = {
           embeds: [getSuccesEmbed({ message: `Temporada **${season.name}** terminada.` })]
         })
         await sendLog({
-          content: `🔴 El usuario <@${interaction.user.id}> ha terminado la temporada **${season.name}**\n- ID: ${season._id || 'N/A'}\n- Fecha de fin: ${season.endDate || 'N/A'}`,
+          content: `Temporada **${season.name}** terminada.`,
           client: interaction.client,
-          type: 'danger'
+          type: 'danger',
+          userId: interaction.user.id,
+          eventType: 'season'
         })
       } else if (subcomand === 'prueba') {
         const ScheduledFunction = require('../../Esquemas/ScheduledFunction.js')

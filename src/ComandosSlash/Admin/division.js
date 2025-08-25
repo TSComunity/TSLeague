@@ -97,9 +97,11 @@ module.exports = {
           embeds: [getSuccesEmbed({ message: `División **${división.emoji} ${división.name}** creada.` })]
         })
         await sendLog({
-          content: `🟢 El usuario <@${interaction.user.id}> ha creado la división **${división.emoji} ${división.name}**\n- Tier: ${división.tier}\n- Color: ${división.color}\n- Emoji: ${división.emoji}`,
+          content: `División **${división.emoji} ${división.name}** creada.\nTier: ${división.tier}\nColor: ${división.color}\nEmoji: ${división.emoji}`,
           client: interaction.client,
-          type: 'success'
+          type: 'success',
+          userId: interaction.user.id,
+          eventType: 'division'
         })
       }
 
@@ -110,9 +112,11 @@ module.exports = {
           embeds: [getSuccesEmbed({ message: `División **${división.emoji} ${división.name}** eliminada.` })]
         })
         await sendLog({
-          content: `🔴 El usuario <@${interaction.user.id}> ha eliminado la división **${división.emoji} ${división.name}**\n- Tier: ${división.tier}\n- Color: ${división.color}\n- Emoji: ${división.emoji}`,
+          content: `División **${división.emoji} ${división.name}** eliminada.\nTier: ${división.tier}\nColor: ${división.color}\nEmoji: ${división.emoji}`,
           client: interaction.client,
-          type: 'danger'
+          type: 'danger',
+          userId: interaction.user.id,
+          eventType: 'division'
         })
       }
 
@@ -128,9 +132,11 @@ module.exports = {
           embeds: [getSuccesEmbed({ message: `División **${división.emoji} ${división.name}** actualizada.` })]
         })
         await sendLog({
-          content: `🟡 El usuario <@${interaction.user.id}> ha actualizado la división **${división.emoji} ${división.name}**\n- Nuevo nombre: ${newName || 'Sin cambio'}\n- Nuevo tier: ${newTier || 'Sin cambio'}\n- Nuevo color: ${newColor || 'Sin cambio'}\n- Nuevo emoji: ${newEmoji || 'Sin cambio'}`,
+          content: `División **${división.emoji} ${división.name}** actualizada.\nNuevo nombre: ${newName || 'Sin cambio'}\nNuevo tier: ${newTier || 'Sin cambio'}\nNuevo color: ${newColor || 'Sin cambio'}\nNuevo emoji: ${newEmoji || 'Sin cambio'}`,
           client: interaction.client,
-          type: 'warning'
+          type: 'warning',
+          userId: interaction.user.id,
+          eventType: 'division'
         })
       }
     } catch (error) {
