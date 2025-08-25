@@ -105,7 +105,7 @@ async function generateCustomImage({
  * @returns {Promise<string>}
  */
 async function generateMatchPreviewImageURL({ divisionDoc, roundIndex, teamADoc, teamBDoc }) {
-  const backgroundPath = path.resolve(__dirname, '../assets/matchInfo.png')
+  const backgroundPath = path.resolve(__dirname, '../assets/matchPreview.png')
 
   const previewImageURL = await generateCustomImage({
     background: backgroundPath,
