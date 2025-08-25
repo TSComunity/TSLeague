@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js')
-const { channels } = require('../configs/league.js')
+const { channels } = require('../../configs/league.js')
 const { logs } = channels
 
 /**
