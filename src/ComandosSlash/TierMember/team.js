@@ -279,8 +279,7 @@ module.exports = {
         const points = interaction.options.getString('puntos')
         await addPointsToTeam({ teamName, points })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `Se han añadido \`${points}\` puntos al equipo **${teamName}**.` })],
-          ephemeral: true
+          embeds: [getSuccesEmbed({ message: `Se han añadido \`${points}\` puntos al equipo **${teamName}**.` })]
         })
         await sendLog({
           content: `🟩 El usuario <@${interaction.user.id}> ha añadido \`${points}\` puntos al equipo **${teamName}**.`,
@@ -292,8 +291,7 @@ module.exports = {
         const points = interaction.options.getString('puntos')
         await removePointsFromTeam({ teamName, points })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `Se han removido \`${points}\` puntos del equipo **${teamName}**.` })],
-          ephemeral: true
+          embeds: [getSuccesEmbed({ message: `Se han removido \`${points}\` puntos del equipo **${teamName}**.` })]
         })
         await sendLog({
           content: `🟥 El usuario <@${interaction.user.id}> ha removido \`${points}\` puntos del equipo **${teamName}**.`,

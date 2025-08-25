@@ -157,7 +157,6 @@ async function generateMatchPreviewImageURL({ divisionDoc, roundIndex, teamADoc,
     ]
   })
 
-  console.log('✅ PreviewImageURL generada:', previewImageURL)
   return previewImageURL
 }
 

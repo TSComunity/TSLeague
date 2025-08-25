@@ -41,7 +41,7 @@ const getMatchInfoEmbed = ({ match, showButtons = false }) => {
     resultsImageURL,
     reason
   } = match
-
+  console.log(match)
   // Determinar qué imagen usar según el estado
   const getImageData = () => {
     if (status === 'played' && resultsImageURL) {
@@ -149,7 +149,7 @@ const getMatchInfoEmbed = ({ match, showButtons = false }) => {
 
   // Crear MediaGallery solo si tenemos imagen
   let mediaGallery = null
-  if (imageData && imageDate.url) {
+  if (imageData && imageData.url) {
     const image = new MediaGalleryItemBuilder()
       .setURL(imageData.url)
       .setDescription(imageData.description || 'imagen')

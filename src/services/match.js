@@ -25,14 +25,16 @@ const createMatchChannel = async ({ match, client }) => {
   try {
 const matchToUpd = await Match.findOne({ _id: match._id })
   .populate({
-    path: 'teamAId',
+    path: 'teamAId',             // primero poblamos el equipo completo
+    model: 'Team',
     populate: {
-      path: 'members.userId',  // aquí populamos dentro de members el userId
-      model: 'User'            // opcional, si mongoose no infiere bien el modelo
+      path: 'members.userId',    // luego poblamos los usuarios de los miembros
+      model: 'User'
     }
   })
   .populate({
     path: 'teamBId',
+    model: 'Team',
     populate: {
       path: 'members.userId',
       model: 'User'
@@ -54,23 +56,25 @@ const matchToUpd = await Match.findOne({ _id: match._id })
 
     // 3. Miembros normales (sin incluir líderes), extraer sus discordId
     const normalMembersA = teamA.members
-      // .filter(m => m.role !== 'leader')
+      .filter(m => m.role !== 'leader')
       .map(m => m.userId?.discordId)
       .filter(Boolean)
 
     const normalMembersB = teamB.members
-      // .filter(m => m.role !== 'leader')
+      .filter(m => m.role !== 'leader')
       .map(m => m.userId?.discordId)
       .filter(Boolean)
 
-      const guild = await client.guilds.fetch(guildConfig.id)
+    const guild = await client.guilds.fetch(guildConfig.id)
+
     // 4. Preparar permisos
     const modRoleIds = channels.perms
 
     const normalPermissions = [
       PermissionsBitField.Flags.ViewChannel,
       PermissionsBitField.Flags.SendMessages,
-      PermissionsBitField.Flags.SendMessagesInThreads,
+      PermissionsBitField.Flags.SendTTSMessages,
+      PermissionsBitField.Flags.SendVoiceMessages,
       PermissionsBitField.Flags.EmbedLinks,
       PermissionsBitField.Flags.AttachFiles,
       PermissionsBitField.Flags.ReadMessageHistory,
@@ -81,15 +85,20 @@ const matchToUpd = await Match.findOne({ _id: match._id })
       PermissionsBitField.Flags.Speak,
       PermissionsBitField.Flags.Stream,
       PermissionsBitField.Flags.UseApplicationCommands,
-      PermissionsBitField.Flags.MentionEveryone
+      PermissionsBitField.Flags.CreateInstantInvite
     ]
 
+    // Líderes = normales + fijar mensajes
+    const leaderPermissions = [
+      ...normalPermissions,
+      PermissionsBitField.Flags.ManageMessages
+    ]
+
+    // Mods = normales + gestionar mensajes y fijar mensajes
     const modPermissions = [
-      PermissionsBitField.Flags.ViewChannel,
+      ...normalPermissions,
       PermissionsBitField.Flags.ManageMessages,
-      PermissionsBitField.Flags.MentionEveryone,
-      PermissionsBitField.Flags.ManageChannels,
-      PermissionsBitField.Flags.ReadMessageHistory
+      PermissionsBitField.Flags.MentionEveryone
     ]
 
     // 5. Construir permissionOverwrites usando IDs de Discord válidos
@@ -98,22 +107,21 @@ const matchToUpd = await Match.findOne({ _id: match._id })
         id: guild.roles.everyone.id,
         deny: [PermissionsBitField.Flags.ViewChannel]
       },
-      // ...(leaderA ? [{
-      //   id: leaderA,
-      //   allow: leaderPermissions
-      // }] : []),
-      // ...(leaderB && leaderB !== leaderA ? [{
-      //   id: leaderB,
-      //   allow: leaderPermissions
-      // }] : []),
+      ...(leaderA ? [{
+        id: leaderA,
+        allow: leaderPermissions
+      }] : []),
+      ...(leaderB && leaderB !== leaderA ? [{
+        id: leaderB,
+        allow: leaderPermissions
+      }] : []),
       ...normalMembersA.map(discordId => ({
         id: discordId,
-        allow: normalPermissions,
+        allow: normalPermissions
       })),
       ...normalMembersB.map(discordId => ({
         id: discordId,
         allow: normalPermissions,
-        deny: [PermissionsBitField.Flags.SendMessages]
       })),
       ...modRoleIds.map(roleId => ({
         id: roleId,
@@ -121,20 +129,20 @@ const matchToUpd = await Match.findOne({ _id: match._id })
       }))
     ]
 
-//     for (const overwrite of permissionOverwrites) {
-//   // try { const resolved =  
-//   //    guild.roles.cache.get(overwrite.id)
-//   //     || await guild.members.fetch(overwrite.id).catch(() => null);
+    // for (const overwrite of permissionOverwrites) {
+    //   try { const resolved =  
+    //     guild.roles.cache.get(overwrite.id)
+    //       || await guild.members.fetch(overwrite.id).catch(() => null);
 
-//   //   if (!resolved) {
-//   //     console.warn(`❌ ID no encontrado: ${overwrite.id}`);
-//   //   } else {
-//   //     console.log(`✅ ID válido: ${overwrite.id}`);
-//   //   }
-//   // } catch (err) {
-//   //   console.error(`💥 Error al verificar ID ${overwrite.id}:`, err);
-//   // }
-// }
+    //     if (!resolved) {
+    //       console.warn(`❌ ID no encontrado: ${overwrite.id}`);
+    //     } else {
+    //       console.log(`✅ ID válido: ${overwrite.id}`);
+    //     }
+    //   } catch (err) {
+    //     console.error(`💥 Error al verificar ID ${overwrite.id}:`, err);
+    //   }
+    // }
 
 
     // 6. Crear el canal en la categoría indicada

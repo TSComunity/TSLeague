@@ -63,8 +63,6 @@ const addRound = async ({ client }) => {
 
     newMatchesDocs = matchmakingResult.newMatchesDocs || []
     newRestingTeamsDocs = matchmakingResult.newRestingTeamsDocs || []
-    console.log('newMatchesDocs', newMatchesDocs)
-    console.log('newRestingTeamsDocs', newRestingTeamsDocs)
     // Si no hay partidos posibles, terminar la división
     if (!newMatchesDocs.length) {
       division.status = 'ended'
@@ -95,8 +93,6 @@ const addRound = async ({ client }) => {
 
   await season.save()
   season = await getActiveSeason()
-  console.log('season')
-  console.log(JSON.stringify(season, null, 2));
 
   // Si todas las divisiones están terminadas, termina la temporada
   if (divisionsSkipped.length === season.divisions.length) {
