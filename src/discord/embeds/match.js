@@ -149,10 +149,10 @@ const getMatchInfoEmbed = ({ match, showButtons = false }) => {
 
   // Crear MediaGallery solo si tenemos imagen
   let mediaGallery = null
-  if (imageData) {
+  if (imageData && imageDate.url) {
     const image = new MediaGalleryItemBuilder()
       .setURL(imageData.url)
-      .setDescription(imageData.description)
+      .setDescription(imageData.description || 'imagen')
 
     mediaGallery = new MediaGalleryBuilder()
       .setId(1)

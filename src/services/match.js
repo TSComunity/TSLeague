@@ -54,25 +54,20 @@ const matchToUpd = await Match.findOne({ _id: match._id })
 
     // 3. Miembros normales (sin incluir líderes), extraer sus discordId
     const normalMembersA = teamA.members
-      .filter(m => m.role !== 'leader')
+      // .filter(m => m.role !== 'leader')
       .map(m => m.userId?.discordId)
       .filter(Boolean)
 
     const normalMembersB = teamB.members
-      .filter(m => m.role !== 'leader')
+      // .filter(m => m.role !== 'leader')
       .map(m => m.userId?.discordId)
       .filter(Boolean)
-
-      console.log('leaderA', leaderA)
-      console.log('leaderB', leaderB)
-      console.log('normalMembersA', normalMembersA)
-      console.log('normalMembersB', normalMembersB)
 
       const guild = await client.guilds.fetch(guildConfig.id)
     // 4. Preparar permisos
     const modRoleIds = channels.perms
 
-    const leaderPermissions = [
+    const normalPermissions = [
       PermissionsBitField.Flags.ViewChannel,
       PermissionsBitField.Flags.SendMessages,
       PermissionsBitField.Flags.SendMessagesInThreads,
@@ -89,14 +84,6 @@ const matchToUpd = await Match.findOne({ _id: match._id })
       PermissionsBitField.Flags.MentionEveryone
     ]
 
-    const normalPermissions = [
-      PermissionsBitField.Flags.ViewChannel,
-      PermissionsBitField.Flags.ReadMessageHistory,
-      PermissionsBitField.Flags.AddReactions,
-      PermissionsBitField.Flags.UseExternalEmojis,
-      PermissionsBitField.Flags.UseExternalStickers
-    ]
-
     const modPermissions = [
       PermissionsBitField.Flags.ViewChannel,
       PermissionsBitField.Flags.ManageMessages,
@@ -111,18 +98,17 @@ const matchToUpd = await Match.findOne({ _id: match._id })
         id: guild.roles.everyone.id,
         deny: [PermissionsBitField.Flags.ViewChannel]
       },
-      ...(leaderA ? [{
-        id: leaderA,
-        allow: leaderPermissions
-      }] : []),
-      ...(leaderB && leaderB !== leaderA ? [{
-        id: leaderB,
-        allow: leaderPermissions
-      }] : []),
+      // ...(leaderA ? [{
+      //   id: leaderA,
+      //   allow: leaderPermissions
+      // }] : []),
+      // ...(leaderB && leaderB !== leaderA ? [{
+      //   id: leaderB,
+      //   allow: leaderPermissions
+      // }] : []),
       ...normalMembersA.map(discordId => ({
         id: discordId,
         allow: normalPermissions,
-        deny: [PermissionsBitField.Flags.SendMessages]
       })),
       ...normalMembersB.map(discordId => ({
         id: discordId,
