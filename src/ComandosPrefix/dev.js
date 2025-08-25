@@ -17,8 +17,13 @@ module.exports = {
 
         // IDs de PM2
         const pm2Ids = {
+<<<<<<< HEAD
             comunity: 1,
             league: 8
+=======
+            comunity: 5,
+            league: 4
+>>>>>>> refs/remotes/origin/main
         };
 
         if (subcommand === "reiniciar") {
