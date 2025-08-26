@@ -5,7 +5,7 @@ const Team = require('../Esquemas/Team')
 
 const { getActiveSeason } = require('../utils/season.js')
 const { getCurrentRoundNumber } = require('../utils/round.js')
-const { findMatchByNamesAndSeason } = require('../utils/match.js')
+const { findMatchByNamesAndSeason, findMatchByIndex } = require('../utils/match.js')
 const { getDate, checkDeadline } = require('../utils/date.js')
 const { generateMatchPreviewImageURL } = require('../utils/canvas.js')
 
@@ -346,8 +346,19 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
 /**
  * Cancela un partido (status = "cancelled")
  */
-const cancelMatch = async ({ seasonIndex, teamAName, teamBName, reason = 'Partido cancelado', removeTeamId = null }) => {
-  const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
+const cancelMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName, reason = 'Partido cancelado', removeTeamId = null }) => {
+  let match
+
+  if (matchIndex != null) {
+    // Caso 1: Buscar por índice
+    match = await findMatchByIndex({ matchIndex })
+  } else if (seasonIndex != null && teamAName && teamBName) {
+    // Caso 2: Buscar por season + nombres de equipos
+    match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
+  } else {
+    throw new Error('Debes proporcionar matchIndex o bien seasonIndex + teamAName + teamBName.')
+  }
+
   // Si se quiere remover a un equipo del match
   if (removeTeamId) {
     if (match.teamAId?._id?.equals(removeTeamId)) match.teamAId = null
@@ -365,8 +376,18 @@ const cancelMatch = async ({ seasonIndex, teamAName, teamBName, reason = 'Partid
 /**
  * Finaliza un partido (status = "played")
  */
-const endMatch = async ({ seasonIndex, teamAName, teamBName }) => {
-  const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
+const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName }) => {
+  let match
+
+  if (matchIndex != null) {
+    // Caso 1: Buscar por índice
+    match = await findMatchByIndex({ matchIndex })
+  } else if (seasonIndex != null && teamAName && teamBName) {
+    // Caso 2: Buscar por season + nombres de equipos
+    match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
+  } else {
+    throw new Error('Debes proporcionar matchIndex o bien seasonIndex + teamAName + teamBName.')
+  }
 
   match.status = 'played'
 
@@ -378,9 +399,18 @@ const endMatch = async ({ seasonIndex, teamAName, teamBName }) => {
 /**
  * cambia la fecha de un partido
  */
-const changeMatchScheduledAt = async ({ seasonIndex, teamAName, teamBName, day, hour, minute }) => {
+const changeMatchScheduledAt = async ({ matchIndex, seasonIndex, teamAName, teamBName, day, hour, minute }) => {
+  let match
 
-  const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
+  if (matchIndex != null) {
+    // Caso 1: Buscar por índice
+    match = await findMatchByIndex({ matchIndex })
+  } else if (seasonIndex != null && teamAName && teamBName) {
+    // Caso 2: Buscar por season + nombres de equipos
+    match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
+  } else {
+    throw new Error('Debes proporcionar matchIndex o bien seasonIndex + teamAName + teamBName.')
+  }
 
   match.scheduledAt = getDate({ day, hour, minute })
 

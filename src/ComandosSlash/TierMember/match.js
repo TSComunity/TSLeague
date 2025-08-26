@@ -36,12 +36,8 @@ module.exports = {
       sub
         .setName('ver-datos')
         .setDescription('Ver los datos de un partido')
-        .addStringOption(opt =>
-            opt.setName('indice-temporada').setDescription('El indice de la temporada').setRequired(true))
-        .addStringOption(opt =>
-            opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
-        .addStringOption(opt =>
-            opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
+        .addIntegerOption(opt =>
+            opt.setName('indice-partido').setDescription('El indice unico del partido').setRequired(true))
     )
 
     // /partido cancelar
@@ -49,10 +45,8 @@ module.exports = {
       sub
         .setName('cancelar')
         .setDescription('Cancela un partido')
-        .addStringOption(opt =>
-            opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
-        .addStringOption(opt =>
-            opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
+        .addIntegerOption(opt =>
+            opt.setName('indice-partido').setDescription('El indice unico del partido').setRequired(true))
         .addStringOption(opt =>
             opt.setName('motivo').setDescription('Motivo del cancelamiento').setRequired(true))
     )
@@ -62,10 +56,8 @@ module.exports = {
       sub
         .setName('terminar')
         .setDescription('Termina un partido')
-        .addStringOption(opt =>
-            opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
-        .addStringOption(opt =>
-            opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
+        .addIntegerOption(opt =>
+            opt.setName('indice-partido').setDescription('El indice unico del partido').setRequired(true))
     )
 
     // /partido cambiar-horario
@@ -73,10 +65,8 @@ module.exports = {
       sub
         .setName('cambiar-horario')
         .setDescription('Cambia el horario de un partido')
-        .addStringOption(opt =>
-            opt.setName('nombre-equipo-a').setDescription('Nombre del primer equipo').setRequired(true))
-        .addStringOption(opt =>
-            opt.setName('nombre-equipo-b').setDescription('Nombre del segundo equipo').setRequired(true))
+        .addIntegerOption(opt =>
+            opt.setName('indice-partido').setDescription('El indice unico del partido').setRequired(true))
         .addIntegerOption(opt =>
           opt.setName('dia').setDescription('Dia del partido').setRequired(true)
             .addChoices(
@@ -152,9 +142,7 @@ module.exports = {
         })
       }
       else if (sub === 'ver-datos') {
-        const seasonIndex = interaction.options.getString('indice-temporada')
-        const teamAName = interaction.options.getString('nombre-equipo-a')
-        const teamBName = interaction.options.getString('nombre-equipo-b')
+        const matchIndex = interaction.options.getString('indice-partido')
 
         const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
 
@@ -164,9 +152,7 @@ module.exports = {
         })
 
       } else if (sub === 'cancelar') {
-        const seasonIndex = (await getLastSeason()).seasonIndex
-        const teamAName = interaction.options.getString('nombre-equipo-a')
-        const teamBName = interaction.options.getString('nombre-equipo-b')
+        const matchIndex = interaction.options.getString('indice-partido')
         const reason = interaction.options.getString('motivo')
 
         const match = await cancelMatch({ seasonIndex, teamAName, teamBName, reason })
@@ -175,9 +161,7 @@ module.exports = {
         })
 
       } else if (sub === 'terminar') {
-        const seasonIndex = (await getLastSeason()).seasonIndex
-        const teamAName = interaction.options.getString('nombre-equipo-a')
-        const teamBName = interaction.options.getString('nombre-equipo-b')
+        const matchIndex = interaction.options.getString('indice-partido')
 
         const match = await endMatch({ seasonIndex, teamAName, teamBName })
         await interaction.reply({
@@ -185,9 +169,7 @@ module.exports = {
         })
 
       } else if (sub === 'cambiar-horario') {
-        const seasonIndex = (await getLastSeason()).seasonIndex
-        const teamAName = interaction.options.getString('nombre-equipo-a')
-        const teamBName = interaction.options.getString('nombre-equipo-b')
+        const matchIndex = interaction.options.getString('indice-partido')
         const day = interaction.options.getInteger('dia')
         const hour = interaction.options.getInteger('hora')
         const minute = interaction.options.getInteger('minuto')
