@@ -10,6 +10,8 @@ const {
   MediaGalleryItemBuilder
 } = require('discord.js');
 
+const { getTeamCreateButton, getTeamSeeButton, getTeamJoinButton } = require('../discord/buttons/team.js');
+
 module.exports = {
   name: 'inscribir',
   aliases: ['ins'],
@@ -72,28 +74,10 @@ Introduce el código en el formulario y pasarás a formar parte del equipo al in
     
     const separator = new SeparatorBuilder();
 
-    const crearTeam = new ButtonBuilder()
-      .setCustomId('teamCreate')
-      .setLabel('Crear Equipo')
-      .setEmoji('<:teamCreate:1396237918003007588>')
-      .setStyle(ButtonStyle.Secondary);
-
-    const verTeam = new ButtonBuilder()
-      .setCustomId('teamSee')
-      .setLabel('Ver Equipo')
-      .setEmoji('📋')
-      .setStyle(ButtonStyle.Secondary);
-    
-    const unirseTeam = new ButtonBuilder()
-      .setCustomId('teamJoin')
-      .setLabel('Unirte a un Equipo')
-      .setEmoji('👥')
-      .setStyle(ButtonStyle.Success)
-
     const actionRow = new ActionRowBuilder().addComponents(
-      crearTeam,
-      verTeam,
-      unirseTeam
+      getTeamCreateButton(),
+      getTeamSeeButton(),
+      getTeamJoinButton()
     );
     const image = new MediaGalleryItemBuilder()
       .setURL("https://media.discordapp.net/attachments/1366297762496249906/1374654925295845446/TS_LEAGUE.png?ex=682ed6aa&is=682d852a&hm=c15d97f6f7fd0f756ab034df54af062f821d0a4425b4695d793a7655220ebd92&=&format=webp&quality=lossless&width=1872&height=433")

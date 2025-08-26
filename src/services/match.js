@@ -163,7 +163,17 @@ const matchToUpd = await Match.findOne({ _id: match._id })
 
     return matchToUpd
   } catch (error) {
-    console.error('Error al crear canal del partido:', error)
+    if (match.channelId) {
+      try {
+        const channel = await client.channels.fetch(match.channelId);
+        if (channel) await channel.delete('Error al crear el canal del partido, limpieza de canal');
+      } catch (err) {
+        console.error('No se pudo eliminar el canal tras error:', err);
+      }
+    }
+
+    await Match.findByIdAndDelete(match._id);
+
     throw error
   }
 }

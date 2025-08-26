@@ -21,7 +21,7 @@ async function uploadToImgBB(buffer) {
     // Algunas veces la propiedad es display_url, otras url
     return response.data?.data?.display_url || response.data?.data?.url
   } catch (err) {
-    console.error('❌ Error al subir imagen a ImgBB:', err.message)
+    console.error('❌ Error al subir imagen a ImgBB:', err)
     return null
   }
 }
@@ -94,45 +94,11 @@ async function generateCustomImage({
   return url || 'https://i.imgur.com/removed.png'
 }
 
-/**
- * Genera la imagen previa de un partido y devuelve la URL.
- * @param {{
- *   divisionDoc: any,
- *   roundIndex: number,
- *   teamADoc: any,
- *   teamBDoc: any
- * }} options
- * @returns {Promise<string>}
- */
 async function generateMatchPreviewImageURL({ divisionDoc, roundIndex, teamADoc, teamBDoc }) {
   const backgroundPath = path.resolve(__dirname, '../assets/matchPreview.png')
 
   const maxTextWidth = 200; // ancho máximo permitido para los nombres
   const baseFontSize = 32;
-
-  function fitText(ctx, text, maxWidth, baseFont) {
-    let fontSize = baseFont;
-    ctx.font = `bold ${fontSize}px Arial`;
-    while (ctx.measureText(text).width > maxWidth && fontSize > 12) {
-      fontSize -= 1;
-      ctx.font = `bold ${fontSize}px Arial`;
-    }
-    return fontSize;
-  }
-
-  // Calcular las coordenadas basadas en el tamaño de la imagen (suponiendo W = 600)
-  const imageSize = 600; // Asumiendo que la imagen es cuadrada con 600px de ancho y alto
-
-  // Coordenadas y tamaño para los cuadros
-  const cuadroSize = 150;
-  const cuadroAX = (imageSize / 4) - 75; // X del Cuadro A
-  const cuadroAY = (imageSize / 2) - 75; // Y del Cuadro A
-  const cuadroBX = (imageSize * 3 / 4) - 75; // X del Cuadro B
-  const cuadroBY = (imageSize / 2) - 75; // Y del Cuadro B
-
-  // Coordenadas de "Jornada 1"
-  const jornadaX = imageSize / 2; // X de "Jornada 1"
-  const jornadaY = imageSize - 50; // Y de "Jornada 1"
 
   const previewImageURL = await generateCustomImage({
     background: backgroundPath,
@@ -149,15 +115,15 @@ async function generateMatchPreviewImageURL({ divisionDoc, roundIndex, teamADoc,
       },
       {
         text: `JORNADA ${roundIndex}`,
-        x: jornadaX,
-        y: jornadaY,
+        x: 500,
+        y: 480,
         font: 'bold 40px Arial',
         color: 'yellow',
         strokeColor: 'black',
         lineWidth: 3,
         align: 'center'
       },
-{
+      {
         text: teamADoc.name,
         x: 200,
         y: 300,
@@ -181,13 +147,13 @@ async function generateMatchPreviewImageURL({ divisionDoc, roundIndex, teamADoc,
       }
     ],
     images: [
-      { src: teamADoc.iconURL, x: cuadroAX, y: cuadroAY, width: cuadroSize, height: cuadroSize },
-      { src: teamBDoc.iconURL, x: cuadroBX, y: cuadroBY, width: cuadroSize, height: cuadroSize }
+      { src: teamADoc.iconURL, x: 150, y: 150, width: 150, height: 150 },
+      { src: teamBDoc.iconURL, x: 750, y: 150, width: 150, height: 150 }
     ]
   })
-
+  console.log(previewImageURL)
   return previewImageURL
-    }
+}
 
 module.exports = {
   generateCustomImage,

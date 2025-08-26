@@ -1,0 +1,29 @@
+{
+    "leader": "<:leader:1395916423695564881>",
+    "subLeader": "<:subleader:1395916298025832519>",
+    "member": "<:member:1402254138632572999>",
+    "members": "<:members:1395916668869283860>",
+
+    "teamCreate": "<:teamCreate:1396237918003007588>",
+    "teamSee": "<:teamSee:1402339812022685887>",
+    "teamJoin": "👥",
+    "teamLeave": "🚪",
+    "teamChangeName": "📛",
+    "teamChangeIcon": "🖼️",
+    "teamChangeColor": "🎨",
+    "teamManageMembers": "<:members:1395916668869283860>",
+    "teamReGenerateCode": "🔑",
+    "teamAddMember": "<:addMember:1402340233139196018>",
+    "teamChangeMemberRole": "🔄",
+    "teamKickMember": "❌",
+    "team": "🔰",
+    "teams": "<:teams:1402339118389919817>",
+    "teamsInDivisions": "<:teamsInDivisions:1409924241775792141>",
+
+    "division": "<:division:1409924139942285332>",
+    "divisions": "<:divisions:1402340388861120636>",
+
+    "schedule": "<:schedule:1409924421707366470>",
+    "match": "<:match:1409924493992005787>",
+    "rest": "<:rest:1409924319064231956>"
+}

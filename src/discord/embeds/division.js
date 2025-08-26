@@ -28,10 +28,9 @@ const getDivisionEndedEmbed = ({ division }) =>  {
 // Embed de partidos de nueva ronda y descansos, robusto ante datos nulos
 const getDivisionRoundAddedEmbed = ({ division, season }) => {
 
-  console.log('rounds', division.rounds)
   const rounds = Array.isArray(division.rounds) ? division.rounds : Object.values(division.rounds)
 const round = rounds[rounds.length - 1]
-console.log('round', round)
+
   if (!round) throw new Error('No se ha encontrado la ronda.')
 
   const divisionDoc = division.divisionId

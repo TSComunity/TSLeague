@@ -64,7 +64,7 @@ const { applyDefaultDates } = require('./services/match.js')
 
 setInterval(() => {
   updateRankingsEmbed({ client }).catch(error => console.error(error))
-  updateDivisionsEmbed({ client }).catch(error => console.error(error))
+  // updateDivisionsEmbed({ client }).catch(error => console.error(error))
   updateUsersPingRole({ client }).catch(error => console.error(error))
 }, 1000 * 60) // cada 1 minuto
 

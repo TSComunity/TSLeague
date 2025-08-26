@@ -1,13 +1,29 @@
 const { ButtonBuilder, ButtonStyle } = require('discord.js')
 
+const getTeamCreateButton = () => {
+    return new ButtonBuilder()
+      .setCustomId('teamCreate')
+      .setLabel('Crear Equipo')
+      .setEmoji('<:teamCreate:1396237918003007588>')
+      .setStyle(ButtonStyle.Primary);
+}
+
 const getTeamSeeButton = () => {
     return (
         new ButtonBuilder()
         .setCustomId('teamSee')
         .setLabel('Ver Equipo')
-        .setEmoji('📋')
+        .setEmoji('<:teamSee:1402339812022685887>')
         .setStyle(ButtonStyle.Secondary)
     )
+}
+
+const getTeamJoinButton = () => {
+    return new ButtonBuilder()
+      .setCustomId('teamJoin')
+      .setLabel('Unirse a un Equipo')
+      .setEmoji('👥')
+      .setStyle(ButtonStyle.Success)
 }
 
 const getTeamLeftButton = () => {
@@ -55,7 +71,7 @@ const getTeamManageMembersButton = () => {
         new ButtonBuilder()
         .setCustomId('teamManageMembers')
         .setLabel('Gestionar Jugadores')
-        .setEmoji('🧑‍💼')
+        .setEmoji('<:members:1395916668869283860>')
         .setStyle(ButtonStyle.Secondary)
     )
 }
@@ -74,8 +90,8 @@ const getTeamAddMemberButton = () => {
     return (
         new ButtonBuilder()
             .setCustomId('teamAddMember')
-            .setLabel('Añadir miembro')
-            .setEmoji('➕')
+            .setLabel('Añadir Miembro')
+            .setEmoji('<:addMember:1402340233139196018>')
             .setStyle(ButtonStyle.Primary)
     )
 }
@@ -105,7 +121,7 @@ const getTeamChangeMemberRoleToLeader = ({ discordId }) => {
         new ButtonBuilder()
           .setCustomId(`teamChangeMemberRoleTo_leader_${discordId}`)
           .setLabel('Cambiar a Líder')
-          .setEmoji('<:leader:1395916423695564881')
+          .setEmoji('<:leader:1395916423695564881>')
           .setStyle(ButtonStyle.Danger)
     )
 }
@@ -125,7 +141,7 @@ const getTeamChangeMemberRoleToMember = ({ discordId }) => {
         new ButtonBuilder()
           .setCustomId(`teamChangeMemberRoleTo_member_${discordId}`)
           .setLabel('Cambiar a Miembro')
-          .setEmoji('👤')
+          .setEmoji('<:member:1402254138632572999>')
           .setStyle(ButtonStyle.Secondary)
     )
 }
@@ -151,7 +167,9 @@ const getTeamStatsButton = ({ teamName }) => {
 }
 
 module.exports = {
+    getTeamCreateButton,
     getTeamSeeButton,
+    getTeamJoinButton,
     getTeamLeftButton,
     getTeamChangeNameButton,
     getTeamChangeIconButton,

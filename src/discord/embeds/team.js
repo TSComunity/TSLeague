@@ -13,7 +13,7 @@ const getTeamInfoEmbed = ({ team, perms }) => {
         const userId = m.userId.discordId || m.userId // por si acaso no está poblado
         const roleLabel = m.role === 'leader' ? '<:leader:1395916423695564881>' :
                           m.role === 'sub-leader' ? '<:subleader:1395916298025832519>' :
-                          '<:member:1395916668869283860>'
+                          '<:member:1402254138632572999>'
         return `${roleLabel} <@${userId}>`
       }).join('\n')
 
