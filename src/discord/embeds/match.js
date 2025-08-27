@@ -6,7 +6,7 @@ const {
   MediaGalleryBuilder,
   MediaGalleryItemBuilder
 } = require('discord.js')
-
+const emojis = require('../../configs/emojis.json')
 const { getMatchChangeScheduleButton } = require('../buttons/match.js')
 const modesData = require('../../configs/gameModes.json')
 
@@ -81,8 +81,8 @@ const getMatchProposedScheduleEmbed = ({ interaction, oldTimestampUnix, timestam
     .setColor('Yellow')
     .setDescription(`### <@${interaction.user.id}> ha propuesto cambiar la hora del partido.`)
     .addFields(
-      { name: 'Hora Actual', value: `<t:${oldTimestampUnix}:F>`, inline: true },
-      { name: 'Hora Propuesta', value: `<t:${timestampUnix}:F>`, inline: true }
+      { name: `${emojis.schedule} Hora Actual`, value: `<t:${oldTimestampUnix}:F>`, inline: true },
+      { name: `${emojis.schedule} Hora Propuesta`, value: `<t:${timestampUnix}:F>`, inline: true }
     )
 }
 

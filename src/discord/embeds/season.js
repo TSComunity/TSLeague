@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js')
+const emojis = require('../../configs/emojis.json')
 
 const { getCurrentRoundNumber } = require('../../utils/round.js')
 
@@ -21,7 +22,7 @@ const getSeasonEndedEmbed = ({ season }) =>  {
     // Top 3 por cada división
     const divisionsRanking = divisions.map(division => {
         const divisionName = division.divisionId.name || 'Sin nombre'
-        const divisionEmoji = division.divisionId.emoji || '🏆'
+        const divisionEmoji = division.divisionId.emoji || emojis.division
         const divisionColor = division.divisionId.color || 'Grey'
         const teamsSorted = [...division.teams].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
         totalTeams += teamsSorted.length
@@ -29,7 +30,7 @@ const getSeasonEndedEmbed = ({ season }) =>  {
         const top3 = teamsSorted.slice(0, 3).map((team, idx) => {
             const teamName = team.teamId?.name || 'Sin nombre'
             const pts = typeof team.points === 'number' ? team.points : 0
-            const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ''
+            const medal = idx === 0 ? emojis.firstPlace : idx === 1 ? emojis.secondPlace : idx === 2 ? emojis.thirdPlace : ''
             return `${medal} **${teamName}** — ${pts} pts`
         })
 
@@ -52,16 +53,17 @@ const getSeasonEndedEmbed = ({ season }) =>  {
         }
     })
 
+    const emojiStatus = status === 'active' ? emojis.active : emojis.ended
     // Construir embed
     const embed = new EmbedBuilder()
         .setColor('Blue')
-        .setDescription(`## Temporada ${name}`)
+        .setDescription(`## ${emojis.season} Temporada ${name} — Edición ${seasonIndex}`)
         .addFields(
-            { name: 'Índice', value: `\`${seasonIndex}\``, inline: true },
-            { name: 'Estado', value: `\`${status === 'active' ? '📅 En curso' : '📅 Finalizada'}\``, inline: true },
-            { name: 'Jornadas totales', value: `🖇️ \`${totalRounds}\``, inline: true },
-            { name: 'Partidos totales', value: `🎯 \`${totalMatches}\``, inline: true },
-            { name: 'Equipos totales', value: `👥 \`${totalTeams}\``, inline: true }
+            { name: `${emojiStatus} Estado`, value: `\`${status === 'active' ? 'En curso' : 'Finalizada'}\``, inline: true },
+            { name: `${emojis.round} Jornadas`, value: `\`${totalRounds}\``, inline: true },
+            { name: `${emojis.division} Divisiones`, value: `\`${divisions.length}\``, inline: true },
+            { name: `${emojis.team} Equipos`, value: `\`${totalTeams}\``, inline: true },
+            { name: `${emojis.match} Partidos`, value: `\`${totalMatches}\``, inline: true }
         )
 
     // Añadir ranking por división
@@ -91,18 +93,17 @@ const getSeasonSummaryEmbed = ({ season }) => {
             matchesLength += round.matches.length
         }
     }
-
+    const emojiStatus = status === 'active' ? emojis.active : emojis.ended
     return (
         new EmbedBuilder()
             .setColor('Purple')
-            .setDescription(`## Temporada ${name}`)
+            .setDescription(`## ${emojis.season} Temporada ${name} — Edición ${seasonIndex}`)
             .addFields(
-                { name: 'Índice', value: `👆 \`${seasonIndex}\``, inline: true },
-                { name: 'Estado', value: `\`${status === 'active' ? '📅 En curso' : '📅 Finalizada'}\``, inline: true },
-                { name: `${status === 'active' ? 'Ronda Actual' : 'Rondas'}`, value: `🖇️ \`${roundNumber}\``, inline: true },
-                { name: 'Divisiones', value: `🧩 \`${divisions.length}\``, inline: true },
-                { name: 'Equipos', value: `👥 \`${teamsLength}\``, inline: true },
-                { name: 'Partidos', value: `🎯 \`${matchesLength}\``, inline: true }
+                { name: `${emojiStatus} Estado`, value: `\`${status === 'active' ? 'En curso' : 'Finalizada'}\``, inline: true },
+                { name: `${status === 'active' ? `${emojis.round} Ronda Actual` : `${emojis.rounds} Rondas Totales`}`, value: `\`${roundNumber}\``, inline: true },
+                { name: `${emojis.division} Divisiones`, value: `\`${divisions.length}\``, inline: true },
+                { name: `${emojis.team} Equipos`, value: `\`${teamsLength}\``, inline: true },
+                { name: `${emojis.match} Partidos`, value: `\`${matchesLength}\``, inline: true }
             )
     )
 }

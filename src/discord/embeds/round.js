@@ -1,8 +1,9 @@
 const { EmbedBuilder } = require('discord.js')
+const emojis = require('../../configs/emojis.json')
 
 // Embed general de jornada, robusto ante datos nulos
 const getRoundAddedEmbed = ({ divisionsWithNewRounds, season, nextRoundIndex }) => {
-  const { name, seasonIndex } = season
+  const { name } = season
 
   let matchesLength = 0
   let restingLength = 0
@@ -14,13 +15,10 @@ const getRoundAddedEmbed = ({ divisionsWithNewRounds, season, nextRoundIndex }) 
   return (
       new EmbedBuilder()
           .setColor('Purple')
-          .setDescription(`## Jornada ${nextRoundIndex} - Temporada ${name}`)
+          .setDescription(`## ${emojis.round} Jornada ${nextRoundIndex} — Temporada ${name}`)
           .addFields(
-              { name: 'Indice', value: `👆 \`${seasonIndex}\``, inline: true },
-              { name: 'Estado', value: `\`📅 En curso\``, inline: true },
-              { name: 'Jornadas', value: `🖇️ \`${nextRoundIndex}\`a`, inline: true },
-              { name: 'Nuevos partidos', value: `👥 \`${matchesLength}\``, inline: true },
-              { name: 'Nuevos descansos', value: `🎯 \`${restingLength}\``, inline: true },
+              { name: `${emojis.match} Nuevos partidos`, value: `\`${matchesLength}\``, inline: true },
+              { name: `${emojis.rest} Nuevos descansos`, value: `\`${restingLength}\``, inline: true },
               { name: '** **', value: '** **', inline: true }
           )
   )

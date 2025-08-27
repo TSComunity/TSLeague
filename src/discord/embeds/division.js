@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js')
+const emojis = require('../../configs/emojis.json')
 
 // Embed de división terminada, mostrando ranking final y nota
 const getDivisionEndedEmbed = ({ division }) =>  {
@@ -17,7 +18,7 @@ const getDivisionEndedEmbed = ({ division }) =>  {
   return new EmbedBuilder()
     .setColor(divisionDoc?.color || 'Blue')
     .setDescription([
-      '### Division terminada',
+      `### ${emojis.division} División terminada`,
       '',
       rankingMsg
     ].join('\n'))
@@ -55,8 +56,8 @@ const round = rounds[rounds.length - 1]
         : 'Sin fecha'
 
     embed.addFields({
-      name: `🆚 ${teamAName} vs ${teamBName}`,
-      value: `💬 Canal: ${channel}\n🕛 Horario: ${timestampText}`,
+      name: `${emojis.match} ${teamAName} ${emojis.vs} ${teamBName}`,
+      value: `${emojis.channel} Canal: ${channel}\n${emojis.schedule} Horario: ${timestampText}`,
       inline: true
     })
   }
@@ -66,8 +67,8 @@ const round = rounds[rounds.length - 1]
     const restingTeam = restingTeamObj.teamId
     const teamName = restingTeam?.name || 'Sin nombre'
     embed.addFields({
-      name: `💤 ${teamName}`,
-      value: '💤 Descansa esta jornada',
+      name: `${emojis.rest} ${teamName}`,
+      value: '> Descansa esta jornada',
       inline: true
     })
   }

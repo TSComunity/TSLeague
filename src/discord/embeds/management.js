@@ -1,10 +1,11 @@
 const { EmbedBuilder } = require('discord.js')
+const emojis = require('../../configs/emojis.json')
 
 const getErrorEmbed = ({ error = 'No se recibieron detalles del error.' }) => {
   return (
     new EmbedBuilder()
       .setColor('Red')
-      .setDescription(`### Se ha producido un error\n\n> ${error}`)
+      .setDescription(`### ${emojis.error} Se ha producido un error\n\n> ${error}`)
   )
 }
 
@@ -12,7 +13,7 @@ const getSuccesEmbed = ({ message = 'La operación ha sido completada sin errore
   return (
     new EmbedBuilder()
       .setColor('Green')
-      .setDescription(`### Operación completada\n\n> ${message}`)
+      .setDescription(`### ${emojis.succes} Operación completada\n\n> ${message}`)
       .setImage(imageURL)
   )
 }

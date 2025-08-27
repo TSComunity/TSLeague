@@ -16,14 +16,35 @@
     "teamAddMember": "<:addMember:1402340233139196018>",
     "teamChangeMemberRole": "🔄",
     "teamKickMember": "❌",
-    "team": "🔰",
-    "teams": "<:teams:1402339118389919817>",
-    "teamsInDivisions": "<:teamsInDivisions:1409924241775792141>",
+    "teamStats": "👀",
 
+    "season": "📅",
+    "round": "⭕",
     "division": "<:division:1409924139942285332>",
-    "divisions": "<:divisions:1402340388861120636>",
-
-    "schedule": "<:schedule:1409924421707366470>",
+    "team": "🔰",
+    "teamsInDivisions": "<:teamsInDivisions:1409924241775792141>",
     "match": "<:match:1409924493992005787>",
-    "rest": "<:rest:1409924319064231956>"
+    "rest": "<:rest:1409924319064231956>",
+
+    "active": "✅",
+    "ended": "🏁",
+    "canceled": "❌",
+    "scheduled": "📅",
+    "accept": "✅",
+    "reject": "❌",
+    "success": "✅",
+    "error": "❌",
+    "cancel": "❌",
+    "schedule": "<:schedule:1409924421707366470>",
+    "code": "🔑",
+    "firstPlace": "🥇",
+    "secondPlace": "🥈",
+    "thirdPlace": "🥉",
+    "index": "🔢",
+    "vs": "🆚",
+    "channel": "💬",
+
+
+    "trophies": "🏆",
+    "wins3vs3": "⚔️"
 }
