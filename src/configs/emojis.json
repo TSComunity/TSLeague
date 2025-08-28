@@ -26,13 +26,13 @@
     "match": "<:match:1409924493992005787>",
     "rest": "<:rest:1409924319064231956>",
 
-    "active": "✅",
+    "active": "<:active:1410424134743097394>",
     "ended": "🏁",
     "canceled": "❌",
     "scheduled": "📅",
-    "accept": "✅",
+    "accept": "<:accept:1410423982959628338>",
     "reject": "❌",
-    "success": "✅",
+    "success": "<:sucess:1410424075414802584>",
     "error": "❌",
     "cancel": "❌",
     "schedule": "<:schedule:1409924421707366470>",
@@ -45,8 +45,9 @@
     "channel": "<:channel:1410331562003923158>",
     "ascent": "<:ascent:1410412510640607343>,
     "decline": "<:decline:1410412528168865832>",
+    "winner": "<:winner:1410424993325645874>",
 
-    "trophies": "🏆",
+    "trophies": "<:trophies:1410422169254629437>",
     "highesTrophies": "<:highesTrophies:1410412490193506455>",
     "wins3vs3": "<:wins3vs3:1410412563845353532>"
 }
