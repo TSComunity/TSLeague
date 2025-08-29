@@ -17,7 +17,7 @@ let TeamSchema = new Schema({
 
     // Aquí se pueden añadir stats totales como total de partidas jugadas, total de puntos en ligas, racha...
 
-    isEligible: { type: Boolean, default: false }  // Tiene al menos 3 miembros
+    channelId: { type: String }
 })
 
 module.exports = model("Team", TeamSchema)

@@ -11,7 +11,7 @@ const { generateMatchPreviewImageURL } = require('../utils/canvas.js')
 
 const { getMatchInfoEmbed } = require('../discord/embeds/match.js')
 
-const { guild: guildConfig, categories, channels, match } = require('../configs/league.js')
+const { guild: guildConfig, categories, channels, roles} = require('../configs/league.js')
 
 /**
  * Crea un canal de Discord para un partido.
@@ -51,6 +51,7 @@ const matchToUpd = await Match.findOne({ _id: match._id })
     // 2. Extraer discordId de los líderes
     const leaderA = teamA.members.find(m => m.role === 'leader')?.userId?.discordId
     const leaderB = teamB.members.find(m => m.role === 'leader')?.userId?.discordId
+    const leaderIds = [leaderA, leaderB].filter(Boolean)
 
     // 3. Miembros normales (sin incluir líderes), extraer sus discordId
     const normalMembersA = teamA.members
@@ -62,69 +63,22 @@ const matchToUpd = await Match.findOne({ _id: match._id })
       .filter(m => m.role !== 'leader')
       .map(m => m.userId?.discordId)
       .filter(Boolean)
+    
+    const memberIds = [...normalMembersA, ...normalMembersB].filter(Boolean)
 
     const guild = await client.guilds.fetch(guildConfig.id)
 
-    // 4. Preparar permisos
-    const modRoleIds = channels.perms
+    const parsePerms = (names) => names.map(name => PermissionsBitField.Flags[name]);
 
-    const normalPermissions = [
-      PermissionsBitField.Flags.ViewChannel,
-      PermissionsBitField.Flags.SendMessages,
-      PermissionsBitField.Flags.SendTTSMessages,
-      PermissionsBitField.Flags.SendVoiceMessages,
-      PermissionsBitField.Flags.EmbedLinks,
-      PermissionsBitField.Flags.AttachFiles,
-      PermissionsBitField.Flags.ReadMessageHistory,
-      PermissionsBitField.Flags.AddReactions,
-      PermissionsBitField.Flags.UseExternalEmojis,
-      PermissionsBitField.Flags.UseExternalStickers,
-      PermissionsBitField.Flags.Connect,
-      PermissionsBitField.Flags.Speak,
-      PermissionsBitField.Flags.Stream,
-      PermissionsBitField.Flags.UseApplicationCommands,
-      PermissionsBitField.Flags.CreateInstantInvite
-    ]
+    const normalPermissions = parsePerms(channels.permissions.member)
+    const leaderPermissions = [...normalPermissions, ...parsePerms(channels.permissions.leader)]
+    const staffPermissions = [...normalPermissions, ...parsePerms(channels.permissions.staff)]
 
-    // Líderes = normales + fijar mensajes
-    const leaderPermissions = [
-      ...normalPermissions,
-      PermissionsBitField.Flags.ManageMessages
-    ]
-
-    // Mods = normales + gestionar mensajes y fijar mensajes
-    const modPermissions = [
-      ...normalPermissions,
-      PermissionsBitField.Flags.ManageMessages,
-      PermissionsBitField.Flags.MentionEveryone
-    ]
-
-    // 5. Construir permissionOverwrites usando IDs de Discord válidos
     const permissionOverwrites = [
-      {
-        id: guild.roles.everyone.id,
-        deny: [PermissionsBitField.Flags.ViewChannel]
-      },
-      ...(leaderA ? [{
-        id: leaderA,
-        allow: leaderPermissions
-      }] : []),
-      ...(leaderB && leaderB !== leaderA ? [{
-        id: leaderB,
-        allow: leaderPermissions
-      }] : []),
-      ...normalMembersA.map(discordId => ({
-        id: discordId,
-        allow: normalPermissions
-      })),
-      ...normalMembersB.map(discordId => ({
-        id: discordId,
-        allow: normalPermissions,
-      })),
-      ...modRoleIds.map(roleId => ({
-        id: roleId,
-        allow: modPermissions
-      }))
+      { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+      ...leaderIds.map(id => ({ id, allow: leaderPermissions })),
+      ...memberIds.map(id => ({ id, allow: normalPermissions })),
+      ...roles.staff.map(id => ({ id, allow: staffPermissions }))
     ]
 
     // for (const overwrite of permissionOverwrites) {

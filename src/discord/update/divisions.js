@@ -27,7 +27,7 @@ const updateDivisionsEmbed = async ({ client }) => {
     (msg.flags & MessageFlags.IsComponentsV2) === MessageFlags.IsComponentsV2;
 
   const guild = await client.guilds.fetch(config.guild.id)
-  const channel = await client.channels.fetch(config.channels.teams.id);
+  const channel = await client.channels.fetch(config.channels.divisions.id);
   if (!channel || !channel.isTextBased())
     throw new Error('Canal no encontrado o no es de texto.');
 

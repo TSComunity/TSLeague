@@ -19,6 +19,9 @@ module.exports = {
   "categories": {
     "matches": {
       "id": '1394250453579202690'
+    },
+    "teams": {
+      "id": '1409912754843947149'
     }
   },
   "channels": {
@@ -31,23 +34,45 @@ module.exports = {
     "rankings": {
       "id": '1364999474564436068'
     },
-    "teams": {
+    "divisions": {
       "id": '1375108833558397053'
     },
-    "perms": [
-      '1106553480803516437',
-      '1107345436492185753',
-      '1106553536839422022',
-      '1363927756617941154',
-      '1202685031219200040',
-      '1107329826982989906',
-      '1377754136824778885'
-    ]
+    "permissions": {
+      "member": [
+        "ViewChannel",
+        "SendMessages",
+        "SendTTSMessages",
+        "SendVoiceMessages",
+        "EmbedLinks",
+        "AttachFiles",
+        "ReadMessageHistory",
+        "AddReactions",
+        "UseExternalEmojis",
+        "UseExternalStickers",
+        "Connect",
+        "Speak",
+        "Stream",
+        "UseApplicationCommands",
+        "CreateInstantInvite"
+      ],
+      "leader": [
+        "ManageMessages"
+      ],
+      "staff": [
+        "ManageMessages",
+        "MentionEveryone"
+      ]
+    }
   },
   "roles": {
     "ping": {
       "id": '1393563891044450434'
-    }
+    },
+    "staff": [
+      "1106553480803516437",
+      "1107345436492185753",
+      "1106553536839422022"
+    ]
   },
   "commands": {
     "perms": [

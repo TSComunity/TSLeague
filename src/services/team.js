@@ -1,3 +1,5 @@
+const { PermissionsBitField } = require('discord.js')
+
 const Season = require('../Esquemas/Season.js')
 const Division = require('../Esquemas/Division.js')
 const Match = require('../Esquemas/Match.js')
@@ -8,6 +10,8 @@ const { cancelMatch } = require('./match.js')
 
 const { getActiveSeason } = require('../utils/season.js')
 const { findTeam } = require('../utils/team.js')
+
+const { getTeamChannelEmbed } = require('../discord/embeds/team.js')
 
 const colors = require('../configs/colors.json')
 const config = require('../configs/league.js')
@@ -49,7 +53,7 @@ const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordI
 
   // Si el que se va es el líder, se transfiere el rol
   if (memberToRemove.role === 'leader') {
-    const subLeaders = team.members.filter(m => m.role === 'sub-leader' && m.userId?.discordId !== discordId);
+    const subLeaders = team.members.filter(m => m.role === 'sub-leader' && m.userId?.discordId !== discordId)
     const otherMembers = team.members.filter(m => m.userId?.discordId !== discordId)
 
     let newLeader
@@ -65,19 +69,17 @@ const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordI
   // Quitar al usuario del equipo
   team.members = team.members.filter(m => m.userId?.discordId !== discordId)
 
-  team.isEligible = team.members.length >= 3
-
   if (team.members.length === 0) {
-    const teamSnapshot = { ...team.toObject() };
-    await Team.findByIdAndDelete(team._id);
-    user.teamId = null;
-    await user.save();
-    return teamSnapshot;
+    const teamSnapshot = { ...team.toObject() }
+    await Team.findByIdAndDelete(team._id)
+    user.teamId = null
+    await user.save()
+    return teamSnapshot
   } else {
-    await team.save();
-    user.teamId = null;
-    await user.save();
-    return team;
+    await team.save()
+    user.teamId = null
+    await user.save()
+    return team
   }
 }
 
@@ -148,6 +150,79 @@ const deleteAllEmptyTeams = async () => {
     }
     // Finalmente eliminar el equipo
     await Team.deleteOne({ _id: teamId })
+  }
+}
+
+const updateTeamsChannels = async ({ client }) => {
+  const guild = await client.guilds.fetch(config.guild.id)
+  const categoryId = config.categories.teams.id
+  const teams = await Team.find({}).populate('members.userId')
+
+  for (const team of teams) {
+    const eligible = team.members.length >= 3 || !!team.divisionId
+
+    if (!eligible && team.channelId) {
+      // Eliminar canal si ya no cumple criterios
+      try {
+        const channel = await guild.channels.fetch(team.channelId)
+        if (channel) await channel.delete()
+      } catch {}
+      team.channelId = null
+      await team.save()
+      continue
+    }
+
+    if (!eligible) continue
+
+    // Preparar IDs de miembros y líderes
+    const leaderIds = team.members
+      .filter(m => m.role === 'leader')
+      .map(m => m.userId?.discordId)
+      .filter(Boolean)
+
+    const memberIds = team.members
+      .filter(m => m.role !== 'leader')
+      .map(m => m.userId?.discordId)
+      .filter(Boolean)
+
+    const parsePerms = (names) => names.map(name => PermissionsBitField.Flags[name]);
+
+    const normalPermissions = parsePerms(config.channels.permissions.member)
+    const leaderPermissions = [...normalPermissions, ...parsePerms(config.channels.permissions.leader)]
+    const staffPermissions = [...normalPermissions, ...parsePerms(config.channels.permissions.staff)]
+
+    const permissionOverwrites = [
+      { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+      ...leaderIds.map(id => ({ id, allow: leaderPermissions })),
+      ...memberIds.map(id => ({ id, allow: normalPermissions })),
+      ...config.roles.staff.map(id => ({ id, allow: staffPermissions }))
+    ]
+
+    // Crear o actualizar canal
+    let channel
+    if (team.channelId) {
+      try {
+        channel = await guild.channels.fetch(team.channelId)
+        if (channel && channel.name !== team.name.toLowerCase()) {
+          await channel.setName(team.name.toLowerCase())
+        }
+      } catch {
+        channel = null
+      }
+    }
+
+    if (!channel) {
+      channel = await guild.channels.create({
+        name: team.name.toLowerCase(),
+        type: 0, // GuildText
+        parent: categoryId,
+        permissionOverwrites
+      })
+
+      await channel.send({ embeds: [getTeamChannelEmbed({ team })] })
+      team.channelId = channel.id
+      await team.save()
+    }
   }
 }
 
@@ -479,6 +554,7 @@ module.exports = {
   checkTeamUserHasPerms,
   checkTeamUserIsLeader,
   deleteAllEmptyTeams,
+  updateTeamsChannels,
   generateTeamCode,
   updateTeamCode,
   createTeam,

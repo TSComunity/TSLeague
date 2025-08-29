@@ -101,11 +101,28 @@ const getTeamStatsEmbed = async ({ team }) => {
     return new EmbedBuilder()
         .setColor(color)
         .setThumbnail(iconURL)
-        .setDescription(`### ${name} — ${members.length}/${config.team.maxMembers}`)
+        .setDescription(`### ${emojis.team} ${name} — ${members.length}/${config.team.maxMembers}`)
         .addFields(
-            { name: `${emojis.trophies} Copas Totales`, value: `\`${totalTrophies}\`` },
-            { name: `${emojis.wins3vs3} Victorias Totales 3v3`, value: `\`${totalWins3vs3}\`` }
+            { name: `Copas Totales`, value: `${emojis.trophies} \`${totalTrophies}\`` },
+            { name: `Victorias Totales 3v3`, value: `${emojis.wins3vs3} \`${totalWins3vs3}\`` }
         )
 }
 
-module.exports = { getTeamInfoEmbed, getAddMemberInfoEmbed, getTeamsSummaryEmbed, getTeamStatsEmbed }
+const getTeamChannelEmbed = ({ team }) => {
+
+    return new EmbedBuilder()
+        .setDescription(
+        `### ${emojis.team} ${team.name}\n\n` +
+        `Este canal es exclusivo para los miembros del equipo.\n` +
+        `Aquí se publicarán todas las actualizaciones, resultados y avisos importantes relacionados con el equipo.\n` +
+        `Si necesitas asistencia o tienes alguna duda, puedes contactar al staff directamente en este canal.`
+        )
+        .setColor(team.color || 'Blue')
+        .setThumbnail(team.iconURL || '')
+        .setFooter({ 
+        text: `Por favor, revisa el canal con regularidad para mantenerte al día con la información del equipo.` 
+        })
+}
+
+
+module.exports = { getTeamInfoEmbed, getAddMemberInfoEmbed, getTeamsSummaryEmbed, getTeamStatsEmbed, getTeamChannelEmbed }
