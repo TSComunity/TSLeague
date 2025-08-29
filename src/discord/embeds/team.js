@@ -32,9 +32,9 @@ const getTeamInfoEmbed = ({ team, perms }) => {
             .setThumbnail(team.iconURL)
             .setDescription(`## ${team.name}`)
             .addFields(
-                { name: `${emojis.members} Miembros — ${team.members.length}/${config.team.maxMembers}`, value: formattedList, inline: true },
-                { name: `${emojis.division} División`, value: `\`${formattedDivision}\``, inline: true },
-                ...(perms ? [{ name: `${emojis.code} Código`, value: `\`${team.code}\``, inline: true }] : [])
+                { name: `Miembros — ${team.members.length}/${config.team.maxMembers}`, value: formattedList, inline: true },
+                { name: `División`, value: `${emojis.division} \`${formattedDivision}\``, inline: true },
+                ...(perms ? [{ name: `Código`, value: `${emojis.code} \`${team.code}\``, inline: true }] : [])
 	    )
     )
 }

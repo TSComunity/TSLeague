@@ -53,17 +53,16 @@ const getSeasonEndedEmbed = ({ season }) =>  {
         }
     })
 
-    const emojiStatus = status === 'active' ? emojis.active : emojis.ended
     // Construir embed
     const embed = new EmbedBuilder()
         .setColor('Blue')
         .setDescription(`## ${emojis.season} Temporada ${name} — Edición ${seasonIndex}`)
         .addFields(
-            { name: `${emojiStatus} Estado`, value: `\`${status === 'active' ? 'En curso' : 'Finalizada'}\``, inline: true },
-            { name: `${emojis.round} Jornadas`, value: `\`${totalRounds}\``, inline: true },
-            { name: `${emojis.division} Divisiones`, value: `\`${divisions.length}\``, inline: true },
-            { name: `${emojis.team} Equipos`, value: `\`${totalTeams}\``, inline: true },
-            { name: `${emojis.match} Partidos`, value: `\`${totalMatches}\``, inline: true }
+            { name: `Estado`, value: `\`${status === 'active' ? `${emojis.active} \`En curso\`` : `${emojis.ended} \`Finalizada\``}\``, inline: true },
+            { name: `Jornadas`, value: `${emojis.round} \`${totalRounds}\``, inline: true },
+            { name: `Divisiones`, value: `${emojis.division} \`${divisions.length}\``, inline: true },
+            { name: `Equipos`, value: `${emojis.team} \`${totalTeams}\``, inline: true },
+            { name: `Partidos`, value: `${emojis.match} \`${totalMatches}\``, inline: true }
         )
 
     // Añadir ranking por división
@@ -93,17 +92,16 @@ const getSeasonSummaryEmbed = ({ season }) => {
             matchesLength += round.matches.length
         }
     }
-    const emojiStatus = status === 'active' ? emojis.active : emojis.ended
     return (
         new EmbedBuilder()
             .setColor('Purple')
             .setDescription(`## ${emojis.season} Temporada ${name} — Edición ${seasonIndex}`)
             .addFields(
-                { name: `${emojiStatus} Estado`, value: `\`${status === 'active' ? 'En curso' : 'Finalizada'}\``, inline: true },
+            { name: `Estado`, value: `\`${status === 'active' ? `${emojis.active} \`En curso\`` : `${emojis.ended} \`Finalizada\``}\``, inline: true },
                 { name: `${status === 'active' ? `${emojis.round} Ronda Actual` : `${emojis.rounds} Rondas Totales`}`, value: `\`${roundNumber}\``, inline: true },
-                { name: `${emojis.division} Divisiones`, value: `\`${divisions.length}\``, inline: true },
-                { name: `${emojis.team} Equipos`, value: `\`${teamsLength}\``, inline: true },
-                { name: `${emojis.match} Partidos`, value: `\`${matchesLength}\``, inline: true }
+                { name: `Divisiones`, value: `${emojis.division} \`${divisions.length}\``, inline: true },
+                { name: `Equipos`, value: `${emojis.team} \`${teamsLength}\``, inline: true },
+                { name: `Partidos`, value: `${emojis.match} \`${matchesLength}\``, inline: true }
             )
     )
 }

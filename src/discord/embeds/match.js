@@ -34,7 +34,7 @@ function getModeOrMapName(id, type) {
   return 'N/A'
 }
 
-const getMatchInfoEmbed = ({ match }) => {
+const getMatchInfoEmbed = ({ match, showButtons = false }) => {
   const { teamAId, teamBId, scoreA, scoreB, status, previewImageURL, resultsImageURL } = match
 
   // --- Elegir la imagen según estado ---

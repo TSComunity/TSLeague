@@ -17,9 +17,8 @@ const getRoundAddedEmbed = ({ divisionsWithNewRounds, season, nextRoundIndex }) 
           .setColor('Purple')
           .setDescription(`## ${emojis.round} Jornada ${nextRoundIndex} — Temporada ${name}`)
           .addFields(
-              { name: `${emojis.match} Nuevos partidos`, value: `\`${matchesLength}\``, inline: true },
-              { name: `${emojis.rest} Nuevos descansos`, value: `\`${restingLength}\``, inline: true },
-              { name: '** **', value: '** **', inline: true }
+              { name: `Nuevos partidos`, value: `${emojis.match} \`${matchesLength}\``, inline: true },
+              { name: `Nuevos descansos`, value: `${emojis.rest} \`${restingLength}\``, inline: true }
           )
   )
 }
