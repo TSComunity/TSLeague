@@ -1,6 +1,6 @@
 const { ActionRowBuilder } = require('discord.js')
 
-const { checkUserVerification } = require('../../../services/user.js')
+const { checkUserIsVerified } = require('../../../services/user.js')
 const { checkTeamUserHasPerms } = require('../../../services/team.js')
 const { findTeam } = require('../../../utils/team.js')
 
@@ -24,7 +24,7 @@ module.exports = {
 
   async execute(interaction) {
     try {
-        const isVerified = await checkUserVerification({ discordId: interaction.user.id })
+        const isVerified = await checkUserIsVerified({ discordId: interaction.user.id })
 
         if (!isVerified) {
             const modal = getUserVerifyModal()

@@ -6,7 +6,10 @@ let UserSchema = new Schema({
 
     teamId: { type: Types.ObjectId, ref: 'Team' }, // Usar ./id de la division
 
-    isVerified: { type: Boolean, default: false }
+    isVerified: { type: Boolean, default: false },
+
+    isFreeAgent: { type: Boolean, default: false },
+    freeAgentMessageId: { type: String }
 })
 
 module.exports = model("User", UserSchema)

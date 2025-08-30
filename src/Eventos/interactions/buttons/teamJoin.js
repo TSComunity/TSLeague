@@ -1,7 +1,7 @@
 const { ActionRowBuilder } = require('discord.js')
 
 
-const { checkUserVerification } = require('../../../services/user.js')
+const { checkUserIsVerified } = require('../../../services/user.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getUserVerifyModal } = require('../../../discord/modals/user.js')
@@ -16,7 +16,7 @@ module.exports = {
   async execute(interaction) {
     try {
 
-        const isVerified = await checkUserVerification({ discordId: interaction.user.id })
+        const isVerified = await checkUserIsVerified({ discordId: interaction.user.id })
         if (!isVerified) {
             const modal = getUserVerifyModal()
 

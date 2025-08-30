@@ -1,15 +1,16 @@
 const Team = require('../Esquemas/Team.js')
 const User = require('../Esquemas/User.js')
 
-const { roles, guild: configGuild } = require('../configs/league.js')
-const { BRAWL_STARS_API_KEY } = require('../configs/configs.js')
+const { getUserBrawlData } = require('../utils/user.js')
+const { getUserBrawlStatsEmbed } = require('../discord/embeds/user.js')
+const { roles, guild: configGuild, channels } = require('../configs/league.js')
 
 /**
  * Actualiza la elegibilidad de un equipo dependiendo de si tiene al menos 3 miembros y devuelve su elegibilidad.
  * @param {Object} team - Equipo a checkear.
  * @returns {Boolean} isEligible - Si es elegible o no.
  */
-const checkUserVerification = async ({ discordId }) => {
+const checkUserIsVerified = async ({ discordId }) => {
 
     const user = await User.findOne({ discordId })
     if (!user) return false
@@ -28,14 +29,9 @@ const verifyUser = async ({ discordId, brawlId }) => {
     ? brawlId.toUpperCase()
     : `#${brawlId.toUpperCase()}`
 
-  const token = `Bearer ${BRAWL_STARS_API_KEY}`
-  const encodedTag = encodeURIComponent(formattedBrawlId)
+  const res = await getUserBrawlData({ brawlId: formattedBrawlId })
 
-  const res = await fetch(`https://api.brawlstars.com/v1/players/${encodedTag}`, {
-    headers: { Authorization: token, Accept: 'application/json' }
-  })
-
-  if (!res.ok)
+  if (!res)
     throw new Error(`No existe ninguna cuenta con el ID \`${formattedBrawlId}\` como ID en brawl.`)
 
   let user = await User.findOne({ discordId })
@@ -92,7 +88,6 @@ const addPingRoleToUser = async ({ client, discordId }) => {
     }
 }
 
-
 /**
  * Verifica y añade el rol de ping a todos los miembros de todos los equipos elegibles.
  * Esta función busca los equipos y sus miembros directamente en la base de datos.
@@ -104,8 +99,6 @@ const updateUsersPingRole = async ({ client }) => {
     if (!client) {
         throw new Error('Faltan datos: client.')
     }
-
-    const PING_ROLE_ID = roles.ping.id
 
     try {
         const teams = await Team.find({}).populate({
@@ -128,8 +121,7 @@ const updateUsersPingRole = async ({ client }) => {
                 if (!userId) continue
 
                 try {
-                    // Llama a tu función `addPingRoleToUser`
-                    const updatedMember = await addPingRoleToUser({ client, discordId: userId })
+                    await addPingRoleToUser({ client, discordId: userId })
                 } catch (memberError) {
                     throw new Error(`❌ Error procesando el rol para el usuario ${userId} en el equipo ${team.name}: ${memberError.message}`)
                 }
@@ -154,4 +146,112 @@ const getUserDisplayName = async ({ guild, discordId }) => {
   }
 }
 
-module.exports = { checkUserVerification, verifyUser, addPingRoleToUser, updateUsersPingRole, getUserDisplayName }
+/**
+ * Toggle Free Agent status (cuando el user pulsa botón)
+ * @param {Client} client - Discord client
+ * @param {User} user - Documento del usuario en Mongo
+ */
+async function toggleFreeAgent({ client, discordId }) {
+  if (!client || !discordId) throw new Error("Faltan datos: client o discordId.")
+  const user = await User.findOne({ discordId })
+  const channel = await client.channels.fetch(channels.freeAgents.id)
+  if (!channel || !channel.isTextBased()) throw new Error("Canal de free agents no encontrado.")
+
+  // Si ya está marcado como free agent
+  if (user.isFreeAgent) {
+    try {
+      if (user.freeAgentMessageId) {
+        const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
+        if (msg) await msg.delete()
+      }
+    } catch (e) {
+      console.error("Error al borrar mensaje de free agent:", e)
+    }
+
+    user.isFreeAgent = false
+    user.freeAgentMessageId = null
+    await user.save()
+    return user
+  }
+
+  // Si no estaba → crear mensaje con stats
+  let data = null
+  if (user.brawlId) {
+    data = await getUserBrawlData({ brawlId: user.brawlId }).catch(() => null)
+  }
+
+  const embed = getUserBrawlStatsEmbed({ client, user, data, isFreeAgent: true })
+
+  const msg = await channel.send({ embeds: [embed] })
+
+  user.isFreeAgent = true
+  user.freeAgentMessageId = msg.id
+  await user.save()
+
+  return user
+}
+
+/**
+ * Sincroniza los Free Agents con el canal
+ * - Borra los que ya tienen equipo
+ * - Recrea los que faltan
+ * - Actualiza los mensajes existentes con stats en tiempo real
+ * @param {Client} client - Discord client
+ */
+async function syncFreeAgents({ client }) {
+  const channel = await client.channels.fetch(channels.freeAgents.id)
+  if (!channel || !channel.isTextBased()) throw new Error("Canal no encontrado o no es de texto.")
+
+  const freeAgents = await User.find({ isFreeAgent: true })
+
+  for (const user of freeAgents) {
+    // Si ya tiene equipo → eliminar mensaje y limpiar
+    if (user.teamId) {
+      try {
+        if (user.freeAgentMessageId) {
+          const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
+          if (msg) await msg.delete()
+        }
+      } catch (e) {
+        console.error("Error al borrar free agent de usuario con equipo:", e)
+      }
+
+      user.isFreeAgent = false
+      user.freeAgentMessageId = null
+      await user.save()
+      continue
+    }
+
+    // Obtener datos actualizados de Brawl
+    let data = null
+    if (user.brawlId) {
+      data = await getUserBrawlData({ brawlId: user.brawlId }).catch(() => null)
+    }
+
+    const embed = getUserBrawlStatsEmbed({ client, user, data, isFreeAgent: true })
+
+    // Si no existe su mensaje → crear
+    if (!user.freeAgentMessageId) {
+      const msg = await channel.send({ embeds: [embed] })
+      user.freeAgentMessageId = msg.id
+      await user.save()
+    } else {
+      // Si existe → actualizar embed
+      try {
+        const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
+        if (msg) {
+          await msg.edit({ embeds: [embed] })
+        } else {
+          // Si no existe el mensaje en Discord pero sí en BD → recrear
+          const newMsg = await channel.send({ embeds: [embed] })
+          user.freeAgentMessageId = newMsg.id
+          await user.save()
+        }
+      } catch (e) {
+        console.error("Error al actualizar mensaje de free agent:", e)
+      }
+    }
+  }
+}
+
+module.exports = { checkUserIsVerified, verifyUser, addPingRoleToUser, updateUsersPingRole, getUserDisplayName, toggleFreeAgent, syncFreeAgents }
