@@ -30,7 +30,7 @@ const getTeamJoinButton = () => {
 const getTeamLookingFotButton = () => {
     return new ButtonBuilder()
       .setCustomId('teamLookingFor')
-      .setLabel('Buscar Equipo (Free Agent)')
+      .setLabel('Buscar Equipo (Agente Libre)')
       .setEmoji(emojis.teamLookingFor)
       .setStyle(ButtonStyle.Secondary)
 }
