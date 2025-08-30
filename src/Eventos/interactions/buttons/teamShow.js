@@ -20,7 +20,7 @@ const {
 } = require('../../../discord/buttons/team.js')
 
 module.exports = {
-  customId: 'teamSee',
+  customId: 'teamShow',
 
   async execute(interaction) {
     try {

@@ -9,12 +9,12 @@ const getTeamCreateButton = () => {
       .setStyle(ButtonStyle.Primary);
 }
 
-const getTeamSeeButton = () => {
+const getTeamShowButton = () => {
     return (
         new ButtonBuilder()
-        .setCustomId('teamSee')
-        .setLabel('Ver Equipo')
-        .setEmoji(emojis.teamSee)
+        .setCustomId('teamShow')
+        .setLabel('Mostrar Equipo')
+        .setEmoji(emojis.teamShow)
         .setStyle(ButtonStyle.Secondary)
     )
 }
@@ -25,6 +25,14 @@ const getTeamJoinButton = () => {
       .setLabel('Unirse a un Equipo')
       .setEmoji(emojis.teamJoin)
       .setStyle(ButtonStyle.Success)
+}
+
+const getTeamLookingFotButton = () => {
+    return new ButtonBuilder()
+      .setCustomId('teamLookingFor')
+      .setLabel('Buscar Equipo (Free Agent)')
+      .setEmoji(emojis.teamLookingFor)
+      .setStyle(ButtonStyle.Secondary)
 }
 
 const getTeamLeftButton = () => {
@@ -169,7 +177,7 @@ const getTeamStatsButton = ({ teamName }) => {
 
 module.exports = {
     getTeamCreateButton,
-    getTeamSeeButton,
+    getTeamShowButton,
     getTeamJoinButton,
     getTeamLeftButton,
     getTeamChangeNameButton,

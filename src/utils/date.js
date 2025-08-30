@@ -55,16 +55,14 @@ function checkDeadline(match, now = new Date()) {
     return { passed: false, deadline: null, defaultDate: match.scheduledAt }
   }
 
-  // Deadline (jueves 23:59, por ejemplo)
   const deadline = getDate({
     day: configs.match.deadlineDay,
     hour: configs.match.deadlineHour,
     minute: configs.match.deadlineMinute
   })
 
-  // Fecha por defecto (sábado 19:00, por ejemplo)
   const defaultDate = getDate({
-    day: configs.match.defaultStartDay,
+    day: configs.match.defaultStartDays[Math.floor(Math.random() * configs.match.defaultStartDays.length)],
     hour: configs.match.defaultStartHour,
     minute: 0
   })

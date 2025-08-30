@@ -8,9 +8,9 @@ const {
   MessageFlags,
   MediaGalleryBuilder,
   MediaGalleryItemBuilder
-} = require('discord.js');
+} = require('discord.js')
 
-const { getTeamCreateButton, getTeamSeeButton, getTeamJoinButton } = require('../discord/buttons/team.js');
+const { getTeamCreateButton, getTeamShowButton, getTeamJoinButton, getTeamLookingFotButton } = require('../discord/buttons/team.js')
 
 module.exports = {
   name: 'inscribir',
@@ -72,20 +72,23 @@ Introduce el código en el formulario y pasarás a formar parte del equipo al in
 )
 
     
-    const separator = new SeparatorBuilder();
+    const separator = new SeparatorBuilder()
 
     const actionRow = new ActionRowBuilder().addComponents(
       getTeamCreateButton(),
-      getTeamSeeButton(),
       getTeamJoinButton()
-    );
+    )
+    const row2 = new ActionRowBuilder().addComponents(
+      getTeamShowButton(),
+      getTeamLookingFotButton()
+    )
     const image = new MediaGalleryItemBuilder()
       .setURL("https://media.discordapp.net/attachments/1366297762496249906/1374654925295845446/TS_LEAGUE.png?ex=682ed6aa&is=682d852a&hm=c15d97f6f7fd0f756ab034df54af062f821d0a4425b4695d793a7655220ebd92&=&format=webp&quality=lossless&width=1872&height=433")
-      .setDescription("tsleague");
+      .setDescription("tsleague")
 
     const mediaGallery = new MediaGalleryBuilder()
       .setId(1)
-      .addItems([image]);
+      .addItems([image])
 
     const container = new ContainerBuilder()
       .addMediaGalleryComponents([mediaGallery])
@@ -95,11 +98,11 @@ Introduce el código en el formulario y pasarás a formar parte del equipo al in
       .addTextDisplayComponents(text2, text3, text4)
       .addSeparatorComponents(separator)
       .setAccentColor(0x1bfc62)
-      .addActionRowComponents(actionRow)
+      .addActionRowComponents(actionRow, row2)
 
     await message.channel.send({
       components: [container],
       flags: MessageFlags.IsComponentsV2
-    });
+    })
   }
-};
+}

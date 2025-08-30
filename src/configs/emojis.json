@@ -5,8 +5,9 @@
     "members": "<:members:1395916668869283860>",
 
     "teamCreate": "<:teamCreate:1396237918003007588>",
-    "teamSee": "<:teamSee:1402339812022685887>",
     "teamJoin": "👥",
+    "teamShow": "<:teamShow:1402339812022685887>",
+    "teamLookingFor": "🔍",
     "teamLeave": "🚪",
     "teamChangeName": "📛",
     "teamChangeIcon": "🖼️",

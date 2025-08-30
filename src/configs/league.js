@@ -94,16 +94,18 @@ module.exports = {
     "maxRounds": calcMaxRounds(maxTeams)
   },
   "round": {
-    "startDay": 6,
-    "startHour": 17
+    "startDay": 1,
+    "startHour": 19
   },
   "division": {
     maxTeams
   },
   "match": {
-    "defaultStartDay": 6,
-    "defaultStartHour": 19,
     "defaultSetsLength": 3,
+    "defaultStartDays": [
+      5, 6, 0
+    ],
+    "defaultStartHour": 19,
     "deadlineDay": 5,
     "deadlineHour": 11,
     "deadlineMinute": 59

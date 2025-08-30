@@ -3,7 +3,7 @@ const { ActionRowBuilder } = require('discord.js')
 const { addMemberToTeam } = require('../../../services/team.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
-const { getTeamSeeButton, getTeamLeftButton } = require('../../../discord/buttons/team.js')
+const { getTeamShowButton, getTeamLeftButton } = require('../../../discord/buttons/team.js')
 const { sendLog } = require('../../../discord/send/staff.js')
 
 module.exports = {
@@ -25,7 +25,7 @@ module.exports = {
       })
 
       const teamRow = new ActionRowBuilder().addComponents(
-        getTeamSeeButton(),
+        getTeamShowButton(),
         getTeamLeftButton()
     )
 
