@@ -22,7 +22,7 @@ const getTeamShowButton = () => {
 const getTeamJoinButton = () => {
     return new ButtonBuilder()
       .setCustomId('teamJoin')
-      .setLabel('Unirse a un Equipo')
+      .setLabel('Unirse a Equipo')
       .setEmoji(emojis.teamJoin)
       .setStyle(ButtonStyle.Success)
 }
