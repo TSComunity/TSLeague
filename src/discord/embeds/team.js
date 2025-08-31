@@ -44,14 +44,12 @@ const getAddMemberInfoEmbed = ({ teamCode }) => {
         new EmbedBuilder()
             .setColor('Blue')
             .setDescription(`
-## ${emojis.teamAddMember} Añadir miembros
-Para que un miembro pueda unirse a tu equipo, debe utilizar el código del equipo, el cual es accesible solo para los lideres y sub-lideres del equipo y no debe ser compartido por canales publicos, si no cualquiera podria unirse a tu equipo.
+    ## ${emojis.teamAddMember} Añadir miembros
+    Los nuevos miembros solo podrán unirse a tu equipo utilizando el **código del equipo**, el cual es accesible únicamente para líderes y sub-líderes. Este código nunca debe compartirse en canales públicos, ya que permitiría la entrada de cualquier persona sin control. Siempre que se genere un nuevo código, el anterior quedará automáticamente invalidado, garantizando la seguridad y privacidad del equipo. El código actual de tu equipo es: \`${teamCode}\`. Compártelo únicamente con los jugadores que quieras invitar a tu equipo.
 
-La generación de un nuevo código invalidará automáticamente cualquier versión anterior, asegurando que la privacidad y la seguridad de su equipo se mantengan constantemente actualizadas y protegidas.
-
-Código del equipo: \`${teamCode}\`.
+    Si tu equipo busca nuevos jugadores, también puedes usar el canal de <#${config.channels.freeAgents.id}>. Allí, cada usuario que busque equipo contará con un mensaje con información actualizada de sus estadísticas de Brawl Stars. Esto te permitirá revisar perfiles y contactar fácilmente con los jugadores que más se adapten a lo que tu equipo necesita.
             `)
-            .setFooter({ text: 'Utilice el botón inferior para regenerar el código si fuera necesario.' })
+            .setFooter({ text: 'Utiliza el botón inferior para regenerar el código si fuera necesario.' })
     )
 }
 

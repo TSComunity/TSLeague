@@ -155,9 +155,9 @@ async function toggleFreeAgent({ client, discordId }) {
   if (!client || !discordId) throw new Error("Faltan datos: client o discordId.")
   const user = await User.findOne({ discordId })
   const channel = await client.channels.fetch(channels.freeAgents.id)
-  if (!channel || !channel.isTextBased()) throw new Error("Canal de free agents no encontrado.")
+  if (!channel || !channel.isTextBased()) throw new Error("Canal de agente libres no encontrado.")
 
-  // Si ya está marcado como free agent
+  // Si ya está marcado como agente libre
   if (user.isFreeAgent) {
     try {
       if (user.freeAgentMessageId) {
@@ -165,7 +165,7 @@ async function toggleFreeAgent({ client, discordId }) {
         if (msg) await msg.delete()
       }
     } catch (e) {
-      console.error("Error al borrar mensaje de free agent:", e)
+      console.error("Error al borrar mensaje de agente libre:", e)
     }
 
     user.isFreeAgent = false
@@ -213,7 +213,7 @@ async function syncFreeAgents({ client }) {
           if (msg) await msg.delete()
         }
       } catch (e) {
-        console.error("Error al borrar free agent de usuario con equipo:", e)
+        console.error("Error al borrar agente libre de usuario con equipo:", e)
       }
 
       user.isFreeAgent = false
@@ -248,7 +248,7 @@ async function syncFreeAgents({ client }) {
           await user.save()
         }
       } catch (e) {
-        console.error("Error al actualizar mensaje de free agent:", e)
+        console.error("Error al actualizar mensaje de agente libre:", e)
       }
     }
   }
