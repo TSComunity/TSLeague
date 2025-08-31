@@ -36,8 +36,8 @@ const getTeamChangeMemberRoleMenu = ({ options }) => {
 const getTeamStatsMenu = ({ options }) => {
     return (
         new StringSelectMenuBuilder()
-        .setCustomId('teamStats')
-        .setPlaceholder('Ver Estadísticas')
+        .setCustomId('teamStatsMenu')
+        .setPlaceholder('Selecciona un miembro para ver sus estadísticas')
         .addOptions(options)
     )
 }

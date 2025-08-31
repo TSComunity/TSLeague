@@ -15,7 +15,7 @@ const config = require('../../configs/league.js');
 const { getUserDisplayName } = require('../../services/user.js')
 
 const { getTeamsSummaryEmbed } = require('../embeds/team.js');
-const { getTeamStatsMenu } = require('../menus/team.js')
+const { getTeamStatsButton } = require('../buttons/team.js')
 
 const maxTeams = config.division.maxTeams;
 
@@ -167,48 +167,15 @@ async function buildDivisionContainer(division, teams, guild) {
       )
       .setThumbnailAccessory(thumbnailComponent)
 
-      // const sectionComponent2 = new SectionBuilder()
-      // .addTextDisplayComponents(
-      //   new TextDisplayBuilder().setContent('** **')
-      // )
-      // .setButtonAccessory(getTeamStatsButton({ teamName: name }))
-
-    const options = await Promise.all(
-      members.map(async m => {
-        const brawlId = m.userId.brawlId
-        const encodedId = encodeURIComponent(brawlId)
-
-        try {
-            const res = await fetch(`https://api.brawlstars.com/v1/players/${encodedId}`, {
-                headers: {
-                    Authorization: `Bearer ${BRAWL_STARS_API_KEY}`,
-                },
-            })
-
-            if (!res.ok) {
-                throw new Error(`No se pudo obtener datos para ${brawlId}`)
-            }
-
-            const data = await res.json()
-
-            return {
-              label: await getUserDisplayName({ guild, discordId: m.userId.discordId }),
-              description: data.name,
-              value: m.userId.discordId,
-            }
-        } catch (error) {
-            console.error(`Error con ${brawlId}:`, error)
-            return undefined
-        }
-      })
-    )
+      const sectionComponent2 = new SectionBuilder()
+      .addTextDisplayComponents(
+        new TextDisplayBuilder().setContent('** ­**')
+      )
+      .setButtonAccessory(getTeamStatsButton({ teamName: name }))
 
     container
       .addSeparatorComponents(new SeparatorBuilder())
-      .addSectionComponents(sectionComponent)
-      .addActionRowComponents(
-        new ActionRowBuilder().addComponents(getTeamStatsMenu({ options: options.filter(Boolean) }))
-      )
+      .addSectionComponents(sectionComponent, sectionComponent2)
   }
 
   return container

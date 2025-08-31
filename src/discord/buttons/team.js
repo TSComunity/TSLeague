@@ -168,10 +168,10 @@ const getTeamCancelButton = () => {
 const getTeamStatsButton = ({ teamName }) => {
     return (
         new ButtonBuilder()
-        .setCustomId(`teamStats-${teamName}`)
+        .setCustomId(`teamStatsButton-${teamName}`)
         .setLabel('Ver Estadísticas')
         .setEmoji(emojis.teamStats)
-        .setStyle(ButtonStyle.Primary)
+        .setStyle(ButtonStyle.Secondary)
     )
 }
 
@@ -179,6 +179,7 @@ module.exports = {
     getTeamCreateButton,
     getTeamShowButton,
     getTeamJoinButton,
+    getTeamLookingFotButton,
     getTeamLeftButton,
     getTeamChangeNameButton,
     getTeamChangeIconButton,

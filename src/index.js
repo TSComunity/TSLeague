@@ -64,8 +64,8 @@ const { deleteAllEmptyTeams, updateTeamsChannels } = require('./services/team.js
 
 setInterval(() => {
   updateRankingsEmbed({ client }).catch(error => console.error(error))
-  // updateDivisionsEmbed({ client }).catch(error => console.error(error))
-}, 1000 * 60) // cada 1 minuto
+  updateDivisionsEmbed({ client }).catch(error => console.error(error))
+}, 1000 * 60 * 5) // cada 5 minuto
 
 setInterval(() => {
   updateUsersPingRole({ client }).catch(error => console.error(error))

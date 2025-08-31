@@ -1,12 +1,14 @@
 const { ActionRowBuilder } = require('discord.js')
 
 const Team = require('../../../Esquemas/Team.js')
-
+const { getUserBrawlData } = require('../../../utils/user.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamStatsEmbed } = require('../../../discord/embeds/team.js')
+const { getTeamStatsMenu } = require('../../../discord/menus/team.js')
+const emojis = require('../../../configs/emojis.json')
 
 module.exports = {
-  condition: (id) => id.startsWith('teamStats'),
+  condition: (id) => id.startsWith('teamStatsButton'),
 
   async execute(interaction) {
     try {
@@ -17,8 +19,29 @@ module.exports = {
             .populate('members.userId')
         if (!team) throw new Error('No se ha encontrado el equipo.')
 
+        const data = await Promise.all(team.members.map(async m => {
+          return await getUserBrawlData({ brawlId: m.userId.brawlId })
+        }))
+
+        const sortedMembers = team.members
+          .map((member, index) => ({ member, stats: data[index] })) // unir member con su stats
+          .sort((a, b) => (b.stats?.trophies || 0) - (a.stats?.trophies || 0)) // ordenar por trofeos descendente
+
+        const row = new ActionRowBuilder().addComponents(
+          getTeamStatsMenu({
+            options: sortedMembers.map(({ member, stats }) => ({
+              label: stats?.name || 'Jugador',
+              description: `${emojis.trophie} Trofeos: ${stats?.trophies || 'No disponible'}`,
+              value: member.userId.discordId.toString(),
+              emoji: emojis.teamStats
+            }))
+          })
+        )
+
         interaction.reply({
-            embeds: [getTeamStatsEmbed()]
+            embeds: [getTeamStatsEmbed({ team, data })],
+            components: [row],
+            ephemeral: true
         })
     } catch (error) {
       console.error(error)

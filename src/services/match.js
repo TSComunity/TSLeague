@@ -338,25 +338,71 @@ const cancelMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName, reas
 }
 
 /**
- * Finaliza un partido (status = "played")
+ * Finaliza un partido, calcula sets, ganador y actualiza stats de equipos.
+ * @param {Object} params
+ * @param {Number} params.matchIndex - Índice único del partido
+ * @param {Number} params.seasonIndex - Índice de la temporada
+ * @param {String} params.teamAName - Nombre del equipo A
+ * @param {String} params.teamBName - Nombre del equipo B
+ * @returns {Promise<Object>} - Match actualizado
  */
 const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName }) => {
   let match
 
   if (matchIndex != null) {
-    // Caso 1: Buscar por índice
-    match = await findMatchByIndex({ matchIndex })
+    match = await Match.findOne({ matchIndex })
   } else if (seasonIndex != null && teamAName && teamBName) {
-    // Caso 2: Buscar por season + nombres de equipos
-    match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
+    match = await Match.findOne({
+      seasonId: seasonIndex,
+      $or: [{ teamAId: teamAName }, { teamBId: teamBName }]
+    })
   } else {
     throw new Error('Debes proporcionar matchIndex o bien seasonIndex + teamAName + teamBName.')
   }
 
+  if (!match) throw new Error('Partido no encontrado.')
+
   match.status = 'played'
 
-  // aqui la logica de ganador y eso
+  // 🔹 contar sets ganados
+  let setsWonA = 0, setsWonB = 0
+  for (const set of match.sets) {
+    if (!set.winner) continue
+    if (set.winner.toString().equals(match.teamAId.toString())) setsWonA++
+    else if (set.winner.toString().equals(match.teamBId.toString())) setsWonB++
+  }
+
+  match.scoreA = setsWonA
+  match.scoreB = setsWonB
   await match.save()
+
+  // 🔹 obtener equipos
+  const teamA = await Team.findById(match.teamAId)
+  const teamB = await Team.findById(match.teamBId)
+
+  // 🔹 actualizar stats
+  const updateStats = async (team, wonMatch, setsWon, setsLost) => {
+    if (wonMatch) team.stats.matchesWon += 1
+    else team.stats.matchesLost += 1
+
+    team.stats.setsWon += setsWon
+    team.stats.setsLost += setsLost
+
+    await team.save()
+  }
+
+  if (setsWonA > setsWonB) {
+    await updateStats(teamA, true, setsWonA, setsWonB)
+    await updateStats(teamB, false, setsWonB, setsWonA)
+  } else if (setsWonB > setsWonA) {
+    await updateStats(teamA, false, setsWonA, setsWonB)
+    await updateStats(teamB, true, setsWonB, setsWonA)
+  } else {
+    // Empate → puedes manejarlo como quieras (ej: derrota a ambos)
+    await updateStats(teamA, false, setsWonA, setsWonB)
+    await updateStats(teamB, false, setsWonB, setsWonA)
+  }
+
   return match
 }
 

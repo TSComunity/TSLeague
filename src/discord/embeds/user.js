@@ -2,8 +2,9 @@ const { EmbedBuilder } = require("discord.js")
 const emojis = require("../../configs/emojis.json")
 const configs = require('../../configs/league.js')
 
-function getUserBrawlStatsEmbed({ user, data, discordUser, isFreeAgent = false }) {
-  if (!isFreeAgent) return
+async function getUserStatsEmbed({ client, user, data, isFreeAgent = false }) {
+  const discordUser = await client.users.fetch(user.discordId).catch(() => null)
+  
 
   return new EmbedBuilder()
     .setColor(data?.nameColor?.replace(/^#|0x/, "") ? parseInt(data.nameColor.replace(/^#|0x/, ""), 16) : "Blue")
@@ -27,4 +28,4 @@ function getUserBrawlStatsEmbed({ user, data, discordUser, isFreeAgent = false }
     )
 }
 
-module.exports = { getUserBrawlStatsEmbed }
+module.exports = { getUserStatsEmbed }

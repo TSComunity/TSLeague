@@ -2,7 +2,7 @@ const Team = require('../Esquemas/Team.js')
 const User = require('../Esquemas/User.js')
 
 const { getUserBrawlData } = require('../utils/user.js')
-const { getUserBrawlStatsEmbed } = require('../discord/embeds/user.js')
+const { getUserStatsEmbed } = require('../discord/embeds/user.js')
 const { roles, guild: configGuild, channels } = require('../configs/league.js')
 
 /**
@@ -180,7 +180,7 @@ async function toggleFreeAgent({ client, discordId }) {
     data = await getUserBrawlData({ brawlId: user.brawlId }).catch(() => null)
   }
 
-  const embed = getUserBrawlStatsEmbed({ client, user, data, isFreeAgent: true })
+  const embed = await getUserStatsEmbed({ client, user, data, isFreeAgent: true })
 
   const msg = await channel.send({ embeds: [embed] })
 
@@ -228,7 +228,7 @@ async function syncFreeAgents({ client }) {
       data = await getUserBrawlData({ brawlId: user.brawlId }).catch(() => null)
     }
 
-    const embed = getUserBrawlStatsEmbed({ client, user, data, isFreeAgent: true })
+    const embed = await getUserStatsEmbed({ client, user, data, isFreeAgent: true })
 
     // Si no existe su mensaje → crear
     if (!user.freeAgentMessageId) {

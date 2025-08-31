@@ -8,13 +8,13 @@ function getUserBrawlData({ brawlId }) {
   })
     .then(res => {
       if (!res.ok) {
-        console.error("Error en API Brawl:", res.status)
+        console.error("La API de Brawl Stars esta caida:", res.status)
         return null
       }
       return res.json()
     })
     .catch(err => {
-      console.error("Error al obtener datos de Brawl:", err)
+      console.error("La API de Brawl Stars esta caida.")
       return null
     })
 }

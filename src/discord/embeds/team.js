@@ -67,43 +67,39 @@ const getTeamsSummaryEmbed = ({ divisionsCount, teamsInDivisionsCount, teamsCoun
     )
 }
 
-const getTeamStatsEmbed = async ({ team }) => {
-    const { name, iconURL, color, members } = team
+const getTeamStatsEmbed = ({ team, data }) => {
+    const matchesPlayed = team.stats.matchesWon + team.stats.matchesLost
+    const matchesWinrate = matchesPlayed > 0
+    ? ((team.stats.matchesWon / matchesPlayed) * 100).toFixed(1)
+    : 0
+    const matchesLoserate = matchesPlayed > 0
+    ? ((team.stats.matchesLost / matchesPlayed) * 100).toFixed(1)
+    : 0
 
-    let totalTrophies = 0
-    let totalWins3vs3 = 0
+    const setsPlayed = team.stats.setsWon + team.stats.setsLost
+    const setsWinrate = setsPlayed > 0
+    ? ((team.stats.setsWon / setsPlayed) * 100).toFixed(1)
+    : 0
+    const setsLoserate = setsPlayed > 0
+    ? ((team.stats.setsLost / setsPlayed) * 100).toFixed(1)
+    : 0
 
-    for (const member of members) {
-        const brawlId = member.userId.brawlId
-        const encodedId = encodeURIComponent(brawlId)
+  return new EmbedBuilder()
+    .setColor(team.color || 'Blue')
+    .setThumbnail(team.iconURL || '')
+    .setTitle(`### ${emojis.teamStats} ${team.name}`)
+    .addFields(
 
-        try {
-            const res = await fetch(`https://api.brawlstars.com/v1/players/${encodedId}`, {
-                headers: {
-                    Authorization: `Bearer ${BRAWL_STARS_API_KEY}`,
-                },
-            })
+      { name: "Partidos Jugados", value: `${emojis.match} \`${matchesPlayed}\``, inline: true },
+      { name: "Partidos Ganados", value: `\`${team.stats.matchesWon} ( ${matchesWinrate}% )\``, inline: true },
+      { name: "Partidos Perdidos", value: `\`${team.stats.matchesLost} ( ${matchesLoserate}% )\``, inline: true },
 
-            if (!res.ok) {
-                throw new Error(`No se pudo obtener datos para ${brawlId}`)
-            }
+      { name: "Sets Jugados", value: `${emojis.match} \`${setsPlayed}\``, inline: true },
+      { name: "Sets Ganados", value: `\`${team.stats.setsWon} ( ${setsWinrate}% )\``, inline: true },
+      { name: "Sets Perdidos", value: `\`${team.stats.setsLost} ( ${setsLoserate}% )\``, inline: true },
 
-            const data = await res.json()
-            totalTrophies += data.trophies || 0
-            totalWins3vs3 += data['3vs3Victories'] || 0
-        } catch (error) {
-            console.error(`Error con ${brawlId}:`, error)
-        }
-    }
-    
-    return new EmbedBuilder()
-        .setColor(color)
-        .setThumbnail(iconURL)
-        .setDescription(`### ${emojis.team} ${name} — ${members.length}/${config.team.maxMembers}`)
-        .addFields(
-            { name: `Copas Totales`, value: `${emojis.trophies} \`${totalTrophies}\`` },
-            { name: `Victorias Totales 3v3`, value: `${emojis.wins3vs3} \`${totalWins3vs3}\`` }
-        )
+      // aquí poner fields de statas de brawl ns si copas totales o promedio o asi de todo el equipo (el parametro data es un array de respuestas de la api de brawl)
+    )
 }
 
 const getTeamChannelEmbed = ({ team }) => {

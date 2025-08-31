@@ -15,7 +15,12 @@ let TeamSchema = new Schema({
         }
     ],
 
-    // Aquí se pueden añadir stats totales como total de partidas jugadas, total de puntos en ligas, racha...
+    stats: {
+        matchesWon: { type: Number, default: 0 },
+        matchesLost: { type: Number, default: 0 },
+        setsWon: { type: Number, default: 0 },
+        setsLost: { type: Number, default: 0 }
+    },
 
     channelId: { type: String }
 })
