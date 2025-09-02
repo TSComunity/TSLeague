@@ -368,8 +368,8 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName }) => {
   let setsWonA = 0, setsWonB = 0
   for (const set of match.sets) {
     if (!set.winner) continue
-    if (set.winner.toString().equals(match.teamAId.toString())) setsWonA++
-    else if (set.winner.toString().equals(match.teamBId.toString())) setsWonB++
+    if (set.winner.toString() === match.teamAId.toString()) setsWonA++
+    else if (set.winner.toString() === match.teamBId.toString()) setsWonB++
   }
 
   match.scoreA = setsWonA
@@ -377,18 +377,31 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName }) => {
   await match.save()
 
   // 🔹 obtener equipos
-  const teamA = await Team.findById(match.teamAId)
-  const teamB = await Team.findById(match.teamBId)
+  const teamA = await Team.findById(match.teamAId).populate("members.userId")
+  const teamB = await Team.findById(match.teamBId).populate("members.userId")
 
-  // 🔹 actualizar stats
+  // 🔹 helper para actualizar stats de equipo y usuarios
   const updateStats = async (team, wonMatch, setsWon, setsLost) => {
     if (wonMatch) team.stats.matchesWon += 1
     else team.stats.matchesLost += 1
 
     team.stats.setsWon += setsWon
     team.stats.setsLost += setsLost
-
     await team.save()
+
+    // 🔹 actualizar stats de cada jugador
+    for (const member of team.members) {
+      const user = member.userId
+      if (!user) continue
+
+      if (wonMatch) user.leagueStats.matchesWon += 1
+      else user.leagueStats.matchesLost += 1
+
+      user.leagueStats.setsWon += setsWon
+      user.leagueStats.setsLost += setsLost
+
+      await user.save()
+    }
   }
 
   if (setsWonA > setsWonB) {
@@ -398,7 +411,7 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName }) => {
     await updateStats(teamA, false, setsWonA, setsWonB)
     await updateStats(teamB, true, setsWonB, setsWonA)
   } else {
-    // Empate → puedes manejarlo como quieras (ej: derrota a ambos)
+    // Empate → los dos como perdedores (o podrías hacer empate real con un campo especial)
     await updateStats(teamA, false, setsWonA, setsWonB)
     await updateStats(teamB, false, setsWonB, setsWonA)
   }

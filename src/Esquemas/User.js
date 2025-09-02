@@ -6,8 +6,21 @@ let UserSchema = new Schema({
 
     teamId: { type: Types.ObjectId, ref: 'Team' }, // Usar ./id de la division
 
-    isVerified: { type: Boolean, default: false },
+    leagueStats: {
+        matchesWon: { type: Number, default: 0 },
+        matchesLost: { type: Number, default: 0 },
+        setsWon: { type: Number, default: 0 },
+        setsLost: { type: Number, default: 0 }
+    },
 
+    scrimStats: {
+        matchesWon: { type: Number, default: 0 },
+        matchesLost: { type: Number, default: 0 },
+        setsWon: { type: Number, default: 0 },
+        setsLost: { type: Number, default: 0 }
+    },
+
+    isVerified: { type: Boolean, default: false },
     isFreeAgent: { type: Boolean, default: false },
     freeAgentMessageId: { type: String }
 })
