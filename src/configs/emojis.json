@@ -17,7 +17,6 @@
     "teamAddMember": "<:addMember:1402340233139196018>",
     "teamChangeMemberRole": "🔄",
     "teamKickMember": "❌",
-    "teamStats": "👀",
 
     "season": "📅",
     "round": "⭕",
@@ -43,6 +42,7 @@
     "ascent": "<:ascent:1410412510640607343>",
     "decline": "<:decline:1410412528168865832>",
     "winner": "<:winner:1410424993325645874>",
+    "starPlayer": "<:starPlayer:1415760998882869280>",
 
     "trophies": "<:trophies:1410422169254629437>",
     "highesTrophies": "<:highesTrophies:1410412490193506455>",
