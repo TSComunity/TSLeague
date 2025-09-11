@@ -170,7 +170,6 @@ const getTeamStatsButton = ({ teamName }) => {
         new ButtonBuilder()
         .setCustomId(`teamStatsButton-${teamName}`)
         .setLabel('Ver Estadísticas')
-        .setEmoji(emojis.teamStats)
         .setStyle(ButtonStyle.Secondary)
     )
 }
