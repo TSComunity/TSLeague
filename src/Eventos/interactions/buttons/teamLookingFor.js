@@ -55,7 +55,7 @@ module.exports = {
             }
 
             // Toggle agente libre
-            const newStatus = await toggleFreeAgent({ discordId })
+            const newStatus = await toggleFreeAgent({ client, discordId })
             const statusText = newStatus
                 ? `Se ha activado tu estado de agente libre, se ha enviado un mensaje a <#${configs.channels.freeAgents.id}> con información actualizada cada 15 minutos de tu perfil de Brawl Stars.`
                 : `Se ha desactivado tu estado de agente libre), tu mensaje buscando equipo de <@${configs.channels.freeAgents.id}> ha sido eliminado.`
