@@ -203,8 +203,8 @@ const updateTeamsChannels = async ({ client }) => {
     if (team.channelId) {
       try {
         channel = await guild.channels.fetch(team.channelId)
-        if (channel && channel.name !== team.name.toLowerCase()) {
-          await channel.setName(team.name.toLowerCase())
+        if (channel && channel.name !== `${config.match.channels.prefix}${team.name.toLowerCase()}`) {
+          await channel.setName(`${config.match.channels.prefix}${team.name.toLowerCase()}`)
         }
       } catch {
         channel = null
@@ -213,7 +213,7 @@ const updateTeamsChannels = async ({ client }) => {
 
     if (!channel) {
       channel = await guild.channels.create({
-        name: team.name.toLowerCase(),
+        name: `${config.match.channels.prefix}${team.name.toLowerCase()}`,
         type: 0, // GuildText
         parent: categoryId,
         permissionOverwrites

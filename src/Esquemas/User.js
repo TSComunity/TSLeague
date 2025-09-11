@@ -10,14 +10,16 @@ let UserSchema = new Schema({
         matchesWon: { type: Number, default: 0 },
         matchesLost: { type: Number, default: 0 },
         setsWon: { type: Number, default: 0 },
-        setsLost: { type: Number, default: 0 }
+        setsLost: { type: Number, default: 0 },
+        starPlayerCount: { type: Number, default: 0 }
     },
 
     scrimStats: {
         matchesWon: { type: Number, default: 0 },
         matchesLost: { type: Number, default: 0 },
         setsWon: { type: Number, default: 0 },
-        setsLost: { type: Number, default: 0 }
+        setsLost: { type: Number, default: 0 },
+        starPlayerCount: { type: Number, default: 0 }
     },
 
     isVerified: { type: Boolean, default: false },

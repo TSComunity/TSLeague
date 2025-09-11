@@ -1,3 +1,4 @@
+const { MessageFlags } = require('discord.js')
 const { channels } = require('../../configs/league.js')
 const { announcements } = channels
 
@@ -9,17 +10,24 @@ const { announcements } = channels
  * @param {Client} options.client - Instancia de Discord.js
  */
 
-const sendAnnouncement = async ({ client, content = '', files = [], embeds = [], components = [] }) => {
+const sendAnnouncement = async ({ client, content = '', files = [], embeds = [], components = [], isComponentsV2 = false }) => {
   const channel = await client.channels.fetch(announcements.id)
 
   if (!channel) throw new Error('No se ha encontrado el canal')
 
-  await channel.send({
-    content,
-    files,
-    embeds,
-    components
-  })
+  if (isComponentsV2) {
+    await channel.send({
+      components,
+      flags: MessageFlags.IsComponentsV2
+    })
+  } else {
+    await channel.send({
+      content,
+      files,
+      embeds,
+      components
+    })
+  }
 }
 
 module.exports = { sendAnnouncement }

@@ -3,6 +3,7 @@ const Division = require('../Esquemas/Division.js')
 const Team = require('../Esquemas/Team.js')
 const ScheduledFunction = require('../Esquemas/ScheduledFunction.js')
 
+const { calculatePromotionRelegation } = require('./division.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
 
 const { getActiveSeason } = require('../utils/season.js')
@@ -89,26 +90,34 @@ const endSeason = async ({ client }) => {
   const season = await getActiveSeason()
 
   season.status = 'ended'
-  season.endDate = new Date() 
+  season.endDate = new Date()
 
+  // Marcar todas las divisiones como terminadas
   for (const division of season.divisions) {
     division.status = 'ended'
   }
 
+  // Calcula y aplica ascensos/descensos
+  const promotionData = await calculateAndApplyPromotionRelegation({ season })
+
+  // Envía embed por división
+  for (const divisionData of promotionData) {
+    const division = season.divisions.find(d => d.divisionId.toString() === divisionData.divisionId.toString())
+    const container = getDivisionEndedEmbed({
+      division,
+      promoted: divisionData.promoted,
+      relegated: divisionData.relegated,
+      stayed: divisionData.stayed,
+      pendingExecution: false
+    })
+    await sendAnnouncement({ client, components: [container], isComponentsV2: true })
+  }
+
   await season.save()
-
   await ScheduledFunction.deleteMany({ functionName: 'addRound' })
-
-  await sendAnnouncement({
-    client,
-    content: `<@&${roles.ping.id}>`,
-    embeds: [getSeasonEndedEmbed({ season })]
-  })
 
   return season
 }
-
-
 
 // se podria hacer algo para pausar la temporada (mantenimiento)
 

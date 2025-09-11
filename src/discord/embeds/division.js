@@ -1,29 +1,49 @@
-const { EmbedBuilder } = require('discord.js')
+const {
+  ActionRowBuilder,
+  ContainerBuilder,
+  TextDisplayBuilder,
+  MediaComponentBuilder,
+  ThumbnailBuilder,
+  SectionBuilder,
+  SeparatorBuilder,
+  MessageFlags,
+  EmbedBuilder
+} = require('discord.js');
+
 const emojis = require('../../configs/emojis.json')
 
-// Embed de división terminada, mostrando ranking final y nota
-const getDivisionEndedEmbed = ({ division }) =>  {
-  const { divisionId: divisionDoc, teams = [], rounds = [] } = division
-  // Ordenar equipos por puntos (descendente)
-  const sortedTeams = [...teams].sort((a, b) => (b.points || 0) - (a.points || 0))
+const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed = [] }) => {
+  const div = division.divisionId
+  const container = new ContainerBuilder()
+    .setAccentColor(parseInt(div.color.replace('#', ''), 16))
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### ${div.emoji || emojis.division} División ${div.name || 'Sin nombre'} — ${division.teams.length}/${configs.division.maxTeams}`
+      )
+    )
+    .addSeparatorComponents(new SeparatorBuilder())
 
-  let rankingMsg = sortedTeams.length
-    ? sortedTeams.map((team, idx) => {
-        const name = team.teamId?.name || 'Sin nombre'
-        const pts = typeof team.points === 'number' ? team.points : 0
-        return `\`${idx + 1}.\` **${name}** — ${pts} pts`
-      }).join('\n')
-    : 'División sin equipos.'
 
-  return new EmbedBuilder()
-    .setColor(divisionDoc?.color || 'Blue')
-    .setDescription([
-      `### ${emojis.division} División terminada`,
-      '',
-      rankingMsg
-    ].join('\n'))
-    	.setFooter({ text:'Cuando todas las divisiones hayan terminado se publicará el resumen global de la temporada.' })
+    const desc = ''
+    promoted.forEach(t =>  {
+      desc += `${emojis.ascent} ${t.name}`
+    })
+    stayed.forEach(t =>  {
+      desc += `${emojis.team} ${t.name}`
+    })
+    relegated.forEach(t =>  {
+      desc += `${emojis.ascent} ${t.name}`
+    })
 
+    if ([...promoted, ...relegated, ...stayed].length === 0) {
+      desc = '*División sin equipos.*'
+    }
+
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(desc)
+    )
+
+  return container
 }
 
 // Embed de partidos de nueva ronda y descansos, robusto ante datos nulos

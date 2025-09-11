@@ -11,7 +11,7 @@ const { generateMatchPreviewImageURL } = require('../utils/canvas.js')
 
 const { getMatchInfoEmbed } = require('../discord/embeds/match.js')
 
-const { guild: guildConfig, categories, channels, roles} = require('../configs/league.js')
+const { guild: guildConfig, categories, channels, roles, match } = require('../configs/league.js')
 
 /**
  * Crea un canal de Discord para un partido.
@@ -100,7 +100,7 @@ const matchToUpd = await Match.findOne({ _id: match._id })
     // 6. Crear el canal en la categoría indicada
     const guildToUse = await client.guilds.fetch(guild.id)
     const channel = await guildToUse.channels.create({
-      name: `「🎮」partido-${matchToUpd.matchIndex}`,
+      name: `${match.channels.prefix}partido-${matchToUpd.matchIndex}`,
       type: ChannelType.GuildText,
       parent: categories.matches.id,
       topic: `Partido entre ${teamA.name} y ${teamB.name} — Ronda ${matchToUpd.roundIndex + 1}`,

@@ -10,6 +10,7 @@ const {
 } = require('discord.js');
 
 const Division = require('../../Esquemas/Division.js');
+const emojis = require('../../configs/emojis.json')
 const config = require('../../configs/league.js');
 
 const { getUserDisplayName } = require('../../services/user.js')
@@ -130,7 +131,7 @@ async function buildDivisionContainer(division, teams, guild) {
     .setAccentColor(parseInt(division.color.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
+        `### ${division.emoji || emojis.division} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
       )
     );
 

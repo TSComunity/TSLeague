@@ -2,6 +2,7 @@ const Team = require('../Esquemas/Team.js')
 const { generateMatchmaking } = require('./matchmaking.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
 const { endSeason } = require('./season.js')
+const { calculatePromotionRelegation } = require('./division.js')
 const { getActiveSeason } = require('../utils/season.js')
 const { sendAnnouncement } = require('../discord/send/general.js')
 const { getRoundAddedEmbed } = require('../discord/embeds/round.js')
@@ -127,7 +128,8 @@ const addRound = async ({ client }) => {
     if (ended) {
       await sendAnnouncement({
         client,
-        embeds: [getDivisionEndedEmbed({ division })]
+        components: [getDivisionEndedEmbed({ division })],
+        isComponentsV2: true
       })
       continue
     }

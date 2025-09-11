@@ -108,9 +108,15 @@ module.exports = {
     "defaultStartHour": 19,
     "deadlineDay": 5,
     "deadlineHour": 11,
-    "deadlineMinute": 59
+    "deadlineMinute": 59,
+    "channels": {
+      "prefix": '「🎮」'
+    }
   },
   "team": {
-    "maxMembers": 5
+    "maxMembers": 5,
+    "channels": {
+      "prefix": '「👥」'
+    }
   }
 }

@@ -62,6 +62,11 @@ async function getUserStatsEmbed({ client, user, data, isFreeAgent = false }) {
         inline: true
       },
       {
+        name: "Jugador Estelar",
+        value: `\`${user.leagueStats.starPlayerCount}\``,
+        inline: true
+      },
+      {
         name: `Trofeos`,
         value: `${emojis.trophies} ${data?.trophies || "No disponible"}`,
         inline: true
