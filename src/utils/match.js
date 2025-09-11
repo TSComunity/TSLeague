@@ -24,7 +24,7 @@ const findMatchByNamesAndSeason = async ({ seasonIndex, teamAName, teamBName }) 
       path: 'teamBId',
       populate: { path: 'members.userId' }
     })
-    .populate('seasonId divisionId')
+    .populate('seasonId divisionId starPlayer')
 
   if (!match) throw new Error('Partido no encontrado.')
 
@@ -41,11 +41,27 @@ const findMatchByIndex = async ({ matchIndex }) => {
       path: 'teamBId',
       populate: { path: 'members.userId' }
     })
-    .populate('seasonId divisionId')
+    .populate('seasonId divisionId starPlayer')
 
   if (!match) throw new Error('Partido no encontrado.')
 
   return match
 }
 
-module.exports = { findMatchByNamesAndSeason, findMatchByIndex }
+const findMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName }) => {
+  let match
+
+    if (matchIndex != null) {
+      // Caso 1: Buscar por índice
+      match = await findMatchByIndex({ matchIndex })
+    } else if (seasonIndex != null && teamAName && teamBName) {
+      // Caso 2: Buscar por season + nombres de equipos
+      match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
+    } else {
+      throw new Error('Debes proporcionar matchIndex o bien seasonIndex + teamAName + teamBName.')
+    }
+    
+  return match
+}
+
+module.exports = { findMatch }

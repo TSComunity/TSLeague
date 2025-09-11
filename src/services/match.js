@@ -5,9 +5,9 @@ const Team = require('../Esquemas/Team')
 
 const { getActiveSeason } = require('../utils/season.js')
 const { getCurrentRoundNumber } = require('../utils/round.js')
-const { findMatchByNamesAndSeason, findMatchByIndex } = require('../utils/match.js')
+const { findMatch } = require('../utils/match.js')
 const { getDate, checkDeadline } = require('../utils/date.js')
-const { generateMatchPreviewImageURL } = require('../utils/canvas.js')
+const { generateMatchPreviewImageURL, generateMatchResultsImageURL } = require('../utils/canvas.js')
 
 const { getMatchInfoEmbed } = require('../discord/embeds/match.js')
 
@@ -311,17 +311,7 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
  * Cancela un partido (status = "cancelled")
  */
 const cancelMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName, reason = 'Partido cancelado', removeTeamId = null }) => {
-  let match
-
-  if (matchIndex != null) {
-    // Caso 1: Buscar por índice
-    match = await findMatchByIndex({ matchIndex })
-  } else if (seasonIndex != null && teamAName && teamBName) {
-    // Caso 2: Buscar por season + nombres de equipos
-    match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
-  } else {
-    throw new Error('Debes proporcionar matchIndex o bien seasonIndex + teamAName + teamBName.')
-  }
+  const match = await findMatch({ matchIndex, seasonIndex, teamAName, teamBName })
 
   // Si se quiere remover a un equipo del match
   if (removeTeamId) {
@@ -347,18 +337,7 @@ const cancelMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName, reas
  * @returns {Promise<Object>} - Match actualizado
  */
 const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName }) => {
-  let match
-
-  if (matchIndex != null) {
-    match = await Match.findOne({ matchIndex })
-  } else if (seasonIndex != null && teamAName && teamBName) {
-    match = await Match.findOne({
-      seasonId: seasonIndex,
-      $or: [{ teamAId: teamAName }, { teamBId: teamBName }]
-    })
-  } else {
-    throw new Error('Debes proporcionar matchIndex o bien seasonIndex + teamAName + teamBName.')
-  }
+  const match = await findMatch({ matchIndex, seasonIndex, teamAName, teamBName })
 
   if (!match) throw new Error('Partido no encontrado.')
 
@@ -416,6 +395,15 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName }) => {
     await updateStats(teamB, false, setsWonB, setsWonA)
   }
 
+  const populatedMatch = await findMatch({ matchIndex, seasonIndex, teamAName, teamBName })
+
+  // 🔹 Generar imagen de resultados
+  const resultsImageURL = await generateMatchResultsImageURL({ match: populatedMatch })
+
+  // 🔹 Guardar URL en el partido
+  populatedMatch.resultsImageURL = resultsImageURL
+  await populatedMatch.save()
+
   return match
 }
 
@@ -423,17 +411,7 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName }) => {
  * cambia la fecha de un partido
  */
 const changeMatchScheduledAt = async ({ matchIndex, seasonIndex, teamAName, teamBName, day, hour, minute }) => {
-  let match
-
-  if (matchIndex != null) {
-    // Caso 1: Buscar por índice
-    match = await findMatchByIndex({ matchIndex })
-  } else if (seasonIndex != null && teamAName && teamBName) {
-    // Caso 2: Buscar por season + nombres de equipos
-    match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
-  } else {
-    throw new Error('Debes proporcionar matchIndex o bien seasonIndex + teamAName + teamBName.')
-  }
+  const match = await findMatch({ matchIndex, seasonIndex, teamAName, teamBName })
 
   match.scheduledAt = getDate({ day, hour, minute })
 

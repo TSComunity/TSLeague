@@ -155,7 +155,123 @@ async function generateMatchPreviewImageURL({ divisionDoc, roundIndex, teamADoc,
   return previewImageURL
 }
 
+const path = require('node:path')
+const { generateCustomImage } = require('./your-image-file.js')
+
+/**
+ * Genera la imagen de resultados de un partido a partir de un Match ya poblado.
+ * @param {Object} match Match poblado con teamAId y teamBId
+ * @returns {Promise<string>} URL pública de la imagen subida
+ */
+async function generateMatchResultsImageURL({ match }) {
+  // Rutas absolutas de los assets
+  const background = path.resolve(__dirname, '../assets/matchResults.webp')
+  const crownIcon = path.resolve(__dirname, '../assets/winner.webp')
+  const mvpIcon = path.resolve(__dirname, '../assets/starPlayer.webp')
+
+  // Diseño según tu diseñador
+  const design = {
+    texto_jugadores: {
+      azul: [
+        { x: 130, y: 620 },
+        { x: 130, y: 660 },
+        { x: 130, y: 700 }
+      ],
+      rojo: [
+        { x: 1070, y: 620 },
+        { x: 1070, y: 660 },
+        { x: 1070, y: 700 }
+      ],
+      fuente: 'Lilita One',
+      tamaño_fuente: 36,
+      color: '#FFFFFF'
+    }
+  }
+
+  const texts = []
+  const images = []
+
+  const teamA = match.teamAId
+  const teamB = match.teamBId
+
+  // Dibujar nombres de jugadores
+  teamA.players.forEach((player, i) => {
+    texts.push({
+      text: player,
+      x: design.texto_jugadores.azul[i].x,
+      y: design.texto_jugadores.azul[i].y,
+      font: `${design.texto_jugadores.tamaño_fuente}px ${design.texto_jugadores.fuente}`,
+      color: design.texto_jugadores.color,
+      align: 'left',
+      baseline: 'top'
+    })
+  })
+
+  teamB.players.forEach((player, i) => {
+    texts.push({
+      text: player,
+      x: design.texto_jugadores.rojo[i].x,
+      y: design.texto_jugadores.rojo[i].y,
+      font: `${design.texto_jugadores.tamaño_fuente}px ${design.texto_jugadores.fuente}`,
+      color: design.texto_jugadores.color,
+      align: 'left',
+      baseline: 'top'
+    })
+  })
+
+  // Dibujar MVP
+  if (match.starPlayer) {
+    await match.populate('starPlayer') // Para tener el nombre
+    const mvpName = match.starPlayer.name
+
+    // Buscar en qué equipo está
+    let pos
+    let idx = teamA.players.indexOf(mvpName)
+    if (idx !== -1) pos = design.texto_jugadores.azul[idx]
+    else {
+      idx = teamB.players.indexOf(mvpName)
+      if (idx !== -1) pos = design.texto_jugadores.rojo[idx]
+    }
+
+    if (pos) {
+      images.push({
+        src: mvpIcon,
+        x: pos.x - 60, // al lado del nombre, ajustable
+        y: pos.y,
+        width: 50,
+        height: 50
+      })
+    }
+  }
+
+  // Dibujar corona sobre el equipo ganador (lado azul)
+  if (match.scoreA > match.scoreB || match.scoreB > match.scoreA) {
+    images.push({
+      src: crownIcon,
+      x: design.texto_jugadores.azul[0].x, // encima del primer jugador del equipo ganador
+      y: design.texto_jugadores.azul[0].y - 60,
+      width: 100,
+      height: 60
+    })
+  }
+
+  // Generar imagen
+  const resultsImageURL = await generateCustomImage({
+    background,
+    texts,
+    images,
+    width: 1500,
+    height: 800
+  })
+
+  // Guardar URL en el match
+  match.resultsImageURL = resultsImageURL
+  await match.save()
+
+  return resultsImageURL
+}
+
 module.exports = {
-  generateCustomImage,
-  generateMatchPreviewImageURL
+  generateMatchPreviewImageURL,
+  generateMatchResultsImageURL
 }
