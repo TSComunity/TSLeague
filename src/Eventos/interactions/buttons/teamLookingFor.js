@@ -2,7 +2,7 @@ const { ActionRowBuilder } = require('discord.js')
 
 const { checkUserIsVerified } = require('../../../services/user.js')
 const { findTeam } = require('../../../utils/team.js')
-const { toggleFreeAgent } = require('../../../services/team.js')
+const { toggleFreeAgent } = require('../../../services/user.js')
 
 const { getUserVerifyModal } = require('../../../discord/modals/user.js')
 const { getUserBrawlIdInput } = require('../../../discord/inputs/user.js')
