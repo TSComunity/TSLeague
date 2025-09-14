@@ -10,6 +10,7 @@ const { getActiveSeason } = require('../utils/season.js')
 
 const { sendAnnouncement } = require('../discord/send/general.js')
 const { getSeasonStartedEmbed, getSeasonEndedEmbed } = require('../discord/embeds/season.js')
+const { getDivisionEndedEmbed } = require('../discord/embeds/division.js')
 
 const { round, roles } = require('../configs/league.js')
 const { startDay, startHour } = round
@@ -98,7 +99,13 @@ const endSeason = async ({ client }) => {
   }
 
   // Calcula y aplica ascensos/descensos
-  const promotionData = await calculateAndApplyPromotionRelegation({ season })
+  const promotionData = await calculatePromotionRelegation({ season })
+
+  await sendAnnouncement({
+    client,
+    content: `<@&${roles.ping.id}>`,
+    embeds: [getSeasonEndedEmbed({ season })]
+  })
 
   // Envía embed por división
   for (const divisionData of promotionData) {
@@ -108,7 +115,7 @@ const endSeason = async ({ client }) => {
       promoted: divisionData.promoted,
       relegated: divisionData.relegated,
       stayed: divisionData.stayed,
-      pendingExecution: false
+      expelled: divisionData.expelled
     })
     await sendAnnouncement({ client, components: [container], isComponentsV2: true })
   }

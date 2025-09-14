@@ -31,9 +31,9 @@ module.exports = {
           getTeamStatsMenu({
             options: sortedMembers.map(({ member, stats }) => ({
               label: stats?.name || 'Jugador',
-              description: `${emojis.trophie} Trofeos: ${stats?.trophies || 'No disponible'}`,
+              description: `${stats?.trophies || 'No disponible'}`,
               value: member.userId.discordId.toString(),
-              emoji: emojis.teamStats
+              emoji: emojis.trophies
             }))
           })
         )

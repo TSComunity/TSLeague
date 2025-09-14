@@ -13,7 +13,7 @@ const getSuccesEmbed = ({ message = 'La operación ha sido completada sin errore
   return (
     new EmbedBuilder()
       .setColor('Green')
-      .setDescription(`### ${emojis.succes} Operación completada\n\n> ${message}`)
+      .setDescription(`### ${emojis.success} Operación completada\n\n> ${message}`)
       .setImage(imageURL)
   )
 }

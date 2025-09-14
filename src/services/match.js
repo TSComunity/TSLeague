@@ -11,7 +11,7 @@ const { generateMatchPreviewImageURL, generateMatchResultsImageURL } = require('
 
 const { getMatchInfoEmbed } = require('../discord/embeds/match.js')
 
-const { guild: guildConfig, categories, channels, roles, match } = require('../configs/league.js')
+const { guild: guildConfig, categories, channels, roles, match: matchConfig } = require('../configs/league.js')
 
 /**
  * Crea un canal de Discord para un partido.
@@ -81,26 +81,26 @@ const matchToUpd = await Match.findOne({ _id: match._id })
       ...roles.staff.map(id => ({ id, allow: staffPermissions }))
     ]
 
-    // for (const overwrite of permissionOverwrites) {
-    //   try { const resolved =  
-    //     guild.roles.cache.get(overwrite.id)
-    //       || await guild.members.fetch(overwrite.id).catch(() => null)
+    for (const overwrite of permissionOverwrites) {
+      try { const resolved =  
+        guild.roles.cache.get(overwrite.id)
+          || await guild.members.fetch(overwrite.id).catch(() => null)
 
-    //     if (!resolved) {
-    //       console.warn(`❌ ID no encontrado: ${overwrite.id}`)
-    //     } else {
-    //       console.log(`✅ ID válido: ${overwrite.id}`)
-    //     }
-    //   } catch (err) {
-    //     console.error(`💥 Error al verificar ID ${overwrite.id}:`, err)
-    //   }
-    // }
+        if (!resolved) {
+          console.warn(`❌ ID no encontrado: ${overwrite.id}`)
+        } else {
+          console.log(`✅ ID válido: ${overwrite.id}`)
+        }
+      } catch (err) {
+        console.error(`💥 Error al verificar ID ${overwrite.id}:`, err)
+      }
+    }
 
 
     // 6. Crear el canal en la categoría indicada
     const guildToUse = await client.guilds.fetch(guild.id)
     const channel = await guildToUse.channels.create({
-      name: `${match.channels.prefix}partido-${matchToUpd.matchIndex}`,
+      name: `${matchConfig.channels.prefix}partido-${matchToUpd.matchIndex}`,
       type: ChannelType.GuildText,
       parent: categories.matches.id,
       topic: `Partido entre ${teamA.name} y ${teamB.name} — Ronda ${matchToUpd.roundIndex + 1}`,

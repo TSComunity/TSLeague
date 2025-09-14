@@ -87,7 +87,7 @@ const getTeamStatsEmbed = ({ team, data }) => {
   return new EmbedBuilder()
     .setColor(team.color || 'Blue')
     .setThumbnail(team.iconURL || '')
-    .setTitle(`### ${emojis.teamStats} ${team.name}`)
+    .setTitle(`### ${emojis.team} ${team.name}`)
     .addFields(
 
       { name: "Partidos Jugados", value: `${emojis.match} \`${matchesPlayed}\``, inline: true },

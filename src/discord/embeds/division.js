@@ -10,29 +10,33 @@ const {
   EmbedBuilder
 } = require('discord.js');
 
+const configs = require('../../configs/league.js')
 const emojis = require('../../configs/emojis.json')
 
-const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed = [] }) => {
+const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed = [], expelled = [] }) => {
   const div = division.divisionId
   const container = new ContainerBuilder()
     .setAccentColor(parseInt(div.color.replace('#', ''), 16))
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### ${div.emoji || emojis.division} División ${div.name || 'Sin nombre'} — ${division.teams.length}/${configs.division.maxTeams}`
+        `### ${div.emoji || emojis.division} División ${div.name || 'Sin nombre'} — Finalizada`
       )
     )
     .addSeparatorComponents(new SeparatorBuilder())
 
 
-    const desc = ''
+    let desc = ''
     promoted.forEach(t =>  {
-      desc += `${emojis.ascent} ${t.name}`
+      desc += `${emojis.ascent} ${t.name}\n`
     })
     stayed.forEach(t =>  {
-      desc += `${emojis.team} ${t.name}`
+      desc += `${emojis.team} ${t.name}\n`
     })
     relegated.forEach(t =>  {
-      desc += `${emojis.ascent} ${t.name}`
+      desc += `${emojis.ascent} ${t.name}\n`
+    })
+    expelled.forEach(t =>  {
+      desc += `${emojis.expel} ${t.name}\n`
     })
 
     if ([...promoted, ...relegated, ...stayed].length === 0) {
@@ -59,10 +63,11 @@ const round = rounds[rounds.length - 1]
 
   const matches = round?.matches ?? []
   const resting = round?.resting ?? []
+  console.log(round)
 
   const embed = new EmbedBuilder()
     .setColor(divisionDoc?.color || 'Blue')
-    .setDescription(`### Nuevos Partidos - Division ${divisionName}`)
+    .setDescription(`### Division ${divisionName} — Nuevos Partidos`)
 
   // Partidos nuevos
   for (const matchObj of matches) {
@@ -70,20 +75,17 @@ const round = rounds[rounds.length - 1]
     const teamAName = match.teamAId?.name || 'Sin nombre'
     const teamBName = match.teamBId?.name || 'Sin nombre'
     const channel = match.channelId ? `<#${match.channelId}>` : 'Sin canal'
-    const timestampText =
-      match.scheduledAt instanceof Date
-        ? `<t:${Math.floor(match.scheduledAt.getTime() / 1000)}:R>`
-        : 'Sin fecha'
 
     embed.addFields({
       name: `${emojis.match} ${teamAName} ${emojis.vs} ${teamBName}`,
-      value: `${emojis.channel} Canal: ${channel}\n${emojis.schedule} Horario: ${timestampText}`,
+      value: `${emojis.channel} ${channel}`,
       inline: true
     })
   }
 
   // Equipos en descanso
   for (const restingTeamObj of resting) {
+    console.log(restingTeamObj)
     const restingTeam = restingTeamObj.teamId
     const teamName = restingTeam?.name || 'Sin nombre'
     embed.addFields({

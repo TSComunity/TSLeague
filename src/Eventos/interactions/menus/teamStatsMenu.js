@@ -1,6 +1,3 @@
-const {
-ActionRowBuilder
-} = require('discord.js')
 const User = require('../../../Esquemas/User.js')
 const { getUserBrawlData } = require('../../../utils/user.js')
 const { getUserStatsEmbed } = require('../../../discord/embeds/user.js')
@@ -19,7 +16,7 @@ async execute(interaction) {
 
     await interaction.reply({
         ephemeral: true,
-        embeds: [getUserStatsEmbed({ client: interaction.client, user, data })]
+        embeds: [await getUserStatsEmbed({ client: interaction.client, user, data })]
     })
 
     } catch (error) {

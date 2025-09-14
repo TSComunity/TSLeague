@@ -104,7 +104,7 @@ async function generateMatchPreviewImageURL({ divisionDoc, roundIndex, teamADoc,
     background: backgroundPath,
     texts: [
       {
-        text: `1ª DIVISIÓN ${divisionDoc.name.toUpperCase()}`,
+        text: `DIVISIÓN ${divisionDoc.name.toUpperCase()}`,
         x: 500,
         y: 60,
         font: 'bold 48px Arial',
@@ -154,9 +154,6 @@ async function generateMatchPreviewImageURL({ divisionDoc, roundIndex, teamADoc,
   console.log(previewImageURL)
   return previewImageURL
 }
-
-const path = require('node:path')
-const { generateCustomImage } = require('./your-image-file.js')
 
 /**
  * Genera la imagen de resultados de un partido a partir de un Match ya poblado.

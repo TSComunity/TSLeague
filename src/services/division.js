@@ -101,65 +101,60 @@ const updateDivision = async ({ name, newName, newTier, newEmoji, newColor }) =>
     return division
 }
 
-const calculatePromotionRelegation = async ({ season, divisionId = null }) => {
-  const allDivisions = season.divisions.sort((a, b) => a.divisionId.tier - b.divisionId.tier)
-  const divisionsToProcess = divisionId
-    ? allDivisions.filter(d => d.divisionId.toString() === divisionId.toString())
-    : allDivisions
+/**
+ * Calcula ascensos, descensos, expulsiones y equipos que se mantienen
+ * para todas las divisiones de una temporada.
+ *
+ * @param {Object} season - documento season con .divisions[] y cada división con .divisionId y .teams[]
+ * @returns {Promise<Array>} - array con resultado por división:
+ *  [{ divisionId, promoted, relegated, stayed, expelled }]
+ */
+const calculatePromotionRelegation = async (season) => {
+  if (!season || !Array.isArray(season.divisions)) {
+    throw new Error("season inválido: necesita season.divisions[]");
+  }
 
-  const allDivisionsEnded = allDivisions.length > 0 && allDivisions.every(d => d.status === 'ended')
-  const result = []
+  const allDivisions = [...season.divisions].sort(
+    (a, b) => (a?.divisionId?.tier ?? 0) - (b?.divisionId?.tier ?? 0)
+  );
 
-  for (const division of divisionsToProcess) {
-    const sortedTeams = [...division.teams].sort((a, b) => (b.points || 0) - (a.points || 0))
-    const teamCount = sortedTeams.length
-    const limit = teamCount >= 12 ? 3 : 2
+  const result = [];
 
-    const globalIndex = allDivisions.findIndex(d => d.divisionId.toString() === division.divisionId.toString())
-    const promoted = globalIndex > 0 ? sortedTeams.slice(0, limit) : []
-    const relegated = globalIndex < allDivisions.length - 1 ? sortedTeams.slice(-limit) : []
-    const stayed = sortedTeams.filter(t => !promoted.includes(t) && !relegated.includes(t))
+  for (const division of allDivisions) {
+    const teams = Array.isArray(division.teams) ? [...division.teams] : [];
+    const sorted = teams
+      .map(t => typeof t === "string" || typeof t === "number" ? { teamId: t } : t)
+      .filter(Boolean)
+      .sort((a, b) => (b.points || 0) - (a.points || 0));
 
-    // Aplicar cambios en DB solo si no es divisionId concreto (cuando termina toda la temporada)
-    if (!divisionId) {
-      // Ascensos
-      if (promoted.length && globalIndex > 0) {
-        const upperDivision = allDivisions[globalIndex - 1]
-        promoted.forEach(t => {
-          upperDivision.teams.push(t)
-          division.teams = division.teams.filter(team => team.teamId.toString() !== t.teamId.toString())
-        })
-      }
+    const teamCount = sorted.length;
 
-      // Descensos
-      if (relegated.length && globalIndex < allDivisions.length - 1) {
-        const lowerDivision = allDivisions[globalIndex + 1]
-        relegated.forEach(t => {
-          lowerDivision.teams.push(t)
-          division.teams = division.teams.filter(team => team.teamId.toString() !== t.teamId.toString())
-        })
-      }
+    // Calcular moveCount según tamaño y limitarlo
+    let moveCount = 0;
+    if (teamCount >= 12) moveCount = 3;
+    else if (teamCount >= 6) moveCount = 2;
+    else if (teamCount >= 3) moveCount = 1;
+    moveCount = Math.min(moveCount, Math.max(0, teamCount - 1));
 
-      // Actualizar Team.divisionId
-      for (const t of [...promoted, ...relegated]) {
-        let newDivisionId = null
-        if (promoted.includes(t) && globalIndex > 0) newDivisionId = allDivisions[globalIndex - 1].divisionId
-        if (relegated.includes(t) && globalIndex < allDivisions.length - 1) newDivisionId = allDivisions[globalIndex + 1].divisionId
-        if (newDivisionId) await Team.findByIdAndUpdate(t.teamId, { divisionId: newDivisionId })
-      }
-    }
+    const globalIndex = allDivisions.findIndex(d => d.divisionId?.toString?.() === division.divisionId?.toString?.());
+    const isFirst = globalIndex === 0;
+    const isLast = globalIndex === allDivisions.length - 1;
+
+    const promoted = !isFirst ? sorted.slice(0, moveCount) : [];
+    const relegated = !isLast ? sorted.slice(-moveCount) : [];
+    const expelled = isLast ? sorted.slice(-moveCount) : [];
+    const stayed = sorted.filter(t => !promoted.includes(t) && !relegated.includes(t) && !expelled.includes(t));
 
     result.push({
       divisionId: division.divisionId,
       promoted,
       relegated,
       stayed,
-      canExecute: allDivisionsEnded || divisionId !== null,
-      pendingExecution: !allDivisionsEnded && divisionId === null
-    })
+      expelled
+    });
   }
 
-  return result
-}
+  return result;
+};
 
 module.exports = { createDivision, deleteDivision, updateDivision, calculatePromotionRelegation }
