@@ -19,44 +19,10 @@ const getSeasonEndedEmbed = ({ season }) =>  {
     let totalMatches = 0
     let totalTeams = 0
 
-    // Top 3 por cada división
-    const divisionsRanking = divisions.map(division => {
-        const divisionName = division.divisionId.name || 'Sin nombre'
-        const divisionEmoji = division.divisionId.emoji || emojis.division
-        const divisionColor = division.divisionId.color || 'Grey'
-        const teamsSorted = [...division.teams].sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
-        totalTeams += teamsSorted.length
-
-        const top3 = teamsSorted.slice(0, 3).map((team, idx) => {
-            const teamName = team.teamId?.name || 'Sin nombre'
-            const pts = typeof team.points === 'number' ? team.points : 0
-            const medal = idx === 0 ? emojis.firstPlace : idx === 1 ? emojis.secondPlace : idx === 2 ? emojis.thirdPlace : ''
-            return `${medal} **${teamName}** — ${pts} pts`
-        })
-
-        // Contar rondas y partidos
-        const roundsCount = division.rounds?.length || 0
-        totalRounds += roundsCount
-        let matchesCount = 0
-        for (const round of division.rounds || []) {
-            matchesCount += round.matches.length
-        }
-        totalMatches += matchesCount
-
-        return {
-            divisionName,
-            divisionEmoji,
-            divisionColor,
-            top3,
-            roundsCount,
-            matchesCount
-        }
-    })
-
     // Construir embed
     const embed = new EmbedBuilder()
         .setColor('Blue')
-        .setDescription(`## ${emojis.season} Temporada ${name} — Edición ${seasonIndex}`)
+        .setDescription(`## ${emojis.season} Temporada ${name} Finalizada`)
         .addFields(
             { name: `Estado`, value: `\`${status === 'active' ? `${emojis.active} \`En curso\`` : `${emojis.ended} \`Finalizada\``}\``, inline: true },
             { name: `Jornadas`, value: `${emojis.round} \`${totalRounds}\``, inline: true },
@@ -64,15 +30,6 @@ const getSeasonEndedEmbed = ({ season }) =>  {
             { name: `Equipos`, value: `${emojis.team} \`${totalTeams}\``, inline: true },
             { name: `Partidos`, value: `${emojis.match} \`${totalMatches}\``, inline: true }
         )
-
-    // Añadir ranking por división
-    for (const div of divisionsRanking) {
-        embed.addFields({
-            name: `${div.divisionEmoji} ${div.divisionName} — Top 3`,
-            value: div.top3.length ? div.top3.join('\n') : 'No hay equipos.',
-            inline: false
-        })
-    }
 
     return embed
 }

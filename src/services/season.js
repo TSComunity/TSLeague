@@ -100,6 +100,7 @@ const endSeason = async ({ client }) => {
 
   // Calcula y aplica ascensos/descensos
   const promotionData = await calculatePromotionRelegation({ season })
+  console.log(promotionData[0].relegated[0])
 
   await sendAnnouncement({
     client,
@@ -109,9 +110,9 @@ const endSeason = async ({ client }) => {
 
   // Envía embed por división
   for (const divisionData of promotionData) {
-    const division = season.divisions.find(d => d.divisionId.toString() === divisionData.divisionId.toString())
+    const division = season.divisions.find(d => d.divisionId.toString() === divisionData.divisionId._id.toString())
     const container = getDivisionEndedEmbed({
-      division,
+      division: divisionData.divisionId,
       promoted: divisionData.promoted,
       relegated: divisionData.relegated,
       stayed: divisionData.stayed,

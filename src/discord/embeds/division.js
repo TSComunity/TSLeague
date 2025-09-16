@@ -13,8 +13,8 @@ const {
 const configs = require('../../configs/league.js')
 const emojis = require('../../configs/emojis.json')
 
-const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed = [], expelled = [] }) => {
-  const div = division.divisionId
+const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed = [], expelled = [], finishedBefore = false }) => {
+  const div = division
   const container = new ContainerBuilder()
     .setAccentColor(parseInt(div.color.replace('#', ''), 16))
     .addTextDisplayComponents(
@@ -24,22 +24,30 @@ const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed
     )
     .addSeparatorComponents(new SeparatorBuilder())
 
+    if (finishedBefore) {
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `La división ha terminado antes del fin de la temporada, una vez terminada la temporada se enviaran los resultados finales de la división.`
+        )
+      )
+      return container
+    }
 
     let desc = ''
-    promoted.forEach(t =>  {
+    promoted.forEach(t => {
       desc += `${emojis.ascent} ${t.name}\n`
     })
     stayed.forEach(t =>  {
       desc += `${emojis.team} ${t.name}\n`
     })
     relegated.forEach(t =>  {
-      desc += `${emojis.ascent} ${t.name}\n`
+      desc += `${emojis.decline} ${t.name}\n`
     })
     expelled.forEach(t =>  {
       desc += `${emojis.expel} ${t.name}\n`
     })
 
-    if ([...promoted, ...relegated, ...stayed].length === 0) {
+    if ([...promoted, ...relegated, ...stayed, ...expelled].length === 0) {
       desc = '*División sin equipos.*'
     }
 
@@ -67,7 +75,7 @@ const round = rounds[rounds.length - 1]
 
   const embed = new EmbedBuilder()
     .setColor(divisionDoc?.color || 'Blue')
-    .setDescription(`### Division ${divisionName} — Nuevos Partidos`)
+    .setDescription(`### ${divisionDoc.emoji || emojis.division} Division ${divisionName} — Nuevos Partidos`)
 
   // Partidos nuevos
   for (const matchObj of matches) {

@@ -98,6 +98,7 @@ module.exports = {
     "startHour": 19
   },
   "division": {
+    "minTeams": 8,
     maxTeams
   },
   "match": {
