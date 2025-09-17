@@ -137,7 +137,8 @@ const addRound = async ({ client }) => {
     if (hasRounds) {
     await sendAnnouncement({
       client,
-      embeds: [getDivisionRoundAddedEmbed({ division, season })]
+      components: [getDivisionRoundAddedEmbed({ division, season })],
+      isComponentsV2: true
     })
     continue
     }

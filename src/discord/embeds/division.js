@@ -62,7 +62,7 @@ const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed
 const getDivisionRoundAddedEmbed = ({ division, season }) => {
 
   const rounds = Array.isArray(division.rounds) ? division.rounds : Object.values(division.rounds)
-const round = rounds[rounds.length - 1]
+  const round = rounds[rounds.length - 1]
 
   if (!round) throw new Error('No se ha encontrado la ronda.')
 
@@ -71,11 +71,14 @@ const round = rounds[rounds.length - 1]
 
   const matches = round?.matches ?? []
   const resting = round?.resting ?? []
-  console.log(round)
 
-  const embed = new EmbedBuilder()
-    .setColor(divisionDoc?.color || 'Blue')
-    .setDescription(`### ${divisionDoc.emoji || emojis.division} Division ${divisionName} — Nuevos Partidos`)
+  const container = new ContainerBuilder()
+    .setAccentColor(parseInt(divisionDoc?.color?.replace('#', '') || '0000FF', 16))
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### ${divisionDoc?.emoji || emojis.division} División ${divisionName} — Nuevos Partidos`
+      )
+    )
 
   // Partidos nuevos
   for (const matchObj of matches) {
@@ -84,11 +87,12 @@ const round = rounds[rounds.length - 1]
     const teamBName = match.teamBId?.name || 'Sin nombre'
     const channel = match.channelId ? `<#${match.channelId}>` : 'Sin canal'
 
-    embed.addFields({
-      name: `${emojis.match} ${teamAName} ${emojis.vs} ${teamBName}`,
-      value: `${emojis.channel} ${channel}`,
-      inline: true
-    })
+    container.addSeparatorComponents(new SeparatorBuilder())
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### ${emojis.match} ${teamAName} vs ${teamBName}\n${emojis.channel}${channel}`
+      )
+    )
   }
 
   // Equipos en descanso
@@ -96,14 +100,16 @@ const round = rounds[rounds.length - 1]
     console.log(restingTeamObj)
     const restingTeam = restingTeamObj.teamId
     const teamName = restingTeam?.name || 'Sin nombre'
-    embed.addFields({
-      name: `${emojis.rest} ${teamName}`,
-      value: '> Descansa esta jornada',
-      inline: true
-    })
+
+    container.addSeparatorComponents(new SeparatorBuilder())
+    container.addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `### ${emojis.rest} ${teamName}`
+      )
+    )
   }
 
-  return embed
+  return container
 }
 
 module.exports = { getDivisionEndedEmbed, getDivisionRoundAddedEmbed }
