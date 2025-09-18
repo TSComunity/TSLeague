@@ -13,15 +13,12 @@ const Division = require('../../Esquemas/Division.js');
 const emojis = require('../../configs/emojis.json')
 const config = require('../../configs/league.js');
 
-const { getUserDisplayName } = require('../../services/user.js')
-
 const { getTeamsSummaryEmbed } = require('../embeds/team.js');
 const { getTeamStatsButton } = require('../buttons/team.js')
 
 const maxTeams = config.division.maxTeams;
 
-const Team = require('../../Esquemas/Team.js');
-const { BRAWL_STARS_API_KEY } = require('../../configs/configs.js')
+const Team = require('../../Esquemas/Team.js')
 
 const updateDivisionsEmbed = async ({ client }) => {
   const isV2 = (msg) =>

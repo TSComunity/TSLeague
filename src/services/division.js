@@ -1,7 +1,7 @@
 const Division = require('../Esquemas/Division.js')
 const Team = require('../Esquemas/Team.js')
 const { division } = require('../configs/league.js')
-const { minTeams, maxTeams } = division
+const { maxTeams } = division
 
 /**
  * Crea una nueva división si el nombre y el tier no están en uso.
@@ -106,188 +106,57 @@ const updateDivision = async ({ name, newName, newTier, newEmoji, newColor }) =>
 /**
  * Calcula ascensos, descensos y expulsiones en todas las divisiones
  * @param {Object} season - Objeto Season con divisiones y equipos
- */
-const calculatePromotionRelegation = async ({ season }) => {
+*/
+const calculatePromotionRelegationFinal = async ({ season }) => {
   if (!season || !Array.isArray(season.divisions)) throw new Error("season inválido");
 
   const allDivisions = [...season.divisions].sort(
     (a, b) => (a?.divisionId?.tier ?? 0) - (b?.divisionId?.tier ?? 0)
   );
 
-  const teamCounts = allDivisions.map((division) => (division.teams || []).length);
-  const movements = calculateMovements(teamCounts);
-
   const result = [];
 
-  for (let index = 0; index < allDivisions.length; index++) {
-    const division = allDivisions[index];
-
-    // Ordenar por puntos descendente
+  for (let i = 0; i < allDivisions.length; i++) {
+    const division = allDivisions[i];
     const teams = (division.teams || []).sort((a, b) => (b.points || 0) - (a.points || 0));
 
-    const movePromotion = movements[index].promotions;
-    const moveRelegation = movements[index].relegations;
-    const moveExpulsion = movements[index].expulsions;
+    const isFirst = i === 0;
+    const isLast = i === allDivisions.length - 1;
 
-    const isFirst = index === 0;
-    const isLast = index === allDivisions.length - 1;
+    const incoming = i > 0 ? result[i - 1].relegated.length : 0;
+    let availableSlots = maxTeams - (teams.length + incoming);
 
-    const promoted = !isFirst ? teams.slice(0, movePromotion).map((t) => t.teamId) : [];
-    const relegated = !isLast ? teams.slice(-moveRelegation).map((t) => t.teamId) : [];
-    const expelled = isLast ? teams.slice(-moveExpulsion).map((t) => t.teamId) : [];
+    // Calculamos movimientos según reglas simplificadas
+    const calcMove = (count) => {
+      if (count >= maxTeams) return 3;
+      if (count >= 7) return 2;
+      if (count >= 4) return 1;
+      return 0;
+    };
+
+    const promotions = !isFirst ? Math.min(calcMove(teams.length), availableSlots) : 0;
+    const relegations = !isLast ? Math.min(calcMove(teams.length - promotions), availableSlots) : 0;
+    const expulsions = isLast ? Math.min(calcMove(teams.length - promotions), availableSlots) : 0;
+
+    const promoted = !isFirst ? teams.slice(0, promotions).map(t => t.teamId) : [];
+    const relegated = !isLast ? teams.slice(-relegations).map(t => t.teamId) : [];
+    const expelled = isLast ? teams.slice(-expulsions).map(t => t.teamId) : [];
     const stayed = teams
-      .map((t) => t.teamId)
-      .filter((t) => !promoted.includes(t) && !relegated.includes(t) && !expelled.includes(t));
+      .map(t => t.teamId)
+      .filter(t => !promoted.includes(t) && !relegated.includes(t) && !expelled.includes(t));
 
     // Actualizar DB
-    const previousDivision = allDivisions[index - 1];
-    const nextDivision = allDivisions[index + 1];
+    const previousDivision = allDivisions[i - 1];
+    const nextDivision = allDivisions[i + 1];
 
-    for (const teamId of promoted) {
-      if (previousDivision) {
-        await Team.findByIdAndUpdate(teamId, { divisionId: previousDivision.divisionId });
-      }
-    }
-    for (const teamId of relegated) {
-      if (nextDivision) {
-        await Team.findByIdAndUpdate(teamId, { divisionId: nextDivision.divisionId });
-      }
-    }
-    for (const teamId of expelled) {
-      await Team.findByIdAndUpdate(teamId, { divisionId: null });
-    }
+    for (const teamId of promoted) if (previousDivision) await Team.findByIdAndUpdate(teamId, { divisionId: previousDivision.divisionId });
+    for (const teamId of relegated) if (nextDivision) await Team.findByIdAndUpdate(teamId, { divisionId: nextDivision.divisionId });
+    for (const teamId of expelled) await Team.findByIdAndUpdate(teamId, { divisionId: null });
 
     result.push({ divisionId: division.divisionId, promoted, relegated, stayed, expelled });
   }
 
   return result;
 };
-
-/**
- * Calcula los movimientos por división
- */
-function calculateMovements(teamCounts) {
-  const movements = teamCounts.map((count) => ({
-    current: count,
-    incoming: 0,
-    promotions: 0,
-    relegations: 0,
-    expulsions: 0,
-    afterIncoming: count,
-  }));
-
-  // Paso 1: movimientos básicos
-  for (let i = 0; i < movements.length; i++) {
-    const mov = movements[i];
-    const isFirst = i === 0;
-    const isLast = i === movements.length - 1;
-
-    if (mov.current >= minTeams) {
-      mov.promotions = isFirst ? 0 : getBaseMoves(mov.current);
-      mov.relegations = isLast ? 0 : getBaseMoves(mov.current);
-      mov.expulsions = isLast ? getBaseMoves(mov.current) : 0;
-
-      if (mov.current % 2 !== 0 && !isFirst) {
-        mov.promotions += 1;
-      }
-    }
-  }
-
-  // Paso 2: incoming
-  for (let i = 0; i < movements.length - 1; i++) {
-    movements[i + 1].incoming = movements[i].relegations;
-    movements[i + 1].afterIncoming = movements[i + 1].current + movements[i + 1].incoming;
-  }
-
-  // Paso 3: recalcular si revive una división
-  for (let i = 1; i < movements.length; i++) {
-    const mov = movements[i];
-    const isLast = i === movements.length - 1;
-
-    if (mov.current < minTeams && mov.afterIncoming >= minTeams) {
-      mov.promotions = getBaseMoves(mov.afterIncoming);
-      mov.relegations = isLast ? 0 : getBaseMoves(mov.afterIncoming);
-      mov.expulsions = isLast ? getBaseMoves(mov.afterIncoming) : 0;
-
-      if (mov.afterIncoming % 2 !== 0) {
-        mov.promotions += 1;
-      }
-
-      if (i + 1 < movements.length) {
-        movements[i + 1].incoming = mov.relegations;
-        movements[i + 1].afterIncoming = movements[i + 1].current + movements[i + 1].incoming;
-      }
-    }
-  }
-
-  // Paso 4: balancear
-  balanceAndOptimize(movements);
-
-  return movements;
-}
-
-/**
- * Ajusta movimientos para no pasar min/max
- */
-function balanceAndOptimize(movements) {
-  // Ajustar sobrecapacidad
-  for (let i = 0; i < movements.length; i++) {
-    const mov = movements[i];
-    let finalCount = mov.afterIncoming - mov.relegations - mov.expulsions;
-
-    if (finalCount > maxTeams) {
-      const excess = finalCount - maxTeams;
-      if (i > 0) {
-        const prevMov = movements[i - 1];
-        prevMov.relegations = Math.max(0, prevMov.relegations - excess);
-        mov.incoming = prevMov.relegations;
-        mov.afterIncoming = mov.current + mov.incoming;
-      }
-    }
-  }
-
-  // Segunda pasada
-  for (let i = 0; i < movements.length; i++) {
-    const mov = movements[i];
-    let finalCount = mov.afterIncoming - mov.relegations - mov.expulsions;
-
-    if (finalCount > maxTeams) {
-      const excess = finalCount - maxTeams;
-      if (i === movements.length - 1) {
-        mov.expulsions += excess;
-      } else {
-        mov.relegations += excess;
-        if (i + 1 < movements.length) {
-          movements[i + 1].incoming = mov.relegations;
-          movements[i + 1].afterIncoming = movements[i + 1].current + movements[i + 1].incoming;
-        }
-      }
-    }
-  }
-
-  // Optimizar última división
-  const lastIndex = movements.length - 1;
-  if (lastIndex >= 0) {
-    const last = movements[lastIndex];
-    const wouldHave = last.afterIncoming;
-
-    if (wouldHave > maxTeams) {
-      const toRemove = wouldHave - maxTeams;
-      const maxPromotions = Math.min(3, wouldHave - minTeams);
-      last.promotions = Math.min(maxPromotions, Math.ceil(toRemove * 0.6));
-      last.expulsions = Math.max(0, toRemove - last.promotions);
-    }
-  }
-}
-
-/**
- * Número base de ascensos/descensos según equipos
- */
-function getBaseMoves(teamCount) {
-  if (teamCount >= 11) return 3;
-  if (teamCount >= 9) return 2;
-  if (teamCount >= 7) return 1;
-  return 0;
-}
 
 module.exports = { createDivision, deleteDivision, updateDivision, calculatePromotionRelegation }

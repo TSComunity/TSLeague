@@ -58,7 +58,7 @@ const getTeamsSummaryEmbed = ({ divisionsCount, teamsInDivisionsCount, teamsCoun
     return (
         new EmbedBuilder()
             .setColor('Purple')
-            .setDescription(`## ${emojis.divisions} Divisiones`)
+            .setDescription(`## ${emojis.division} Divisiones`)
             .addFields(
                 { name: `${emojis.division} Divisiones`, value: `\`${divisionsCount}\``, inline: true },
                 { name: `${emojis.teamsInDivisions} Equipos en divisiones`, value: `\`${teamsInDivisionsCount}\``, inline: true },
