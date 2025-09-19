@@ -52,7 +52,7 @@ module.exports = {
       // Responder en el canal con mensaje de éxito
       await interaction.reply({
         content: `<@${leaderId}> ha aceptado la propuesta de cambio de hora.`,
-        components: [getMatchInfoEmbed({ match, showButtons: true })],
+        components: [await getMatchInfoEmbed({ match, showButtons: true })],
         flags: MessageFlags.IsComponentsV2
       })
 

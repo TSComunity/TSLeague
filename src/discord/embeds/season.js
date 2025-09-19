@@ -3,26 +3,22 @@ const emojis = require('../../configs/emojis.json')
 const { getCurrentRoundNumber } = require('../../utils/round.js')
 
 const getSeasonStartedEmbed = ({ season }) => {
-    const { name, seasonIndex, divisions, startDate } = season
+  const { name, seasonIndex, divisions, startDate } = season
 
-    // Contar total de equipos
-    let totalTeams = 0
-    for (const division of divisions) {
-        totalTeams += division.teams.length
-    }
+  // Contar total de equipos
+  const totalTeams = divisions.reduce((acc, d) => acc + d.teams.length, 0)
 
-    // Construir descripción tipo anuncio formal
-    const description = 
-`## ${emojis.season} Temporada ${name} — Edición ${seasonIndex} Iniciada\n\n` +
-`La nueva temporada ha comenzado oficialmente. A continuación, se presentan las divisiones que participarán en esta edición:\n` +
-`${divisions.map(d => `- ${d.divisionId}`).join('\n')}\n\n` +
-`En total, se han registrado **${totalTeams} equipos**, todos listos para competir y demostrar su desempeño.\n` +
-`La temporada dará inicio el **${new Date(startDate).toLocaleDateString()}**, marcando el comienzo de una etapa llena de emoción y competitividad.\n\n` +
-`Deseamos éxito a todos los equipos participantes. ${emojis.active}`
+  // Construir descripción formal y por párrafos
+  const description = 
+`## Temporada ${name} — Edición ${seasonIndex} Comenzada\n\n` +
+`La temporada ha comenzado oficialmente, marcando el inicio de un nuevo ciclo competitivo. ` +
+`En esta edición participarán las siguientes divisiones:\n` +
+`${divisions.map(d => `> ${d.divisionId.emoji} ${d.divisionId.name}`).join('\n')}\n\n` +
+`Se han registrado un total de **${totalTeams} equipos**.\n\n`
 
-    return new EmbedBuilder()
-        .setColor('Green')
-        .setDescription(description)
+  return new EmbedBuilder()
+    .setColor('Green')
+    .setDescription(description)
 }
 
 
@@ -47,14 +43,14 @@ const getSeasonEndedEmbed = ({ season }) => {
 
     return new EmbedBuilder()
         .setColor('Blue')
-        .setDescription(`## ${emojis.season} Temporada ${name} — Edición ${seasonIndex} Comenzada`)
+        .setDescription(`## ${emojis.season} Temporada ${name} — Edición ${seasonIndex} Finalizada`)
         .addFields(
-            { name: `Rondas`, value: `${emojis.rounds} \`${totalRounds}\``, inline: true },
+            { name: `Jornadas`, value: `${emojis.round} \`${totalRounds}\``, inline: true },
             { name: `Divisiones`, value: `${emojis.division} \`${divisions.length}\``, inline: true },
             { name: `Equipos`, value: `${emojis.team} \`${totalTeams}\``, inline: true },
             { name: `Partidos`, value: `${emojis.match} \`${totalMatches}\``, inline: true },
-            { name: `Inicio`, value: `\`${new Date(startDate).toLocaleDateString()}\``, inline: true },
-            { name: `Duración`, value: durationDays ? `\`${durationDays} días\`` : '`-`', inline: true }
+            { name: `Inicio`, value: `${emojis.schedule} <t:${Math.floor(new Date(startDate).getTime() / 1000)}:D>`, inline: true },
+            { name: `Duración`, value: durationDays ? `${emojis.schedule}\`${durationDays} días\`` : '`-`', inline: true }
         )
 }
 

@@ -67,6 +67,7 @@ if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta
   })
 
   await season.save()
+  await season.populate('divisions.divisionId')
 
   await sendAnnouncement({
     client,

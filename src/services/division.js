@@ -103,11 +103,8 @@ const updateDivision = async ({ name, newName, newTier, newEmoji, newColor }) =>
     return division
 }
 
-/**
- * Calcula ascensos, descensos y expulsiones en todas las divisiones
- * @param {Object} season - Objeto Season con divisiones y equipos
-*/
-const calculatePromotionRelegationFinal = async ({ season }) => {
+
+const calculatePromotionRelegation = async ({ season }) => {
   if (!season || !Array.isArray(season.divisions)) throw new Error("season inválido");
 
   const allDivisions = [...season.divisions].sort(
@@ -123,20 +120,35 @@ const calculatePromotionRelegationFinal = async ({ season }) => {
     const isFirst = i === 0;
     const isLast = i === allDivisions.length - 1;
 
+    // slots libres para recibir
     const incoming = i > 0 ? result[i - 1].relegated.length : 0;
     let availableSlots = maxTeams - (teams.length + incoming);
 
-    // Calculamos movimientos según reglas simplificadas
-    const calcMove = (count) => {
-      if (count >= maxTeams) return 3;
-      if (count >= 7) return 2;
-      if (count >= 4) return 1;
+    // Cuántos ascensos/descesos según tamaño
+    const calcPromotions = (count) => {
+      if (count >= 12) return 4;
+      if (count >= 10) return 2;
+      if (count >= 8) return 1;
       return 0;
     };
 
-    const promotions = !isFirst ? Math.min(calcMove(teams.length), availableSlots) : 0;
-    const relegations = !isLast ? Math.min(calcMove(teams.length - promotions), availableSlots) : 0;
-    const expulsions = isLast ? Math.min(calcMove(teams.length - promotions), availableSlots) : 0;
+    const calcRelegations = (count) => {
+      if (count >= 12) return 3;
+      if (count >= 10) return 2;
+      if (count >= 8) return 1;
+      return 0;
+    };
+
+    let promotions = !isFirst ? Math.min(calcPromotions(teams.length), availableSlots) : 0;
+    let relegations = !isLast ? Math.min(calcRelegations(teams.length - promotions), 3) : 0;
+    let expulsions = isLast ? Math.min(calcRelegations(teams.length - promotions), 3) : 0;
+
+    // Priorizar que la última tenga menos miembros que las demás
+    if (isLast) {
+      if (teams.length - promotions + incoming > 9) {
+        expulsions++;
+      }
+    }
 
     const promoted = !isFirst ? teams.slice(0, promotions).map(t => t.teamId) : [];
     const relegated = !isLast ? teams.slice(-relegations).map(t => t.teamId) : [];

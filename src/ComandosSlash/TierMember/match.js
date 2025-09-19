@@ -6,8 +6,7 @@ const {
   changeMatchScheduledAt
 } = require('../../services/match.js')
 
-const { getLastSeason } = require('../../utils/season.js')
-const { findMatchByNamesAndSeason } = require('../../utils/match.js')
+const { findMatch } = require('../../utils/match.js')
 
 const { getMatchInfoEmbed } = require('../../discord/embeds/match.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
@@ -142,39 +141,39 @@ module.exports = {
         })
       }
       else if (sub === 'ver-datos') {
-        const matchIndex = interaction.options.getString('indice-partido')
+        const matchIndex = interaction.options.getInteger('indice-partido')
 
-        const match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
+        const match = await findMatch({ matchIndex })
 
         await interaction.reply({
-          components: [getMatchInfoEmbed({ match })],
+          components: [await getMatchInfoEmbed({ match })],
           flags: MessageFlags.IsComponentsV2
         })
 
       } else if (sub === 'cancelar') {
-        const matchIndex = interaction.options.getString('indice-partido')
+        const matchIndex = interaction.options.getInteger('indice-partido')
         const reason = interaction.options.getString('motivo')
 
-        const match = await cancelMatch({ seasonIndex, teamAName, teamBName, reason })
+        const match = await cancelMatch({ matchIndex })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `Cancelado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.` })]
         })
 
       } else if (sub === 'terminar') {
-        const matchIndex = interaction.options.getString('indice-partido')
+        const matchIndex = interaction.options.getInteger('indice-partido')
 
-        const match = await endMatch({ seasonIndex, teamAName, teamBName })
+        const match = await endMatch({ matchIndex })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `Terminado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.` })]
         })
 
       } else if (sub === 'cambiar-horario') {
-        const matchIndex = interaction.options.getString('indice-partido')
+        const matchIndex = interaction.options.getInteger('indice-partido')
         const day = interaction.options.getInteger('dia')
         const hour = interaction.options.getInteger('hora')
         const minute = interaction.options.getInteger('minuto')
 
-        const match = await changeMatchScheduledAt({ seasonIndex, teamAName, teamBName, day, hour, minute })
+        const match = await changeMatchScheduledAt({ matchIndex, day, hour, minute })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message:`Cambiada la fecha del partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.` })]
         })

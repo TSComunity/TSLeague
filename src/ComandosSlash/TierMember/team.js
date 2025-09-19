@@ -67,11 +67,11 @@ module.exports = {
         }))))
     )
 
-    // /equipo añadir-division
+    // /equipo asignar-division
     .addSubcommand(sub =>
       sub
-        .setName('añadir-division')
-        .setDescription('Añade un equipo a una división')
+        .setName('asignar-division')
+        .setDescription('Asigna un equipo a una división')
         .addStringOption(opt =>
           opt.setName('nombre-equipo').setDescription('Nombre del equipo').setRequired(true))
         .addStringOption(opt =>
@@ -223,7 +223,7 @@ module.exports = {
           eventType: 'team'
         })
 
-      } else if (sub === 'añadir-division') {
+      } else if (sub === 'asignar-division') {
         const teamName = interaction.options.getString('nombre-equipo')
         const divisionName = interaction.options.getString('nombre-division')
         const team = await addTeamToDivision({ teamName, divisionName })

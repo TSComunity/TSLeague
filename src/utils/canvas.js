@@ -269,6 +269,7 @@ async function generateMatchResultsImageURL({ match }) {
 }
 
 module.exports = {
+  uploadToImgBB,
   generateMatchPreviewImageURL,
   generateMatchResultsImageURL
 }

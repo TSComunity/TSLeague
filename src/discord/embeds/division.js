@@ -15,6 +15,7 @@ const emojis = require('../../configs/emojis.json')
 
 const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed = [], expelled = [], finishedBefore = false }) => {
   const div = division
+  console.log('div', div)
   const container = new ContainerBuilder()
     .setAccentColor(parseInt(div.color.replace('#', ''), 16))
     .addTextDisplayComponents(
@@ -90,14 +91,14 @@ const getDivisionRoundAddedEmbed = ({ division, season }) => {
     container.addSeparatorComponents(new SeparatorBuilder())
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### ${emojis.match} ${teamAName} vs ${teamBName}\n${emojis.channel}${channel}`
+        `### ${emojis.match} ${teamAName} vs ${teamBName}\n${emojis.channel} ${channel}`
       )
     )
   }
 
   // Equipos en descanso
   for (const restingTeamObj of resting) {
-    console.log(restingTeamObj)
+    console.log('restingTeamObj', restingTeamObj)
     const restingTeam = restingTeamObj.teamId
     const teamName = restingTeam?.name || 'Sin nombre'
 

@@ -1,3 +1,5 @@
+const sharp = require('sharp')
+const { uploadToImgBB } = require('../utils/canvas.js')
 const { getActiveSeason } = require('../utils/season.js')
 
 const gameModes = require('../configs/gameModes.json')
@@ -78,4 +80,55 @@ const generateRandomSets = async () => {
   return sets
 }
 
-module.exports = { generateRandomSets }
+async function generateMapCollage({ sets }) {
+  // sets: array de 3 sets con { mapURL }
+
+  function getMapData(mapId) {
+    for (const mode of gameModes) {
+      const map = mode.maps.find(m => m.id === mapId)
+      if (map) return map
+    }
+    return null
+  }
+
+  // Descargar las imágenes de los mapas de cada set
+  const imagesBuffers = await Promise.all(
+    sets.map(async set => {
+      const mapData = getMapData(set.map)
+      if (!mapData?.imageURL) return null
+
+      const res = await fetch(mapData.imageURL)
+      const arrayBuffer = await res.arrayBuffer()
+      return Buffer.from(arrayBuffer)
+    })
+  )
+
+  // Redimensionar todas a la misma altura (ej: 200px)
+  const resizedBuffers = await Promise.all(
+    imagesBuffers.map(buf => sharp(buf).resize({ height: 200 }).toBuffer())
+  )
+
+  // Combinar horizontalmente
+  const collage = await sharp({
+    create: {
+      width: 200 * 3, // 3 imágenes de 200px de ancho cada una
+      height: 200,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 }
+    }
+  })
+    .composite([
+      { input: resizedBuffers[0], left: 0, top: 0 },
+      { input: resizedBuffers[1], left: 200, top: 0 },
+      { input: resizedBuffers[2], left: 400, top: 0 }
+    ])
+    .png()
+    .toBuffer()
+
+    const url = await uploadToImgBB(collage)
+
+  return url
+}
+
+
+module.exports = { generateRandomSets, generateMapCollage }

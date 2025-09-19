@@ -11,8 +11,8 @@ module.exports = {
     .setDescription('Gestiona la temporada')
     .addSubcommand(sub =>
       sub
-        .setName('empezar')
-        .setDescription('Crea una nueva temporada')
+        .setName('comenzar')
+        .setDescription('Comienza una nueva temporada')
         .addStringOption(opt =>
           opt.setName('nombre')
             .setDescription('Nombre de la temporada')
@@ -21,7 +21,7 @@ module.exports = {
     )
     .addSubcommand(sub =>
       sub
-        .setName('terminar')
+        .setName('finalizar')
         .setDescription('Cuidado con este comando')
     )
     
@@ -40,7 +40,7 @@ module.exports = {
     const subcomand = interaction.options.getSubcommand()
 
     try {
-      if (subcomand === 'empezar') {
+      if (subcomand === 'comenzar') {
         const name = interaction.options.getString('nombre')
         const season = await startSeason({ name, client })
         await interaction.reply({
@@ -55,7 +55,7 @@ module.exports = {
         })
       }
 
-      else if (subcomand === 'terminar') {
+      else if (subcomand === 'finalizar') {
         const season = await endSeason({ client })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `Temporada **${season.name}** terminada.` })]

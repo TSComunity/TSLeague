@@ -3,7 +3,7 @@
       "id":"gemGrab",
       "name":"Atrapagemas",
       "weight":3,
-      "emoji": "<:Moneda:1408132272808394975>",
+      "emoji": "<:gemGrab:1375082350605766879>",
       "maps":[
          {
             "id":"Minecart Madness",
@@ -29,7 +29,7 @@
       "id":"heist",
       "name":"Atraco",
       "weight":2,
-      "emoji": "<:Moneda:1408132272808394975>",
+      "emoji": "<:heist:1375082426367348767>",
       "maps":[
          {
             "id":"Safe Zone",
@@ -55,7 +55,7 @@
       "id":"bounty",
       "name":"Caza estelar",
       "weight":2,
-      "emoji": "<:Moneda:1408132272808394975>",
+      "emoji": "<:bounty:1375082403944730694>",
       "maps":[
          {
             "id":"Layer Cake",
@@ -81,7 +81,7 @@
       "id":"hotzone",
       "name":"Zona restringida",
       "weight":2,
-      "emoji": "<:Moneda:1408132272808394975>",
+      "emoji": "<:hotZone:1418636356816474374>",
       "maps":[
          {
             "id":"Dueling Beetles",
@@ -107,7 +107,7 @@
       "id":"nockout",
       "name":"Noqueo",
       "weight":2,
-      "emoji": "<:Moneda:1408132272808394975>",
+      "emoji": "<:knockout:1375082367869517867>",
       "maps":[
          {
             "id":"Belle's Rock",
@@ -133,7 +133,7 @@
       "id":"brawlBall",
       "name":"Balón Brawl",
       "weight":3,
-      "emoji": "<:Moneda:1408132272808394975>",
+      "emoji": "<:brawlBall:1375082446235762688>",
       "maps":[
          {
             "id":"Backyard Bowl",

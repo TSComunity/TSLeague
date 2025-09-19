@@ -111,7 +111,7 @@ const matchToUpd = await Match.findOne({ _id: match._id })
     await matchToUpd.save()
 
     await channel.send({
-      components: [getMatchInfoEmbed({ match: matchToUpd, showButtons: true })],
+      components: [await getMatchInfoEmbed({ match: matchToUpd, showButtons: true })],
       flags: MessageFlags.IsComponentsV2
     })
 
@@ -444,7 +444,7 @@ const applyDefaultDates = async ({ client }) => {
                   `por lo que se ha aplicado la fecha por defecto.\n` +
                   `**Fecha:** <t:${Math.floor(match.scheduledAt.getTime() / 1000)}:F>\n` +
                   `Revisa el embed para más detalles del partido.`,
-          components: [getMatchInfoEmbed({ match })],
+          components: [await getMatchInfoEmbed({ match })],
         flags: MessageFlags.IsComponentsV2
         })
       }
