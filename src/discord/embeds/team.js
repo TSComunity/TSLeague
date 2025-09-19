@@ -26,17 +26,31 @@ const getTeamInfoEmbed = ({ team, perms }) => {
         formattedDivision = 'En ninguna división'
     }
 
-    return (
-        new EmbedBuilder()
-            .setColor(team.color || 'Blue')
-            .setThumbnail(team.iconURL)
-            .setDescription(`## ${team.name}`)
-            .addFields(
-                { name: `Miembros — ${team.members.length}/${config.team.maxMembers}`, value: formattedList, inline: true },
-                { name: `División`, value: `${emojis.division} \`${formattedDivision}\``, inline: true },
-                ...(perms ? [{ name: `Código`, value: `${emojis.code} \`${team.code}\``, inline: true }] : [])
-	    )
-    )
+    const embed = new EmbedBuilder()
+        .setColor(team.color || 'Blue')
+        .setThumbnail(team.iconURL)
+        .setDescription(`## ${team.name}`)
+        .addFields(
+            { name: `Miembros — ${team.members.length}/${config.team.maxMembers}`, value: formattedList, inline: true },
+            { name: `División`, value: `${emojis.division} \`${formattedDivision}\``, inline: true },
+            ...(perms ? [{ name: `Código`, value: `${emojis.code} \`${team.code}\``, inline: true }] : [])
+        )
+
+    function isValidUrl(url) {
+    try {
+        new URL(url);
+        return true;
+    } catch {
+        return false;
+    }
+    }
+
+    const thumbnailUrl = isValidUrl(team.iconURL) ? team.iconURL : undefined;
+
+    embed.setThumbnail(thumbnailUrl); // Si no es válida, no se pone thumbnail
+
+    
+    return embed
 }
 
 const getAddMemberInfoEmbed = ({ teamCode }) => {

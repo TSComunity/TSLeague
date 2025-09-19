@@ -53,7 +53,8 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
   const accentColor = parseInt(statusColors[status].replace('#', ''), 16)
 
   // --- Info principal con resumen de sets ---
-  let infoText = `# ${emojis.match} ${teamAId?.name || "Equipo A"} vs ${teamBId?.name || "Equipo B"}\n`
+  let title = `## ${emojis.match} ${teamAId?.name || "Equipo A"} vs ${teamBId?.name || "Equipo B"}\n`
+  let infoText = ''
 
   if (status === 'scheduled') {
     infoText += `${emojis.schedule} ${scheduledAt ? `<t:${new Date(scheduledAt).getTime() / 1000}:D> (<t:${new Date(scheduledAt).getTime() / 1000}:R>)` : "Por definir"}`
@@ -95,7 +96,9 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
     container.addSeparatorComponents(new SeparatorBuilder())
   }
 
-  // Texto principal
+  
+  container.addTextDisplayComponents(new TextDisplayBuilder().setContent(title))
+  container.addSeparatorComponents(new SeparatorBuilder())
   container.addTextDisplayComponents(new TextDisplayBuilder().setContent(infoText))
 
   // --- Galería de sets (solo imágenes) ---

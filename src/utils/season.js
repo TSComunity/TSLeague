@@ -9,10 +9,12 @@ const getActiveSeason = async () => {
     .populate('divisions.divisionId')
     .populate('divisions.teams.teamId')
     .populate({
-      path: 'divisions.rounds.matches.matchId', // 🔥 ojo: accede al matchId dentro del objeto
-      populate: ['teamAId', 'teamBId'] // si quieres popular también los equipos dentro del partido
+      path: 'divisions.rounds.matches.matchId',
+      populate: ['teamAId', 'teamBId']
     })
-    .populate('divisions.rounds.resting.teamId')
+    .populate({
+      path: 'divisions.rounds.resting.teamId'
+    })
 
   if (!season) throw new Error('Ninguna temporada activa encontrada.')
 

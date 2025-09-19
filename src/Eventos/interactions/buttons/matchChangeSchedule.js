@@ -5,7 +5,7 @@ const configs = require('../../../configs/league.js')
 
 const { checkTeamUserIsLeader } = require('../../../services/team.js')
 const { checkDeadline } = require('../../../utils/date.js')
-const { findMatchByIndex } = require('../../../utils/match.js')
+const { findMatch } = require('../../../utils/match.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getMatchCancelInteractionButton } = require('../../../discord/buttons/match.js')
@@ -19,10 +19,10 @@ module.exports = {
         const splittedId = interaction.customId.split(':')
         const matchIndex = splittedId[1]
 
-        const match = await findMatchByIndex({ matchIndex })
+        const match = await findMatch({ matchIndex })
 
         if (!match) {
-            throw new Error('No se ha encontrado el partido-')
+            throw new Error('No se ha encontrado el partido.')
         }
 
         const { passed, deadline, defaultDate } = checkDeadline(match)

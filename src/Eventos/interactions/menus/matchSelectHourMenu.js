@@ -1,7 +1,7 @@
 const { ActionRowBuilder, EmbedBuilder } = require('discord.js')
 const Match = require('../../../Esquemas/Match.js')
 const { getDate } = require('../../../utils/date.js')
-const { findMatchByIndex } = require('../../../utils/match.js')
+const { findMatch } = require('../../../utils/match.js')
 const { getMatchProposedScheduleEmbed } = require('../../../discord/embeds/match.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getMatchAcceptScheduleButton, getMatchRejectScheduleButton } = require('../../../discord/buttons/match.js') 
@@ -19,7 +19,7 @@ module.exports = {
       const minute = splittedValues[1]
 
       // Buscar el partido
-      const match = await findMatchByIndex({ matchIndex })
+      const match = await findMatch({ matchIndex })
 
       if (!match) throw new Error('No se ha encontrado el partido.')
 

@@ -113,7 +113,7 @@ const endSeason = async ({ client }) => {
   for (const divisionData of promotionData) {
     const division = season.divisions.find(d => d.divisionId.toString() === divisionData.divisionId._id.toString())
     const container = getDivisionEndedEmbed({
-      division: divisionData.divisionId,
+      division: divisionData,
       promoted: divisionData.promoted,
       relegated: divisionData.relegated,
       stayed: divisionData.stayed,

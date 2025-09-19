@@ -37,4 +37,4 @@ const sendTeamDM = async ({ client, team, rol = 'jugador', content = '', files =
   }
 }
 
-module.exports = { sendTeamDm }
+module.exports = { sendTeamDM }

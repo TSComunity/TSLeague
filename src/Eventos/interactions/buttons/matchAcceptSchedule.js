@@ -1,7 +1,7 @@
 const { MessageFlags } = require('discord.js')
 const Match = require('../../../Esquemas/Match.js')
 const { checkDeadline } = require('../../../utils/date.js')
-const { findMatchByIndex } = require('../../../utils/match.js')
+const { findMatch } = require('../../../utils/match.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getMatchInfoEmbed } = require('../../../discord/embeds/match.js')
 
@@ -13,7 +13,7 @@ module.exports = {
       const splittedId = interaction.customId.split(':')
       const matchIndex = splittedId[1]
 
-      const match = await findMatchByIndex({ matchIndex })
+      const match = await findMatch({ matchIndex })
 
         const { passed, deadline, defaultDate } = checkDeadline(match)
 

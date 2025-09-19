@@ -75,7 +75,7 @@ const addRound = async ({ client }) => {
     const newRound = {
       roundIndex: nextRoundIndex,
       matches: newMatchesDocs.map((match) => ({ matchId: match._id })),
-      resting: newRestingTeamsDocs.map((team) => ({ teamId: team._id }))
+      resting: newRestingTeamsDocs.map((team) => ({ teamId: team.teamId }))
     }
 
     division.rounds.push(newRound)
@@ -137,7 +137,7 @@ const addRound = async ({ client }) => {
     if (hasRounds) {
     await sendAnnouncement({
       client,
-      components: [getDivisionRoundAddedEmbed({ division, season })],
+      components: [getDivisionRoundAddedEmbed({ division })],
       isComponentsV2: true
     })
     continue

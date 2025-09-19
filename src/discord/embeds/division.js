@@ -14,10 +14,9 @@ const configs = require('../../configs/league.js')
 const emojis = require('../../configs/emojis.json')
 
 const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed = [], expelled = [], finishedBefore = false }) => {
-  const div = division
-  console.log('div', div)
+  const div = division.divisionId
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(div.color.replace('#', ''), 16))
+    .setAccentColor(parseInt(div.color?.replace('#', ''), 16) || 3447003)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         `### ${div.emoji || emojis.division} División ${div.name || 'Sin nombre'} — Finalizada`
@@ -60,7 +59,7 @@ const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed
 }
 
 // Embed de partidos de nueva ronda y descansos, robusto ante datos nulos
-const getDivisionRoundAddedEmbed = ({ division, season }) => {
+const getDivisionRoundAddedEmbed = ({ division }) => {
 
   const rounds = Array.isArray(division.rounds) ? division.rounds : Object.values(division.rounds)
   const round = rounds[rounds.length - 1]
@@ -98,7 +97,6 @@ const getDivisionRoundAddedEmbed = ({ division, season }) => {
 
   // Equipos en descanso
   for (const restingTeamObj of resting) {
-    console.log('restingTeamObj', restingTeamObj)
     const restingTeam = restingTeamObj.teamId
     const teamName = restingTeam?.name || 'Sin nombre'
 
