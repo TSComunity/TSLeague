@@ -1,4 +1,4 @@
-const Team = require('../Esquemas/Team.js')
+const Team = require('../models/Team.js')
 const { generateMatchmaking } = require('./matchmaking.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
 const { endSeason } = require('./season.js')

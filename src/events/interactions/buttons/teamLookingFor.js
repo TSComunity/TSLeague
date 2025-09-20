@@ -1,5 +1,5 @@
 const { ActionRowBuilder } = require('discord.js')
-const User = require('../../../Esquemas/User.js')
+const User = require('../../../models/User.js')
 
 const { checkUserIsVerified } = require('../../../services/user.js')
 const { toggleFreeAgent } = require('../../../services/user.js')

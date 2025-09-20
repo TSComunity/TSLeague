@@ -1,10 +1,10 @@
 const { PermissionsBitField } = require('discord.js')
 
-const Season = require('../Esquemas/Season.js')
-const Division = require('../Esquemas/Division.js')
-const Match = require('../Esquemas/Match.js')
-const Team = require('../Esquemas/Team.js')
-const User = require('../Esquemas/User.js')
+const Season = require('../models/Season.js')
+const Division = require('../models/Division.js')
+const Match = require('../models/Match.js')
+const Team = require('../models/Team.js')
+const User = require('../models/User.js')
 
 const { cancelMatch } = require('./match.js')
 

@@ -1,7 +1,7 @@
-const Season = require('../Esquemas/Season.js')
-const Division = require('../Esquemas/Division.js')
-const Team = require('../Esquemas/Team.js')
-const ScheduledFunction = require('../Esquemas/ScheduledFunction.js')
+const Season = require('../models/Season.js')
+const Division = require('../models/Division.js')
+const Team = require('../models/Team.js')
+const ScheduledFunction = require('../models/ScheduledFunction.js')
 
 const { calculatePromotionRelegation } = require('./division.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')

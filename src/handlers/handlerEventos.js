@@ -2,14 +2,14 @@ function loadEvents(client) {
     const fs = require('fs');
     var colors = require('colors');
 
-    const eventFolders = fs.readdirSync('src/Eventos')
+    const eventFolders = fs.readdirSync('src/events')
     for (const folder of eventFolders) {
         const eventFiles = fs
-      .readdirSync(`src/Eventos/${folder}`)
+      .readdirSync(`src/events/${folder}`)
       .filter((file) => file.endsWith(".js"))
 
         for (const file of eventFiles) {
-            const evento = require(`../Eventos/${folder}/${file}`);
+            const evento = require(`../events/${folder}/${file}`);
 
             if (evento.rest) {
                 if(evento.once)

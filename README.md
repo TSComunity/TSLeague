@@ -24,9 +24,9 @@
 - **Imágenes customizadas en tiempo real:** El bot genera imágenes de presentación y resultados de los partidos usando Canvas y las sube automáticamente a ImgBB para visualización en Discord.
 - **Paneles y menús interactivos:** Uso intensivo de modals, botones y menús select para gestionar equipos, partidos y usuarios de forma visual y segura.
 - **Integración con la API de Brawl Stars:** Verificación, stats y rankings de jugadores y equipos con datos oficiales en tiempo real.
-- **Funciones programadas (scheduling):** El sistema permite programar tareas y eventos (rondas, deadlines, limpieza de equipos, etc) que se ejecutan automáticamente.
+- **Funciones programadas (scheduling):** El sistema permite programar tareas y events (rondas, deadlines, limpieza de equipos, etc) que se ejecutan automáticamente.
 - **Logs y avisos inteligentes:** Toda acción relevante se loguea y los canales de clasificaciones/divisiones se actualizan en tiempo real.
-- **Arquitectura robusta y mantenible:** Separación clara de servicios, eventos, comandos, utilidades, configuraciones y modelos de datos.
+- **Arquitectura robusta y mantenible:** Separación clara de servicios, events, comandos, utilidades, configuraciones y modelos de datos.
 
 ---
 
@@ -47,18 +47,18 @@
   - **services/**  
     - Lógica de negocio de alto nivel: gestión de equipos, divisiones, partidos, rondas, usuarios, puntos, matches, scheduling de funciones, generación de sets, matchmaking, etc.
     - Incluye algoritmos para evitar partidos repetidos, control de elegibilidad de equipos, y limpieza/actualización autónoma de entidades.
-  - **Esquemas/**  
+  - **models/**  
     Modelos de datos Mongoose: Season, Division, Team, Match, User, ScheduledFunction.
   - **configs/**  
     - **league.js:** Configuración general de la liga (canales, roles, límites, parámetros de partidos y equipos).
     - **colors.json, emojis.json, gameModes.json:** Paletas de colores, emojis custom y modos/mapas con pesos y assets para sorteos y lógica visual.
   - **utils/**  
     - Funciones utilitarias para fechas, rounds, matches, mapas, generación de imágenes (canvas.js), etc.
-  - **Handlers/**  
-    - Carga dinámica y modular de eventos, comandos y comandos de prefijo.
-  - **Eventos/**  
-    - Listeners de eventos Discord.js para interacciones, botones, menús, modals y mensajes.
-    - Handlers desacoplados para facilitar el desarrollo y pruebas.
+  - **handlers/**  
+    - Carga dinámica y modular de events, comandos y comandos de prefijo.
+  - **events/**  
+    - Listeners de events Discord.js para interacciones, botones, menús, modals y mensajes.
+    - handlers desacoplados para facilitar el desarrollo y pruebas.
   - **assets/**  
     - Recursos gráficos de fondo y de apoyo para la generación de imágenes customizadas (por ejemplo: backgrounds de partidos).
 

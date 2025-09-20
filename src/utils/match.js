@@ -1,6 +1,6 @@
-const Season = require('../Esquemas/Season.js')
-const Match = require('../Esquemas/Match.js')
-const Team = require('../Esquemas/Team.js')
+const Season = require('../models/Season.js')
+const Match = require('../models/Match.js')
+const Team = require('../models/Team.js')
 
 const findMatchByNamesAndSeason = async ({ seasonIndex, teamAName, teamBName }) => {
   const season = await Season.findOne({ seasonIndex })

@@ -68,7 +68,7 @@ module.exports = {
           eventType: 'season'
         })
       } else if (subcomand === 'prueba') {
-        const Team = require('../../Esquemas/Team.js')
+        const Team = require('../../models/Team.js')
         await Team.deleteOne({ name: 'añas'})
 
 interaction.reply({

@@ -1,6 +1,6 @@
 const { ActionRowBuilder } = require('discord.js')
 
-const Team = require('../../../Esquemas/Team.js')
+const Team = require('../../../models/Team.js')
 const { getUserBrawlData } = require('../../../utils/user.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamStatsEmbed } = require('../../../discord/embeds/team.js')

@@ -1,6 +1,6 @@
 const { ActionRowBuilder } = require('discord.js')
 
-const Match = require('../../../Esquemas/Match.js')
+const Match = require('../../../models/Match.js')
 const configs = require('../../../configs/league.js')
 
 const { checkTeamUserIsLeader } = require('../../../services/team.js')

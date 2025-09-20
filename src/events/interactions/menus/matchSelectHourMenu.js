@@ -1,5 +1,5 @@
 const { ActionRowBuilder, EmbedBuilder } = require('discord.js')
-const Match = require('../../../Esquemas/Match.js')
+const Match = require('../../../models/Match.js')
 const { getDate } = require('../../../utils/date.js')
 const { findMatch } = require('../../../utils/match.js')
 const { getMatchProposedScheduleEmbed } = require('../../../discord/embeds/match.js')

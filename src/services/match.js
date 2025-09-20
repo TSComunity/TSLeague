@@ -1,7 +1,7 @@
 const { ChannelType, PermissionsBitField, MessageFlags } = require('discord.js')
 
-const Match = require('../Esquemas/Match')
-const Team = require('../Esquemas/Team')
+const Match = require('../models/Match')
+const Team = require('../models/Team')
 
 const { getActiveSeason } = require('../utils/season.js')
 const { getCurrentRoundNumber } = require('../utils/round.js')

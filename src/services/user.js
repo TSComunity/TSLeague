@@ -1,5 +1,5 @@
-const Team = require('../Esquemas/Team.js')
-const User = require('../Esquemas/User.js')
+const Team = require('../models/Team.js')
+const User = require('../models/User.js')
 
 const { getUserBrawlData } = require('../utils/user.js')
 const { getUserStatsEmbed } = require('../discord/embeds/user.js')

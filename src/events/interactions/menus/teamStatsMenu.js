@@ -1,4 +1,4 @@
-const User = require('../../../Esquemas/User.js')
+const User = require('../../../models/User.js')
 const { getUserBrawlData } = require('../../../utils/user.js')
 const { getUserStatsEmbed } = require('../../../discord/embeds/user.js')
 const { getErrorEmbed } = require('../../../discord/embeds/management.js')

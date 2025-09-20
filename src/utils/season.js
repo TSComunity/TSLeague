@@ -1,4 +1,4 @@
-const Season = require('../Esquemas/Season.js')
+const Season = require('../models/Season.js')
 /**
  * Obtiene la temporada activa de la base de datos con todos sus datos relacionados poblados.
  * Incluye divisiones, equipos, partidos y equipos en descanso.

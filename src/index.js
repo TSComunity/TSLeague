@@ -2,9 +2,9 @@ const process = require('node:process')
 
 const { Client, GatewayIntentBits, Partials, Collection, AttachmentBuilder } = require('discord.js')
 
-const { loadEvents } = require('./Handlers/handlerEventos.js')
-const { loadCommands } = require('./Handlers/handlerComandos.js')
-const { loadPrefix } = require('./Handlers/handlerComandosPrefix.js')
+const { loadEvents } = require('./handlers/handlerEventos.js')
+const { loadCommands } = require('./handlers/handlerComandos.js')
+const { loadPrefix } = require('./handlers/handlerComandosPrefix.js')
 
 const { TOKEN } = require('./configs/configs.js')
 

@@ -1,5 +1,5 @@
-const Division = require('../Esquemas/Division.js')
-const Team = require('../Esquemas/Team.js')
+const Division = require('../models/Division.js')
+const Team = require('../models/Team.js')
 const { division } = require('../configs/league.js')
 const { maxTeams } = division
 

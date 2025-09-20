@@ -1,4 +1,4 @@
-const ScheduledFunction = require('../Esquemas/ScheduledFunction.js')
+const ScheduledFunction = require('../models/ScheduledFunction.js')
 
 const { getDate } = require('../utils/date.js')
 
