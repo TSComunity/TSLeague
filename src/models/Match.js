@@ -31,7 +31,7 @@ const MatchSchema = new Schema({
     }
   ],
 
-  starPlayer: { type: Types.ObjectId, ref: 'User' },
+  starPlayerId: { type: Types.ObjectId, ref: 'User' },
 
   previewImageURL: { type: String },
   resultsImageURL: { type: String},

@@ -82,19 +82,19 @@ const getSeasonSummaryEmbed = ({ season }) => {
             { 
                 name: `Estado`, 
                 value: status === 'active' 
-                    ? `${emojis.active} \`En curso\`` 
-                    : `${emojis.ended} \`Finalizada\``, 
+                    ? `${emojis.active} En curso` 
+                    : `${emojis.ended} Finalizada`, 
                 inline: true 
             },
             { 
-                name: status === 'active' ? `${emojis.round} Jornada Actual` : `${emojis.rounds} Rondas Totales`, 
+                name: status === 'active' ? `${emojis.round} Jornada Actual` : `${emojis.rounds} Jornadas Totales`, 
                 value: `\`${roundNumber}\``, 
                 inline: true 
             },
             { name: `Divisiones`, value: `${emojis.division} \`${divisions.length}\``, inline: true },
             { name: `Equipos`, value: `${emojis.team} \`${totalTeams}\``, inline: true },
             { name: `Partidos`, value: `${emojis.match} \`${totalMatches}\``, inline: true },
-            { name: `Duración`, value: durationDays ? `\`${durationDays} días\`` : '`-`', inline: true }
+            { name: `Duración`, value: durationDays ? `${durationDays} días` : '`-`', inline: true }
         )
 }
 

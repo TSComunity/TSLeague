@@ -24,7 +24,7 @@ const findMatchByNamesAndSeason = async ({ seasonIndex, teamAName, teamBName }) 
       path: 'teamBId',
       populate: { path: 'members.userId' }
     })
-    .populate('seasonId divisionId starPlayer')
+    .populate('seasonId divisionId starPlayerId')
 
   if (!match) throw new Error('Partido no encontrado.')
 
@@ -41,7 +41,7 @@ const findMatchByIndex = async ({ matchIndex }) => {
       path: 'teamBId',
       populate: { path: 'members.userId' }
     })
-    .populate('seasonId divisionId starPlayer')
+    .populate('seasonId divisionId starPlayerId')
 
   if (!match) throw new Error('Partido no encontrado.')
 

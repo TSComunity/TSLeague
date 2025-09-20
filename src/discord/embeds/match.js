@@ -24,7 +24,8 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
     sets,
     previewImageURL,
     resultsImageURL,
-    reason
+    reason,
+    starPlayerId
   } = match
 
   // --- Helpers ---
@@ -60,7 +61,7 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
   if (status === 'scheduled') {
     infoText += `${emojis.schedule} ${scheduledAt ? `<t:${new Date(scheduledAt).getTime() / 1000}:D> (<t:${new Date(scheduledAt).getTime() / 1000}:R>)` : "Por definir"}`
   } else if (status === 'played') {
-    infoText += `${emojis.ended} ${scoreA} - ${scoreB}`
+    infoText += `${emojis.ended} ${scoreA} - ${scoreB}\n${emojis.starPlayer} <@${starPlayerId.discordId}>`
   } else if (status === 'cancelled') {
     infoText += `${emojis.canceled} Cancelado ${reason ? `\n> ${reason}` : ""}`
   }
