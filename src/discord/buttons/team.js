@@ -99,7 +99,7 @@ const getTeamAddMemberButton = () => {
     return (
         new ButtonBuilder()
             .setCustomId('teamAddMember')
-            .setLabel('Añadir Miembro')
+            .setLabel('Añadir Miembros')
             .setEmoji(emojis.teamAddMember)
             .setStyle(ButtonStyle.Primary)
     )
@@ -119,7 +119,7 @@ const getTeamKickMemberButton = () => {
     return (
         new ButtonBuilder()
             .setCustomId('teamKickMember')
-            .setLabel('Expulsar miembro')
+            .setLabel('Expulsar Miembros')
             .setEmoji(emojis.teamKickMember)
             .setStyle(ButtonStyle.Danger)
     )

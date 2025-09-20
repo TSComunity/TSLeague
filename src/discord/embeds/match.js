@@ -1,4 +1,5 @@
 const {
+  EmbedBuilder,
   ActionRowBuilder,
   ContainerBuilder,
   TextDisplayBuilder,
@@ -140,12 +141,23 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
 }
 
 
-const getMatchProposedScheduleEmbed = ({ interaction, oldTimestampUnix, timestampUnix}) => {
+const getMatchProposedScheduleEmbed = ({ interaction, oldTimestampUnix, timestampUnix, status = 'pending' }) => {
+  let color = 'Yellow'
+  let description = `### <@${interaction.user.id}> ha propuesto cambiar la hora del partido.`
+
+  if (status === 'accepted') {
+    color = 'Green'
+    description = `### La propuesta ha sido aceptada por <@${interaction.user.id}>.`
+  } else if (status === 'rejected') {
+    color = 'Red'
+    description = `### La propuesta ha sido rechazada por <@${interaction.user.id}>.`
+  }
+
   return new EmbedBuilder()
-    .setColor('Yellow')
-    .setDescription(`### <@${interaction.user.id}> ha propuesto cambiar la hora del partido.`)
+    .setColor(color)
+    .setDescription(description)
     .addFields(
-      { name: `${emojis.schedule} Hora Actual`, value: `<t:${oldTimestampUnix}:F>`, inline: true },
+      { name: `${emojis.schedule} Hora Actual`, value: oldTimestampUnix ? `<t:${oldTimestampUnix}:F>` : "*No definida*", inline: true },
       { name: `${emojis.schedule} Hora Propuesta`, value: `<t:${timestampUnix}:F>`, inline: true }
     )
 }

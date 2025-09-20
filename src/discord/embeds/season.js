@@ -87,7 +87,7 @@ const getSeasonSummaryEmbed = ({ season }) => {
                 inline: true 
             },
             { 
-                name: status === 'active' ? `${emojis.round} Ronda Actual` : `${emojis.rounds} Rondas Totales`, 
+                name: status === 'active' ? `${emojis.round} Jornada Actual` : `${emojis.rounds} Rondas Totales`, 
                 value: `\`${roundNumber}\``, 
                 inline: true 
             },

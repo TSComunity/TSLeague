@@ -31,7 +31,7 @@ module.exports = {
       // Nueva fecha y timestamp UNIX
       const newDate = getDate({ day: Number(day), hour: Number(hour), minute: Number(minute) })
       const timestampUnix = Math.floor(newDate.getTime() / 1000)
-      const oldTimestampUnix = Math.floor(match.scheduledAt.getTime() / 1000)
+      const oldTimestampUnix = match.scheduledAt ? `${Math.floor(match.scheduledAt.getTime() / 1000)}` : null
 
       // Obtener líderes
       const leaderA = match.teamAId.members.find(m => m.role === 'leader')

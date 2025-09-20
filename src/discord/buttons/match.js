@@ -15,7 +15,8 @@ const getMatchAcceptScheduleButton = ({ matchIndex, leaderId }) => {
     return (
         new ButtonBuilder()
           .setCustomId(`matchAcceptSchedule:${matchIndex}:${leaderId}`)
-          .setLabel(emojis.accept)
+          .setLabel('Aceptar')
+          .setEmoji(emojis.accept)
           .setStyle(ButtonStyle.Success)
     )
 }
@@ -24,7 +25,8 @@ const getMatchRejectScheduleButton = ({ matchIndex, leaderId }) => {
     return (
         new ButtonBuilder()
           .setCustomId(`matchRejectSchedule:${matchIndex}:${leaderId}`)
-          .setLabel(emojis.reject)
+          .setLabel('Rechazar')
+          .setEmoji(emojis.reject)
           .setStyle(ButtonStyle.Danger)
     )
 }

@@ -1,9 +1,8 @@
-const { MessageFlags } = require('discord.js')
-const Match = require('../../../Esquemas/Match.js')
+const { MessageFlags, ButtonBuilder, ActionRowBuilder } = require('discord.js')
 const { checkDeadline } = require('../../../utils/date.js')
 const { findMatch } = require('../../../utils/match.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
-const { getMatchInfoEmbed } = require('../../../discord/embeds/match.js')
+const { getMatchInfoEmbed, getMatchProposedScheduleEmbed } = require('../../../discord/embeds/match.js')
 
 module.exports = {
   condition: (id) => id.startsWith('matchAcceptSchedule'),
@@ -49,9 +48,33 @@ module.exports = {
       match.proposedSchedule.status = 'accepted'
       await match.save()
 
-      // Responder en el canal con mensaje de éxito
-      await interaction.reply({
-        content: `<@${leaderId}> ha aceptado la propuesta de cambio de hora.`,
+      const disabledRow = new ActionRowBuilder()
+        .addComponents(
+          ...interaction.message.components[0].components.map(button =>
+            ButtonBuilder.from(button).setDisabled(true)
+          )
+        )
+
+      const oldTimestampUnix = match.scheduledAt
+        ? Math.floor(match.scheduledAt.getTime() / 1000)
+        : null
+
+      // Timestamp de la hora propuesta
+      const timestampUnix = match.proposedSchedule?.newDate
+        ? Math.floor(match.proposedSchedule.newDate.getTime() / 1000)
+        : null
+
+      await interaction.update({ embeds: [getMatchProposedScheduleEmbed({
+  interaction,
+  oldTimestampUnix,
+  timestampUnix,
+  status: 'accepted'
+})], components: [disabledRow] })
+
+      await interaction.followUp({
+        embeds: [getSuccesEmbed({ message: `<@${leaderId}> ha aceptado la propuesta de cambio de hora.` })]
+      })      
+      await interaction.channel.send({
         components: [await getMatchInfoEmbed({ match, showButtons: true })],
         flags: MessageFlags.IsComponentsV2
       })

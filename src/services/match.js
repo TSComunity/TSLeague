@@ -103,7 +103,7 @@ const matchToUpd = await Match.findOne({ _id: match._id })
       name: `${matchConfig.channels.prefix}partido-${matchToUpd.matchIndex}`,
       type: ChannelType.GuildText,
       parent: categories.matches.id,
-      topic: `Partido entre ${teamA.name} y ${teamB.name} — Ronda ${matchToUpd.roundIndex + 1}`,
+      topic: `Partido entre ${teamA.name} y ${teamB.name} — Jornada ${matchToUpd.roundIndex + 1}`,
       permissionOverwrites
     })
 

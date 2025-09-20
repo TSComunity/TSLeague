@@ -81,7 +81,7 @@ module.exports = {
     // /equipo eliminar-division
     .addSubcommand(sub =>
       sub
-        .setName('eliminar-division')
+        .setName('desasignar-division')
         .setDescription('Elimina un equipo de su división')
         .addStringOption(opt =>
           opt.setName('nombre-equipo').setDescription('Nombre del equipo').setRequired(true))
@@ -238,14 +238,14 @@ module.exports = {
           eventType: 'division'
         })
 
-      } else if (sub === 'eliminar-division') {
+      } else if (sub === 'desasignar-division') {
         const teamName = interaction.options.getString('nombre-equipo')
-        const team = await removeTeamFromDivision({ teamName })
+        await removeTeamFromDivision({ teamName })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** eliminado de su división.` })]
+          embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** desasignado de su división.` })]
         })
         await sendLog({
-          content: `El equipo **${teamName}** ha sido eliminado de su división.`,
+          content: `El equipo **${teamName}** ha sido desasignado de su división.`,
           client: interaction.client,
           type: 'warning',
           userId: interaction.user.id,

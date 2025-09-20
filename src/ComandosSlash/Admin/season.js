@@ -68,19 +68,12 @@ module.exports = {
           eventType: 'season'
         })
       } else if (subcomand === 'prueba') {
-        const ScheduledFunction = require('../../Esquemas/ScheduledFunction.js')
-        const functions = await ScheduledFunction.find()
-        for (const f of functions) {
-          await interaction.reply({
-   content: `\`\`\`json\n${JSON.stringify(f, null, 2).slice(0, 1900)}\n\`\`\``
-          })
-        }
-
+        const Team = require('../../Esquemas/Team.js')
+        await Team.deleteOne({ name: 'añas'})
 
 interaction.reply({
-  content: `\`\`\`json\n${JSON.stringify(match, null, 2).slice(0, 1900)}\n\`\`\``
+  content: `a`
 })
-
       } else if (subcomand === 'prueba2') {
         await addRound({ client })
         await interaction.reply({

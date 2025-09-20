@@ -9,14 +9,26 @@ module.exports = {
 
   async execute(interaction) {
       try {
-            const isValidURL = ({ url }) => {
-        try {
-          new URL(url)
-          return true
-        } catch {
-          return false
+        function isValidURL({ url }) {
+          if (!url || typeof url !== 'string') return false
+
+          try {
+            const parsed = new URL(url)
+
+            // Verificar protocolo
+            if (!['http:', 'https:'].includes(parsed.protocol)) return false
+
+            // Verificar que no tenga espacios
+            if (/\s/.test(url)) return false
+
+            // Verificar que tenga hostname
+            if (!parsed.hostname) return false
+
+            return true
+          } catch {
+            return false
+          }
         }
-      }
 
       const iconURL = interaction.fields.getTextInputValue('teamIconInput').trim()
       const discordId = interaction.user.id

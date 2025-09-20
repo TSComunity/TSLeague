@@ -20,9 +20,21 @@ module.exports = {
 
   async execute(interaction, client) {
     try {
-      const isValidURL = ({ url }) => {
+      function isValidURL({ url }) {
+        if (!url || typeof url !== 'string') return false
+
         try {
-          new URL(url)
+          const parsed = new URL(url)
+
+          // Verificar protocolo
+          if (!['http:', 'https:'].includes(parsed.protocol)) return false
+
+          // Verificar que no tenga espacios
+          if (/\s/.test(url)) return false
+
+          // Verificar que tenga hostname
+          if (!parsed.hostname) return false
+
           return true
         } catch {
           return false

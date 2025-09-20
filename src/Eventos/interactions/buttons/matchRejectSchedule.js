@@ -1,8 +1,8 @@
-const { ActionRowBuilder } = require('discord.js')
-const Match = require('../../../Esquemas/Match.js')
+const { ActionRowBuilder, ButtonBuilder } = require('discord.js')
 const { checkDeadline } = require('../../../utils/date.js')
 const { findMatch } = require('../../../utils/match.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
+const { getMatchProposedScheduleEmbed } = require('../../../discord/embeds/match.js')
 
 module.exports = {
   condition: (id) => id.startsWith('matchRejectSchedule'),
@@ -33,7 +33,7 @@ module.exports = {
       if (interaction.user.id !== leaderId) {
         return interaction.reply({
           ephemeral: true,
-          embeds: [getErrorEmbed({ error: `Solo <@${leaderId}> puede aceptar la propuesta.` })]
+          embeds: [getErrorEmbed({ error: `Solo <@${leaderId}> puede rechazar la propuesta.` })]
         })
       }
 
@@ -46,10 +46,34 @@ module.exports = {
       match.proposedSchedule.status = 'rejected'
       await match.save()
 
+      // Deshabilitar botones
+      const disabledRow = new ActionRowBuilder()
+        .addComponents(
+          ...interaction.message.components[0].components.map(button =>
+            ButtonBuilder.from(button).setDisabled(true)
+          )
+        )
+
+      // Timestamp de la hora actual del partido
+      const oldTimestampUnix = match.scheduledAt
+        ? Math.floor(match.scheduledAt.getTime() / 1000)
+        : null
+
+      // Timestamp de la hora propuesta
+      const timestampUnix = match.proposedSchedule?.newDate
+        ? Math.floor(match.proposedSchedule.newDate.getTime() / 1000)
+        : null
+
+      await interaction.update({ embeds: [getMatchProposedScheduleEmbed({
+  interaction,
+  oldTimestampUnix,
+  timestampUnix,
+  status: 'rejected' // o 'accepted'
+})], components: [disabledRow] })
+
       // Responder en el canal con mensaje
-      await interaction.reply({
-        embeds: [getSuccesEmbed({ message: `<@${leaderId}> ha rechazado la propuesta de cambio de hora.` })],
-        components: []
+      await interaction.followUp({
+        embeds: [getSuccesEmbed({ message: `<@${leaderId}> ha rechazado la propuesta de cambio de hora.` })]
       })
 
     } catch (error) {

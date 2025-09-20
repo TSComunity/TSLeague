@@ -65,13 +65,13 @@ const { deleteAllEmptyTeams, updateTeamsChannels } = require('./services/team.js
 setInterval(() => {
   updateRankingsEmbed({ client }).catch(error => console.error(error))
   updateDivisionsEmbed({ client }).catch(error => console.error(error))
+  syncFreeAgents({ client }).catch(error => console.error(error))
 }, 1000 * 60 * 5) // cada 5 minuto
 
 setInterval(() => {
   updateUsersPingRole({ client }).catch(error => console.error(error))
   executeDueScheduledFunctions({ client }).catch(error => console.error(error))
   applyDefaultDates({ client }).catch(error => console.error(error))
-  syncFreeAgents({ client }).catch(error => console.error(error))
 }, 1000 * 60 * 15) // cada 15 minutos
 
 setInterval(() => {
