@@ -351,9 +351,13 @@ const addTeamToDivision = async ({ teamName = null, teamCode = null, discordId =
   }
 
   // 🔹 Si hay temporada activa, eliminar de todas las divisiones de la temporada
+  let previousPoints = 0
   const activeSeason = await Season.findOne({ status: 'active' })
   if (activeSeason) {
     for (const seasonDivision of activeSeason.divisions) {
+      previusPoints = seasonDivision.teams.find(t => 
+        t.teamId.toString() === team._id.toString()
+      )?.points || 0
       seasonDivision.teams = seasonDivision.teams.filter(
         t => t.teamId.toString() !== team._id.toString()
       )
@@ -374,7 +378,7 @@ const addTeamToDivision = async ({ teamName = null, teamCode = null, discordId =
     if (seasonDivision) {
       seasonDivision.teams.push({
         teamId: team._id,
-        points: 0
+        points: previousPoints
       })
       await activeSeason.save()
     }

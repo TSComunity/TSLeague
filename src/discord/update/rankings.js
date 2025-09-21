@@ -8,6 +8,7 @@ const {
 } = require('discord.js')
 
 const config = require('../../configs/league.js')
+const emojis = require('../../configs/emojis.json')
 
 const { getLastSeason } = require('../../utils/season.js')
 const { getSeasonSummaryEmbed } = require('../embeds/season.js')
@@ -120,7 +121,7 @@ function buildDivisionContainers({ division, teams, chunkSize = 10 }) {
       .setAccentColor(accent)
       .addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `### ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — 0/${maxTeams}`
+          `### ${division.emoji || emojis.division} División ${division.name || 'Sin nombre'} — 0/${maxTeams}`
         )
       )
       .addSeparatorComponents(new SeparatorBuilder())
@@ -136,7 +137,7 @@ function buildDivisionContainers({ division, teams, chunkSize = 10 }) {
     if (chunkIndex === 0) {
       container.addTextDisplayComponents(
         new TextDisplayBuilder().setContent(
-          `### ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
+          `### ${division.emoji || emojis.division} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
         )
       )
     }
@@ -149,7 +150,7 @@ function buildDivisionContainers({ division, teams, chunkSize = 10 }) {
       const thumbnailComponent = new ThumbnailBuilder({ media: { url: iconURL } })
 
       const sectionComponent = new SectionBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`### ${rank}. ${name}\n🏓 Puntos: ${points}`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`### ${rank}. ${name}\n${emojis.points} Puntos: ${points}`))
         .setThumbnailAccessory(thumbnailComponent)
 
       if (!(chunkIndex > 0 && j === 0)) {

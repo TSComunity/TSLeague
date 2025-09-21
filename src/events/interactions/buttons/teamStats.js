@@ -39,7 +39,7 @@ module.exports = {
         )
 
         interaction.reply({
-            embeds: [getTeamStatsEmbed({ team, data })],
+            embeds: [getTeamStatsEmbed({ team })],
             components: [row],
             ephemeral: true
         })

@@ -250,9 +250,19 @@ const calculatePromotionRelegation = async ({ season, maxTeams = 12 }) => {
     if (i === 0 && arr.length > 0) {
       const sortedArr = arr.slice().sort((a, b) => (b.points || 0) - (a.points || 0));
       const winnerTeam = sortedArr[0];
-      winnerArr.push({ teamId: winnerTeam.teamId, name: winnerTeam.name });
+
+      // Guardar solo el ID en winnerArr
+      winnerArr.push(winnerTeam.teamId);
+
       // Incrementar stats.leaguesWon
       await Team.findByIdAndUpdate(winnerTeam.teamId, { $inc: { "stats.leaguesWon": 1 } }).catch(() => {});
+      for (const member of winnerTeam.teamId.members || []) {
+        await User.findByIdAndUpdate(member.userId, { $inc: { "leagueStats.leaguesWon": 1 } }).catch(() => {});
+      }
+
+      // 🔹 Eliminar del array para que no aparezca en stayed
+      const index = arr.findIndex(t => t.teamId.toString() === winnerTeam.teamId.toString());
+      if (index > -1) arr.splice(index, 1);
     }
 
     // Stayed

@@ -10,7 +10,6 @@ const {
   EmbedBuilder
 } = require('discord.js');
 
-const configs = require('../../configs/league.js')
 const emojis = require('../../configs/emojis.json')
 
 const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed = [], expelled = [], winner = [], finishedBefore = false }) => {

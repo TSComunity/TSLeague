@@ -47,12 +47,10 @@ module.exports = {
             }
 
             // Verificar si tiene equipo
-            const hasTeam = await User.findOne({ discordId })?.teamId
-            if (hasTeam) {
-                return interaction.reply({
-                    ephemeral: true,
-                    content: '❌ No puedes usar esta opción porque ya perteneces a un equipo.'
-                })
+            const user = await User.findOne({ discordId })
+
+            if (user.teamId) {
+                throw new Error('Ya perteneces a un equipo, no puedes buscar equipo.')
             }
 
             // Toggle agente libre

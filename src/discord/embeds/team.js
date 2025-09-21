@@ -68,7 +68,7 @@ const getTeamsSummaryEmbed = ({ divisionsCount, teamsInDivisionsCount, teamsCoun
     )
 }
 
-const getTeamStatsEmbed = ({ team, data }) => {
+const getTeamStatsEmbed = ({ team }) => {
     const matchesPlayed = team.stats.matchesWon + team.stats.matchesLost
     const matchesWinrate = matchesPlayed > 0
     ? ((team.stats.matchesWon / matchesPlayed) * 100).toFixed(1)
@@ -88,18 +88,16 @@ const getTeamStatsEmbed = ({ team, data }) => {
   return new EmbedBuilder()
     .setColor(team.color || 'Blue')
     .setThumbnail(team.iconURL || '')
-    .setDescription(`### ${emojis.team} ${team.name}`)
+    .setDescription(`## ${emojis.team} ${team.name}`)
     .addFields(
 
       { name: "Partidos Jugados", value: `${emojis.match} \`${matchesPlayed}\``, inline: true },
-      { name: "Partidos Ganados", value: `\`${team.stats.matchesWon} ( ${matchesWinrate}% )\``, inline: true },
-      { name: "Partidos Perdidos", value: `\`${team.stats.matchesLost} ( ${matchesLoserate}% )\``, inline: true },
+      { name: "Partidos Ganados", value: `\`${team.stats.matchesWon}\` \`(${matchesWinrate}%)\``, inline: true },
+      { name: "Partidos Perdidos", value: `\`${team.stats.matchesLost}\` \`(${matchesLoserate}%)\``, inline: true },
 
       { name: "Sets Jugados", value: `${emojis.match} \`${setsPlayed}\``, inline: true },
-      { name: "Sets Ganados", value: `\`${team.stats.setsWon} ( ${setsWinrate}% )\``, inline: true },
-      { name: "Sets Perdidos", value: `\`${team.stats.setsLost} ( ${setsLoserate}% )\``, inline: true },
-
-      // aquí poner fields de statas de brawl ns si copas totales o promedio o asi de todo el equipo (el parametro data es un array de respuestas de la api de brawl)
+      { name: "Sets Ganados", value: `\`${team.stats.setsWon}\` \`(${setsWinrate}%)\``, inline: true },
+      { name: "Sets Perdidos", value: `\`${team.stats.setsLost}\` \`(${setsLoserate}%)\``, inline: true },
     )
 }
 
