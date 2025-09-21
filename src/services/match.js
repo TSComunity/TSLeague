@@ -110,6 +110,7 @@ const matchToUpd = await Match.findOne({ _id: match._id })
     matchToUpd.channelId = channel.id
     await matchToUpd.save()
 
+    await channel.send({ content: `<@&${roles.ping.id}>` })
     await channel.send({
       components: [await getMatchInfoEmbed({ match: matchToUpd, showButtons: true })],
       flags: MessageFlags.IsComponentsV2

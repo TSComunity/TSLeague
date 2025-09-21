@@ -1,7 +1,6 @@
 const { EmbedBuilder } = require('discord.js')
 const config  = require('../../configs/league.js')
 const emojis = require('../../configs/emojis.json')
-const { BRAWL_STARS_API_KEY } = require('../../configs/configs.js')
 
 const getTeamInfoEmbed = ({ team, perms }) => {
 
@@ -23,7 +22,7 @@ const getTeamInfoEmbed = ({ team, perms }) => {
     if (team.divisionId) {
         formattedDivision = `${team.divisionId.emoji || emojis.division} \`${team.divisionId.name || 'División sin nombre'}\``
     } else {
-        formattedDivision = '${emojis.division} \`En ninguna división\`'
+        formattedDivision = `${emojis.division} \`En ninguna división\``
     }
 
     const embed = new EmbedBuilder()
@@ -98,6 +97,8 @@ const getTeamStatsEmbed = ({ team }) => {
       { name: "Sets Jugados", value: `${emojis.match} \`${setsPlayed}\``, inline: true },
       { name: "Sets Ganados", value: `\`${team.stats.setsWon}\` \`(${setsWinrate}%)\``, inline: true },
       { name: "Sets Perdidos", value: `\`${team.stats.setsLost}\` \`(${setsLoserate}%)\``, inline: true },
+
+      { name: 'Ligas Ganadas', value: `\`${team.stats.leaguesWon}\``, inline: true}
     )
 }
 

@@ -37,7 +37,7 @@ const client = new Client({
     // Añade cualquier otro partial que necesites
   ],
   allowedMentions: {
-      parse: ["users"]
+      parse: ["users", "roles"]
     },
 })
 

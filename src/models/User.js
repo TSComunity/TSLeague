@@ -7,15 +7,15 @@ let UserSchema = new Schema({
     teamId: { type: Types.ObjectId, ref: 'Team' }, // Usar ./id de la division
 
     leagueStats: {
-    leaguesWon: { type: Number, default: 0 },
+        leaguesWon: { type: Number, default: 0 },
 
-    matchesWon: { type: Number, default: 0 },
-    matchesLost: { type: Number, default: 0 },
-    matchStarPlayer: { type: Number, default: 0 },
+        matchesWon: { type: Number, default: 0 },
+        matchesLost: { type: Number, default: 0 },
+        matchStarPlayer: { type: Number, default: 0 },
 
-    setsWon: { type: Number, default: 0 },
-    setsLost: { type: Number, default: 0 },
-    setStarPlayer: { type: Number, default: 0 }
+        setsWon: { type: Number, default: 0 },
+        setsLost: { type: Number, default: 0 },
+        setStarPlayer: { type: Number, default: 0 }
     },
 
 

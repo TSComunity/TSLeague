@@ -14,7 +14,7 @@ module.exports = {
       const teamCode = interaction.fields.getTextInputValue('teamCodeInput').trim()
       const discordId = interaction.user.id
 
-      const team = await addMemberToTeam({ discordId, teamCode })
+      const team = await addMemberToTeam({ client, discordId, teamCode })
 
       await sendLog({
         content: `El usuario <@${discordId}> se ha unido al equipo **${team.name}**.`,

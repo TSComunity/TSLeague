@@ -18,6 +18,50 @@ const config = require('../configs/league.js')
 const maxTeams = config.division.maxTeams
 const maxMembers = config.team.maxMembers
 
+const checkTeamEligibility = (team) => {
+  return team.members.length >= 3 || !!team.divisionId
+}
+
+const createTeamChannel = async ({ client, team }) => {
+  const guild = await client.guilds.fetch(config.guild.id)
+  const categoryId = config.categories.teams.id
+
+  const leaderIds = team.members
+    .filter(m => m.role === 'leader')
+    .map(m => m.userId?.discordId)
+    .filter(Boolean)
+
+  const memberIds = team.members
+    .filter(m => m.role !== 'leader')
+    .map(m => m.userId?.discordId)
+    .filter(Boolean)
+
+  const parsePerms = (names) => names.map(name => PermissionsBitField.Flags[name])
+
+  const normalPermissions = parsePerms(config.channels.permissions.member)
+  const leaderPermissions = [...normalPermissions, ...parsePerms(config.channels.permissions.leader)]
+  const staffPermissions = [...normalPermissions, ...parsePerms(config.channels.permissions.staff)]
+
+  const permissionOverwrites = [
+    { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+    ...leaderIds.map(id => ({ id, allow: leaderPermissions })),
+    ...memberIds.map(id => ({ id, allow: normalPermissions })),
+    ...config.roles.staff.map(id => ({ id, allow: staffPermissions }))
+  ]
+
+  const channel = await guild.channels.create({
+    name: `${config.team.channels.prefix}${team.name.toLowerCase()}`,
+    type: 0, // GuildText
+    parent: categoryId,
+    permissionOverwrites
+  })
+
+  await channel.send({ content: `<@&${config.roles.ping.id}>`, embeds: [getTeamChannelEmbed({ team })] })
+  team.channelId = channel.id
+  await team.save()
+  return channel
+}
+
 const checkTeamUserHasPerms = async ({ discordId }) => {
   const team = await findTeam({ discordId })
 
@@ -159,10 +203,9 @@ const updateTeamsChannels = async ({ client }) => {
   const teams = await Team.find({}).populate('members.userId')
 
   for (const team of teams) {
-    const eligible = team.members.length >= 3 || !!team.divisionId
+    const eligible = checkTeamEligibility(team)
 
     if (!eligible && team.channelId) {
-      // Eliminar canal si ya no cumple criterios
       try {
         const channel = await guild.channels.fetch(team.channelId)
         if (channel) await channel.delete()
@@ -174,31 +217,6 @@ const updateTeamsChannels = async ({ client }) => {
 
     if (!eligible) continue
 
-    // Preparar IDs de miembros y líderes
-    const leaderIds = team.members
-      .filter(m => m.role === 'leader')
-      .map(m => m.userId?.discordId)
-      .filter(Boolean)
-
-    const memberIds = team.members
-      .filter(m => m.role !== 'leader')
-      .map(m => m.userId?.discordId)
-      .filter(Boolean)
-
-    const parsePerms = (names) => names.map(name => PermissionsBitField.Flags[name]);
-
-    const normalPermissions = parsePerms(config.channels.permissions.member)
-    const leaderPermissions = [...normalPermissions, ...parsePerms(config.channels.permissions.leader)]
-    const staffPermissions = [...normalPermissions, ...parsePerms(config.channels.permissions.staff)]
-
-    const permissionOverwrites = [
-      { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-      ...leaderIds.map(id => ({ id, allow: leaderPermissions })),
-      ...memberIds.map(id => ({ id, allow: normalPermissions })),
-      ...config.roles.staff.map(id => ({ id, allow: staffPermissions }))
-    ]
-
-    // Crear o actualizar canal
     let channel
     if (team.channelId) {
       try {
@@ -212,16 +230,7 @@ const updateTeamsChannels = async ({ client }) => {
     }
 
     if (!channel) {
-      channel = await guild.channels.create({
-        name: `${config.team.channels.prefix}${team.name.toLowerCase()}`,
-        type: 0, // GuildText
-        parent: categoryId,
-        permissionOverwrites
-      })
-
-      await channel.send({ embeds: [getTeamChannelEmbed({ team })] })
-      team.channelId = channel.id
-      await team.save()
+      await createTeamChannel({ client, team })
     }
   }
 }
@@ -328,51 +337,60 @@ const updateTeam = async ({ teamName = null, teamCode = null, discordId = null, 
 
 /**
  * Añade un equipo a una división, validando límite máximo.
+ * Mantiene los puntos previos en la temporada activa.
  * @param {Object} params
- * @param {String} params.teamName - Nombre del equipo a añadir.
+ * @param {String} [params.teamName] - Nombre del equipo a añadir.
+ * @param {String} [params.teamCode] - Código del equipo.
+ * @param {String} [params.discordId] - DiscordId de algún miembro del equipo.
  * @param {String} params.divisionName - Nombre de la división destino.
  * @param {Number} params.maxTeams - Máximo de equipos permitidos por división.
  * @returns {Object} team actualizado.
  */
-const addTeamToDivision = async ({ teamName = null, teamCode = null, discordId = null, divisionName }) => {
+const addTeamToDivision = async ({ teamName = null, teamCode = null, discordId = null, divisionName, maxTeams }) => {
+  // 🔹 Buscar división destino
   const division = await Division.findOne({ name: divisionName })
   if (!division) throw new Error('División no encontrada')
 
+  // 🔹 Buscar equipo
   const team = await findTeam({ teamName, teamCode, discordId })
+  if (!team) throw new Error('Equipo no encontrado')
 
-  // 🔹 Si ya estaba en esta división, no hacemos nada
+  // 🔹 Si ya estaba en esta división, lanzar error
   if (team.divisionId?.toString() === division._id.toString()) {
     throw new Error('El equipo ya está en esta división')
   }
 
+  // 🔹 Validar límite de equipos en la división
   const teamCount = await Team.countDocuments({ divisionId: division._id })
   if (teamCount >= maxTeams) {
     throw new Error('La división ya tiene el número máximo de equipos')
   }
 
-  // 🔹 Si hay temporada activa, eliminar de todas las divisiones de la temporada
+  // 🔹 Manejar temporada activa
   let previousPoints = 0
   const activeSeason = await Season.findOne({ status: 'active' })
   if (activeSeason) {
-    for (const seasonDivision of activeSeason.divisions) {
-      previusPoints = seasonDivision.teams.find(t => 
-        t.teamId.toString() === team._id.toString()
-      )?.points || 0
-      seasonDivision.teams = seasonDivision.teams.filter(
-        t => t.teamId.toString() !== team._id.toString()
-      )
+    // Buscar si el equipo ya estaba en alguna división
+    const currentDivision = activeSeason.divisions.find(d =>
+      d.teams.some(t => t.teamId.toString() === team._id.toString())
+    )
+    if (currentDivision) {
+      const existingTeam = currentDivision.teams.find(t => t.teamId.toString() === team._id.toString())
+      previousPoints = existingTeam?.points || 0
+      // Eliminar al equipo de la división anterior
+      currentDivision.teams = currentDivision.teams.filter(t => t.teamId.toString() !== team._id.toString())
+      await activeSeason.save()
     }
-    await activeSeason.save()
   }
 
-  // 🔹 Actualizar Team
+  // 🔹 Actualizar división del equipo
   team.divisionId = division._id
   await team.save()
   await team.populate('divisionId')
 
   // 🔹 Añadir a la nueva división en la temporada activa
   if (activeSeason) {
-    const seasonDivision = activeSeason.divisions.find(d => 
+    const seasonDivision = activeSeason.divisions.find(d =>
       d.divisionId.toString() === division._id.toString()
     )
     if (seasonDivision) {
@@ -427,7 +445,7 @@ const removeTeamFromDivision = async ({ teamName = null, teamCode = null, discor
  * @param {String} params.discordId - ID de Discord del usuario.
  * @returns {Object} equipo actualizado.
  */
-const addMemberToTeam = async ({ teamName = null, teamCode = null, discordId }) => {
+const addMemberToTeam = async ({ client, teamName = null, teamCode = null, discordId }) => {
   if (!discordId) {
     throw new Error('Faltan datos: discordId.')
   }
@@ -435,7 +453,7 @@ const addMemberToTeam = async ({ teamName = null, teamCode = null, discordId }) 
   const user = await User.findOne({ discordId })
   if (user && user.teamId) throw new Error('El usuario ya se encuentra en un equipo.')
   
-  const team = await findTeam({ teamName, teamCode, discordId})
+  const team = await findTeam({ teamName, teamCode, discordId })
 
   if (team.members.length >= maxMembers) {
     throw new Error(`El equipo ya tiene el maximo de miembros: \`${maxMembers}\``)
@@ -449,6 +467,11 @@ const addMemberToTeam = async ({ teamName = null, teamCode = null, discordId }) 
 
   user.team = team._id
   await user.save()
+
+  // Crear canal inmediatamente si el equipo cumple criterios
+  if (checkTeamEligibility(team)) {
+    await createTeamChannel({ client, team })
+  }
 
   return team
 }
