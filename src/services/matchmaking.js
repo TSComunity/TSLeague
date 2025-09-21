@@ -235,8 +235,6 @@ const generateMatchmaking = async ({
     }
   }
 
-  console.log(`Ronda ${nextRoundIndex}: ${newMatchesDocs.length} partidos, ${newRestingTeamsDocs.length} equipos descansan`)
-
   return { newMatchesDocs, newRestingTeamsDocs }
 }
 

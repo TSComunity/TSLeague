@@ -13,7 +13,7 @@ const {
 const configs = require('../../configs/league.js')
 const emojis = require('../../configs/emojis.json')
 
-const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed = [], expelled = [], finishedBefore = false }) => {
+const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed = [], expelled = [], winner = [], finishedBefore = false }) => {
   const div = division.divisionId
   const container = new ContainerBuilder()
     .setAccentColor(parseInt(div.color?.replace('#', ''), 16) || 3447003)
@@ -34,6 +34,9 @@ const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed
     }
 
     let desc = ''
+    winner.forEach(t => {
+      desc += `${emojis.winner} ${t.name}\n`
+    })
     promoted.forEach(t => {
       desc += `${emojis.ascent} ${t.name}\n`
     })
@@ -47,7 +50,7 @@ const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed
       desc += `${emojis.expel} ${t.name}\n`
     })
 
-    if ([...promoted, ...relegated, ...stayed, ...expelled].length === 0) {
+    if ([...winner, ...promoted, ...relegated, ...stayed, ...expelled].length === 0) {
       desc = '*División sin equipos.*'
     }
 

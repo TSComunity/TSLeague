@@ -16,6 +16,7 @@ let TeamSchema = new Schema({
     ],
 
     stats: {
+        leaguesWon: { type: Number, default: 0 },
         matchesWon: { type: Number, default: 0 },
         matchesLost: { type: Number, default: 0 },
         setsWon: { type: Number, default: 0 },

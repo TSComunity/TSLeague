@@ -1,154 +1,168 @@
 const {
   ContainerBuilder,
   TextDisplayBuilder,
-  MediaComponentBuilder,
   ThumbnailBuilder,
   SectionBuilder,
   SeparatorBuilder,
   MessageFlags
-} = require('discord.js');
+} = require('discord.js')
 
-const config = require('../../configs/league.js');
+const config = require('../../configs/league.js')
 
 const { getLastSeason } = require('../../utils/season.js')
-const { getSeasonSummaryEmbed } = require('../embeds/season.js');
+const { getSeasonSummaryEmbed } = require('../embeds/season.js')
 
-const maxTeams = config.division.maxTeams;
+const maxTeams = config.division.maxTeams
+
+function chunkArray(array, size) {
+  const chunks = []
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size))
+  }
+  return chunks
+}
 
 const updateRankingsEmbed = async ({ client }) => {
   const isV2 = (msg) =>
-    (msg.flags & MessageFlags.IsComponentsV2) === MessageFlags.IsComponentsV2;
+    (msg.flags & MessageFlags.IsComponentsV2) === MessageFlags.IsComponentsV2
 
-  const channel = await client.channels.fetch(config.channels.rankings.id);
+  const channel = await client.channels.fetch(config.channels.rankings.id)
   if (!channel || !channel.isTextBased())
-    throw new Error('Canal no encontrado o no es de texto.');
+    throw new Error('Canal no encontrado o no es de texto.')
 
   const season = await getLastSeason()
   const { divisions } = season
 
-  const fetchedMessages = await channel.messages.fetch({ limit: 100 });
+  const fetchedMessages = await channel.messages.fetch({ limit: 100 })
   const sortedMessages = Array.from(fetchedMessages.values()).sort(
     (a, b) => a.createdTimestamp - b.createdTimestamp
-  );
-  const botMessages = sortedMessages.filter(
-    (msg) => msg.author.id === client.user.id
-  );
+  )
+  const botMessages = sortedMessages.filter((msg) => msg.author.id === client.user.id)
 
-  const summaryMsg = botMessages.find((msg) => !isV2(msg));
-  const divisionMsgs = botMessages.filter((msg) => isV2(msg));
+  const summaryMsg = botMessages.find((msg) => !isV2(msg))
+  const divisionMsgs = botMessages.filter((msg) => isV2(msg))
 
-  const expectedMessages = divisions.length;
-
-  // 🟪 Actualiza mensaje de resumen o limpia todo si no existe
-  if (!summaryMsg) {
-    for (const msg of botMessages) {
-      await msg.delete().catch(() => {});
-    }
-  } else {
-    await summaryMsg.edit({
-      embeds: [
-        getSeasonSummaryEmbed({ season })
-      ]
-    });
+  // build containers para todas las divisiones
+  const containersByDivision = []
+  for (const division of divisions) {
+    const teams = division.teams
+      .sort((a, b) => b.points - a.points)
+      .map((team, index) => ({
+        ...team.teamId,
+        points: team.points,
+        rank: index + 1
+      }))
+    const containers = buildDivisionContainers({ division: division.divisionId, teams })
+    containersByDivision.push(containers)
   }
 
-  // 🔁 Si faltan mensajes por divisiones, reinicia todo
-  if (divisionMsgs.length < expectedMessages) {
-    for (const msg of botMessages) {
-      await msg.delete().catch(() => {});
-    }
+  const flatContainers = containersByDivision.reduce((acc, arr) => acc.concat(arr), [])
 
-    await channel.send({
-      embeds: [
-        getSeasonSummaryEmbed({ season })
-      ]
-    });
+  // actualizar o crear summary
+  if (summaryMsg) {
+    try {
+      await summaryMsg.edit({ embeds: [getSeasonSummaryEmbed({ season })] })
+    } catch (err) {}
+  } else {
+    await channel.send({ embeds: [getSeasonSummaryEmbed({ season })] })
+  }
 
-    for (const division of divisions) {
-      const teams = division.teams
-        .sort((a, b) => b.points - a.points) // orden descendente por puntos
-        .map((team, index) => ({
-          ...team.teamId,          // aplanar datos del equipo
-          points: team.points,     // conservar puntos
-          rank: index + 1          // asignar ranking
-        }))
-
-      const container = buildDivisionContainer({ division: division.divisionId, teams });
+  // editar mensajes existentes en orden y solo crear/eliminar lo necesario
+  const targetCount = flatContainers.length
+  const minCount = Math.min(divisionMsgs.length, targetCount)
+  for (let i = 0; i < minCount; i++) {
+    const msg = divisionMsgs[i]
+    const container = flatContainers[i]
+    try {
+      await msg.edit({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+        allowedMentions: { parse: [] }
+      })
+    } catch (err) {
+      try {
+        await msg.delete().catch(() => {})
+      } catch (e) {}
       await channel.send({
         components: [container],
-        flags: MessageFlags.IsComponentsV2
-      });
-    }
-
-    return;
-  }
-
-  // 🧩 Editar mensajes existentes por división
-  for (let i = 0; i < divisions.length; i++) {
-    const division = divisions[i];
-    const msg = divisionMsgs[i];
-    if (!msg) continue;
-
-    const teams = division.teams
-      .sort((a, b) => b.points - a.points) // orden descendente por puntos
-      .map((team, index) => ({
-        ...team.teamId,          // aplanar datos del equipo
-        points: team.points,     // conservar puntos
-        rank: index + 1          // asignar ranking
-      }))
-
-    const container = buildDivisionContainer({ division: division.divisionId, teams });
-    await msg.edit({
-      components: [container],
-      flags: MessageFlags.IsComponentsV2
-    });
-  }
-
-  // ✂️ Eliminar mensajes sobrantes si hay extras
-  if (divisionMsgs.length > expectedMessages) {
-    for (let i = expectedMessages; i < divisionMsgs.length; i++) {
-      await divisionMsgs[i].delete().catch(() => {});
+        flags: MessageFlags.IsComponentsV2,
+        allowedMentions: { parse: [] }
+      })
     }
   }
-};
 
-// 🧠 Utilidad para construir el embed de una división
-function buildDivisionContainer({ division, teams }) {
-  const container = new ContainerBuilder()
-    .setAccentColor(parseInt(division.color.replace('#', ''), 16))
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        `### ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
-      )
-    );
+  if (targetCount > divisionMsgs.length) {
+    for (let i = divisionMsgs.length; i < targetCount; i++) {
+      const container = flatContainers[i]
+      await channel.send({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+        allowedMentions: { parse: [] }
+      })
+    }
+  }
+
+  if (divisionMsgs.length > targetCount) {
+    for (let i = targetCount; i < divisionMsgs.length; i++) {
+      await divisionMsgs[i].delete().catch(() => {})
+    }
+  }
+}
+
+function buildDivisionContainers({ division, teams, chunkSize = 10 }) {
+  const teamChunks = chunkArray(teams, chunkSize)
+  const containers = []
+  const safeColor = division && division.color ? division.color.replace('#', '') : '2f3136'
+  const accent = parseInt(safeColor, 16)
 
   if (teams.length === 0) {
-    container.addSeparatorComponents(new SeparatorBuilder())
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent('División sin equipos.'))
-    return container
-  }
-
-  for (const team of teams) {
-    const { points, rank } = team
-    const { name, iconURL } = team._doc
-
-    const thumbnailComponent = new ThumbnailBuilder({ media: { url: iconURL } });
-
-    const sectionComponent = new SectionBuilder()
+    const container = new ContainerBuilder()
+      .setAccentColor(accent)
       .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent([
-          `### ${rank}. ${name}`,
-          `🏓 Puntos: ${points}`
-        ].join('\n'))
+        new TextDisplayBuilder().setContent(
+          `### ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — 0/${maxTeams}`
+        )
       )
-      .setThumbnailAccessory(thumbnailComponent)
-
-    container
       .addSeparatorComponents(new SeparatorBuilder())
-      .addSectionComponents(sectionComponent)
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent('División sin equipos.'))
+    containers.push(container)
+    return containers
   }
 
-  return container;
+  for (let chunkIndex = 0; chunkIndex < teamChunks.length; chunkIndex++) {
+    const teamGroup = teamChunks[chunkIndex]
+    const container = new ContainerBuilder().setAccentColor(accent)
+
+    if (chunkIndex === 0) {
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `### ${division.emoji || '🏆'} División ${division.name || 'Sin nombre'} — ${teams.length}/${maxTeams}`
+        )
+      )
+    }
+
+    for (let j = 0; j < teamGroup.length; j++) {
+      const team = teamGroup[j]
+      const { points, rank } = team
+      const { name, iconURL } = team._doc
+
+      const thumbnailComponent = new ThumbnailBuilder({ media: { url: iconURL } })
+
+      const sectionComponent = new SectionBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`### ${rank}. ${name}\n🏓 Puntos: ${points}`))
+        .setThumbnailAccessory(thumbnailComponent)
+
+      if (!(chunkIndex > 0 && j === 0)) {
+        container.addSeparatorComponents(new SeparatorBuilder())
+      }
+
+      container.addSectionComponents(sectionComponent)
+    }
+
+    containers.push(container)
+  }
+
+  return containers
 }
 
 module.exports = { updateRankingsEmbed }

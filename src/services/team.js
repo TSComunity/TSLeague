@@ -336,37 +336,84 @@ const updateTeam = async ({ teamName = null, teamCode = null, discordId = null, 
  */
 const addTeamToDivision = async ({ teamName = null, teamCode = null, discordId = null, divisionName }) => {
   const division = await Division.findOne({ name: divisionName })
-  if (!division) throw new Error('División no encontrada.')
+  if (!division) throw new Error('División no encontrada')
 
   const team = await findTeam({ teamName, teamCode, discordId })
 
+  // 🔹 Si ya estaba en esta división, no hacemos nada
   if (team.divisionId?.toString() === division._id.toString()) {
-    throw new Error('El equipo ya está en esta división.')
+    throw new Error('El equipo ya está en esta división')
   }
 
   const teamCount = await Team.countDocuments({ divisionId: division._id })
   if (teamCount >= maxTeams) {
-    throw new Error('La división ya tiene el número máximo de equipos.')
+    throw new Error('La división ya tiene el número máximo de equipos')
   }
 
+  // 🔹 Si hay temporada activa, eliminar de todas las divisiones de la temporada
+  const activeSeason = await Season.findOne({ status: 'active' })
+  if (activeSeason) {
+    for (const seasonDivision of activeSeason.divisions) {
+      seasonDivision.teams = seasonDivision.teams.filter(
+        t => t.teamId.toString() !== team._id.toString()
+      )
+    }
+    await activeSeason.save()
+  }
+
+  // 🔹 Actualizar Team
   team.divisionId = division._id
   await team.save()
   await team.populate('divisionId')
+
+  // 🔹 Añadir a la nueva división en la temporada activa
+  if (activeSeason) {
+    const seasonDivision = activeSeason.divisions.find(d => 
+      d.divisionId.toString() === division._id.toString()
+    )
+    if (seasonDivision) {
+      seasonDivision.teams.push({
+        teamId: team._id,
+        points: 0
+      })
+      await activeSeason.save()
+    }
+  }
 
   return team
 }
 
 /**
  * Elimina a un equipo de su división actual.
- * @param {Object} params
- * @param {String} params.teamName - Nombre del equipo a eliminar de la división.
- * @returns {Object} team actualizado.
+ * También lo elimina de la temporada activa si existe.
  */
 const removeTeamFromDivision = async ({ teamName = null, teamCode = null, discordId = null }) => {
   const team = await findTeam({ teamName, teamCode, discordId })
 
+  if (!team.divisionId) {
+    throw new Error('El equipo no pertenece a ninguna división')
+  }
+
+  const divisionId = team.divisionId
+
+  // 🔹 Actualizar Team
   team.divisionId = null
   await team.save()
+
+  // 🔹 Si hay temporada activa, sincronizar
+  const activeSeason = await Season.findOne({ status: 'active' })
+  if (activeSeason) {
+    const seasonDivision = activeSeason.divisions.find(d =>
+      d.divisionId.toString() === divisionId.toString()
+    )
+    if (seasonDivision) {
+      seasonDivision.teams = seasonDivision.teams.filter(
+        t => t.teamId.toString() !== team._id.toString()
+      )
+      await activeSeason.save()
+    }
+  }
+
   return team
 }
 

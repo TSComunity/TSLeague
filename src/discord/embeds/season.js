@@ -71,9 +71,7 @@ const getSeasonSummaryEmbed = ({ season }) => {
     }
 
     // Si está activa, usamos fecha actual para duración
-    const durationDays = startDate
-        ? Math.ceil(((status === 'active' ? Date.now() : season.endDate) - startDate) / (1000 * 60 * 60 * 24))
-        : null
+    const durationDays = Math.ceil(((status === 'active' ? Date.now() : season.endDate) - startDate) / (1000 * 60 * 60 * 24))
 
     return new EmbedBuilder()
         .setColor('Purple')
@@ -87,14 +85,14 @@ const getSeasonSummaryEmbed = ({ season }) => {
                 inline: true 
             },
             { 
-                name: status === 'active' ? `${emojis.round} Jornada Actual` : `${emojis.rounds} Jornadas Totales`, 
-                value: `\`${roundNumber}\``, 
+                name: status === 'active' ? `Jornada Actual` : `Jornadas Totales`, 
+                value: `${emojis.round} \`${roundNumber}\``, 
                 inline: true 
             },
             { name: `Divisiones`, value: `${emojis.division} \`${divisions.length}\``, inline: true },
             { name: `Equipos`, value: `${emojis.team} \`${totalTeams}\``, inline: true },
             { name: `Partidos`, value: `${emojis.match} \`${totalMatches}\``, inline: true },
-            { name: `Duración`, value: durationDays ? `${durationDays} días` : '`-`', inline: true }
+            { name: `Duración`, value: `${emojis.schedule} ${durationDays} ${durationDays === 1 ? 'día' : 'días'}`, inline: true }
         )
 }
 

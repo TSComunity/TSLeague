@@ -151,7 +151,7 @@ async function generateMatchPreviewImageURL({ divisionDoc, roundIndex, teamADoc,
       { src: teamBDoc.iconURL, x: 750, y: 150, width: 150, height: 150 }
     ]
   })
-  console.log(previewImageURL)
+
   return previewImageURL
 }
 
