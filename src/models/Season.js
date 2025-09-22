@@ -15,8 +15,12 @@ const SeasonSchema = new Schema({
       teams: [  
         {
           teamId: { type: Types.ObjectId, ref: 'Team', required: true },
-          points: { type: Number, default: 0 }
-          // aqui se pueden poner mas stats como partidos jugados o racha
+          points: { type: Number, default: 0 },
+          result: { 
+            type: String,
+            enum: ['promoted', 'relegated', 'stayed', 'expelled', 'winner', null],
+            default: null
+          }
         }
       ],
 

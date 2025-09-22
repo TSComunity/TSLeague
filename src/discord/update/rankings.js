@@ -10,6 +10,7 @@ const {
 const config = require('../../configs/league.js')
 const emojis = require('../../configs/emojis.json')
 
+const { calculatePromotionRelegation } = require('../../services/season.js')
 const { getLastSeason } = require('../../utils/season.js')
 const { getSeasonSummaryEmbed } = require('../embeds/season.js')
 
@@ -32,7 +33,13 @@ const updateRankingsEmbed = async ({ client }) => {
     throw new Error('Canal no encontrado o no es de texto.')
 
   const season = await getLastSeason()
-  const { divisions } = season
+  const { divisions, status } = season
+
+  // Si la season está activa, calculamos predicciones
+  let predictions = null
+  if (status === 'active') {
+    predictions = await calculatePromotionRelegation({ season, updateDb: false })
+  }
 
   const fetchedMessages = await channel.messages.fetch({ limit: 100 })
   const sortedMessages = Array.from(fetchedMessages.values()).sort(
@@ -48,11 +55,27 @@ const updateRankingsEmbed = async ({ client }) => {
   for (const division of divisions) {
     const teams = division.teams
       .sort((a, b) => b.points - a.points)
-      .map((team, index) => ({
-        ...team.teamId,
-        points: team.points,
-        rank: index + 1
-      }))
+      .map((team, index) => {
+        // si hay predicciones, usamos esas
+        let effectiveResult = team.result
+        if (predictions) {
+          const pred = predictions.find(p => p.divisionId.toString() === division.divisionId.toString())
+          if (pred) {
+            if (pred.promoted.includes(team.teamId)) effectiveResult = 'promoted'
+            else if (pred.relegated.includes(team.teamId)) effectiveResult = 'relegated'
+            else if (pred.winner.includes(team.teamId)) effectiveResult = 'winner'
+            else if (pred.expelled.includes(team.teamId)) effectiveResult = 'expelled'
+            else effectiveResult = 'stayed'
+          }
+        }
+
+        return {
+          ...team.teamId,
+          points: team.points,
+          result: effectiveResult,
+          rank: index + 1
+        }
+      })
     const containers = buildDivisionContainers({ division: division.divisionId, teams })
     containersByDivision.push(containers)
   }
@@ -110,7 +133,7 @@ const updateRankingsEmbed = async ({ client }) => {
   }
 }
 
-function buildDivisionContainers({ division, teams, chunkSize = 10 }) {
+function buildDivisionContainers({ division, teams, chunkSize = 9 }) {
   const teamChunks = chunkArray(teams, chunkSize)
   const containers = []
   const safeColor = division && division.color ? division.color.replace('#', '') : '2f3136'
@@ -144,13 +167,25 @@ function buildDivisionContainers({ division, teams, chunkSize = 10 }) {
 
     for (let j = 0; j < teamGroup.length; j++) {
       const team = teamGroup[j]
-      const { points, rank } = team
+      const { points, result, rank } = team
       const { name, iconURL } = team._doc
 
       const thumbnailComponent = new ThumbnailBuilder({ media: { url: iconURL } })
 
+      const resultEmoji = (() => {
+        if (result === 'promoted') return emojis.promoted
+        if (result === 'relegated') return emojis.relegated
+        if (result === 'winner') return emojis.winner
+        if (result === 'expelled') return emojis.expelled
+        return emojis.team
+      })()
+
       const sectionComponent = new SectionBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`### ${rank}. ${name}\n${emojis.points} Puntos: ${points}`))
+        .addTextDisplayComponents(
+          new TextDisplayBuilder().setContent(
+            `### ${resultEmoji} ${rank}. ${name}\n${emojis.points} Puntos: ${points}`
+          )
+        )
         .setThumbnailAccessory(thumbnailComponent)
 
       if (!(chunkIndex > 0 && j === 0)) {

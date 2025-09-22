@@ -37,16 +37,16 @@ const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed
       desc += `${emojis.winner} ${t.name}\n`
     })
     promoted.forEach(t => {
-      desc += `${emojis.ascent} ${t.name}\n`
+      desc += `${emojis.promoted} ${t.name}\n`
     })
     stayed.forEach(t =>  {
       desc += `${emojis.team} ${t.name}\n`
     })
     relegated.forEach(t =>  {
-      desc += `${emojis.decline} ${t.name}\n`
+      desc += `${emojis.relegated} ${t.name}\n`
     })
     expelled.forEach(t =>  {
-      desc += `${emojis.expel} ${t.name}\n`
+      desc += `${emojis.expelled} ${t.name}\n`
     })
 
     if ([...winner, ...promoted, ...relegated, ...stayed, ...expelled].length === 0) {
