@@ -1,7 +1,7 @@
 const Team = require('../models/Team.js')
 const { generateMatchmaking } = require('./matchmaking.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
-const { endSeason } = require('./season.js')
+const { calculatePromotionRelegation, endSeason } = require('./season.js')
 const { getActiveSeason } = require('../utils/season.js')
 const { sendAnnouncement } = require('../discord/send/general.js')
 const { getRoundAddedEmbed } = require('../discord/embeds/round.js')
@@ -93,6 +93,7 @@ const addRound = async ({ client }) => {
 
   await season.save()
   season = await getActiveSeason()
+  const promotionData = await calculatePromotionRelegation({ season, updateDb: false})
 
   // Si todas las divisiones están terminadas, termina la temporada
   if (divisionsSkipped.length === season.divisions.length) {
@@ -125,9 +126,22 @@ const addRound = async ({ client }) => {
     // Si terminó justo ahora, embed de fin de división
     const ended = divisionsSkipped.find(d => String(d.divisionDoc._id) === String(divisionId._id) && d.endedJustNow)
     if (ended) {
+      const divisionData = promotionData.find(d => 
+        String(d.divisionId._id) === String(divisionId._id)
+      )      
+      const container = getDivisionEndedEmbed({
+        division: divisionData,
+        promoted: divisionData.promoted,
+        relegated: divisionData.relegated,
+        stayed: divisionData.stayed,
+        expelled: divisionData.expelled,
+        winner: divisionData.winner,
+        finishedBefore: true
+      })
+
       await sendAnnouncement({
         client,
-        components: [getDivisionEndedEmbed({ division, finishedBefore: true })],
+        components: [container],
         isComponentsV2: true
       })
       continue

@@ -23,15 +23,6 @@ const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed
     )
     .addSeparatorComponents(new SeparatorBuilder())
 
-    if (finishedBefore) {
-      container.addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `La división ha terminado antes del fin de la temporada, una vez terminada la temporada se enviaran los resultados finales de la división.`
-        )
-      )
-      return container
-    }
-
     let desc = ''
     winner.forEach(t => {
       desc += `${emojis.winner} ${t.name}\n`
@@ -56,6 +47,15 @@ const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(desc)
     )
+    
+    if (finishedBefore) {
+      container.addSeparatorComponents(new SeparatorBuilder())
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          `Estos datos son aproximados debido a que la división ha terminado antes del fin de la temporada, una vez terminada la temporada se enviaran los resultados definitivos de la división.`
+        )
+      )
+    }
 
   return container
 }

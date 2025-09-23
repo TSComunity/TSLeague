@@ -153,7 +153,7 @@ function buildDivisionContainers(division, teams, guild, chunkSize = 5) {
         )
       )
       .addSeparatorComponents(new SeparatorBuilder())
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent('División sin equipos.'))
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent('*División sin equipos.*'))
     containers.push(container)
     return containers
   }

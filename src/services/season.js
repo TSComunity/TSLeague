@@ -320,4 +320,4 @@ const endSeason = async ({ client }) => {
 
 // se podria hacer algo para pausar la temporada (mantenimiento)
 
-module.exports = { startSeason, endSeason, calculatePromotionRelegation }
+module.exports = { calculatePromotionRelegation, startSeason, endSeason }
