@@ -98,11 +98,11 @@ const getTeamStatsEmbed = ({ team }) => {
       { name: "Sets Ganados", value: `\`${team.stats.setsWon}\` \`(${setsWinrate}%)\``, inline: true },
       { name: "Sets Perdidos", value: `\`${team.stats.setsLost}\` \`(${setsLoserate}%)\``, inline: true },
 
-      { name: 'Ligas Ganadas', value: `\`${team.stats.leaguesWon}\``, inline: true}
+      { name: 'Ligas Ganadas', value: `${emojis.season} \`${team.stats.leaguesWon}\``, inline: true}
     )
 }
 
-const getTeamChannelEmbed = ({ team }) => {
+const getTeamChannelCreatedEmbed = ({ team }) => {
 
     return new EmbedBuilder()
         .setDescription(
@@ -119,4 +119,4 @@ const getTeamChannelEmbed = ({ team }) => {
 }
 
 
-module.exports = { getTeamInfoEmbed, getAddMemberInfoEmbed, getTeamsSummaryEmbed, getTeamStatsEmbed, getTeamChannelEmbed }
+module.exports = { getTeamInfoEmbed, getAddMemberInfoEmbed, getTeamsSummaryEmbed, getTeamStatsEmbed, getTeamChannelCreatedEmbed }

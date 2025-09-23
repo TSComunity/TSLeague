@@ -1,5 +1,6 @@
 const { ChannelType, PermissionsBitField, MessageFlags } = require('discord.js')
 
+const Division = require('../models/Division')
 const Match = require('../models/Match')
 const Team = require('../models/Team')
 
@@ -11,7 +12,7 @@ const { generateMatchPreviewImageURL, generateMatchResultsImageURL } = require('
 
 const { getMatchInfoEmbed } = require('../discord/embeds/match.js')
 
-const { guild: guildConfig, categories, channels, roles, match: matchConfig } = require('../configs/league.js')
+const { guild: guildConfig, channels, roles, match: matchConfig } = require('../configs/league.js')
 
 /**
  * Crea un canal de Discord para un partido.
@@ -21,88 +22,113 @@ const { guild: guildConfig, categories, channels, roles, match: matchConfig } = 
  */
 const createMatchChannel = async ({ match, client }) => {
   try {
-const matchToUpd = await Match.findOne({ _id: match._id })
-  .populate({
-    path: 'teamAId',             // primero poblamos el equipo completo
-    model: 'Team',
-    populate: {
-      path: 'members.userId',    // luego poblamos los usuarios de los miembros
-      model: 'User'
-    }
-  })
-  .populate({
-    path: 'teamBId',
-    model: 'Team',
-    populate: {
-      path: 'members.userId',
-      model: 'User'
-    }
-  })
+    const matchToUpd = await Match.findById(match._id)
+      .populate({
+        path: 'teamAId',
+        model: 'Team',
+        populate: { path: 'members.userId', model: 'User' }
+      })
+      .populate({
+        path: 'teamBId',
+        model: 'Team',
+        populate: { path: 'members.userId', model: 'User' }
+      })
 
-    if (!matchToUpd) throw new Error('No se encontro el partido.')
-    // 1. Poblamos equipos con miembros y sus usuarios (para discordId)
+    if (!matchToUpd) throw new Error('No se encontró el partido.')
+
     const teamA = matchToUpd.teamAId
     const teamB = matchToUpd.teamBId
+    if (!teamA || !teamB) throw new Error('No se encontraron los equipos del partido')
 
-    if (!teamA || !teamB) {
-      throw new Error('No se encontraron los equipos del partido')
-    }
+    // IDs de miembros
+    const leaderIds = [teamA, teamB].flatMap(t =>
+      t.members.filter(m => m.role === 'leader').map(m => m.userId?.discordId)
+    ).filter(Boolean)
 
-    // 2. Extraer discordId de los líderes
-    const leaderA = teamA.members.find(m => m.role === 'leader')?.userId?.discordId
-    const leaderB = teamB.members.find(m => m.role === 'leader')?.userId?.discordId
-    const leaderIds = [leaderA, leaderB].filter(Boolean)
+    const subLeaderIds = [teamA, teamB].flatMap(t =>
+      t.members.filter(m => m.role === 'sub-leader').map(m => m.userId?.discordId)
+    ).filter(Boolean)
 
-    // 3. Miembros normales (sin incluir líderes), extraer sus discordId
-    const normalMembersA = teamA.members
-      .filter(m => m.role !== 'leader')
-      .map(m => m.userId?.discordId)
-      .filter(Boolean)
-
-    const normalMembersB = teamB.members
-      .filter(m => m.role !== 'leader')
-      .map(m => m.userId?.discordId)
-      .filter(Boolean)
-    
-    const memberIds = [...normalMembersA, ...normalMembersB].filter(Boolean)
+    const memberIds = [teamA, teamB].flatMap(t =>
+      t.members.filter(m => m.role === 'member').map(m => m.userId?.discordId)
+    ).filter(Boolean)
 
     const guild = await client.guilds.fetch(guildConfig.id)
 
-    const parsePerms = (names) => names.map(name => PermissionsBitField.Flags[name]);
+    // Fetch miembros (evita fallo por no-cached)
+    const fetchMember = async id => {
+      try { return await guild.members.fetch(id) } catch { return null }
+    }
+    const leaderMembers = (await Promise.all(leaderIds.map(fetchMember))).filter(Boolean)
+    const subLeaderMembers = (await Promise.all(subLeaderIds.map(fetchMember))).filter(Boolean)
+    const normalMembers = (await Promise.all(memberIds.map(fetchMember))).filter(Boolean)
 
-    const normalPermissions = parsePerms(channels.permissions.member)
-    const leaderPermissions = [...normalPermissions, ...parsePerms(channels.permissions.leader)]
-    const staffPermissions = [...normalPermissions, ...parsePerms(channels.permissions.staff)]
+    // Fetch roles staff
+    const fetchRole = async id => {
+      try { return await guild.roles.fetch(id) } catch { return null }
+    }
+    const staffRolesResolved = (await Promise.all((roles.staff || []).map(fetchRole))).filter(Boolean)
+
+    // Permisos: member base + extras
+    const parsePerms = names => names.map(name => PermissionsBitField.Flags[name])
+    const memberPermissions = parsePerms(channels.permissions.member)
+    const leaderPermissions = [...memberPermissions, ...parsePerms(channels.permissions.leader)]
+    const subLeaderPermissions = [...memberPermissions, ...parsePerms(channels.permissions.subLeader || [])]
+    const staffPermissions = [...memberPermissions, ...parsePerms(channels.permissions.staff)]
 
     const permissionOverwrites = [
       { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-      ...leaderIds.map(id => ({ id, allow: leaderPermissions })),
-      ...memberIds.map(id => ({ id, allow: normalPermissions })),
-      ...roles.staff.map(id => ({ id, allow: staffPermissions }))
+      ...leaderMembers.map(m => ({ id: m.id, allow: leaderPermissions })),
+      ...subLeaderMembers.map(m => ({ id: m.id, allow: subLeaderPermissions })),
+      ...normalMembers.map(m => ({ id: m.id, allow: memberPermissions })),
+      ...staffRolesResolved.map(r => ({ id: r.id, allow: staffPermissions }))
     ]
 
-    for (const overwrite of permissionOverwrites) {
-      try { const resolved =  
-        guild.roles.cache.get(overwrite.id)
-          || await guild.members.fetch(overwrite.id).catch(() => null)
+    // Obtener categoría de la división
+    const divisionId = teamA.divisionId
+    const division = await Division.findById(divisionId)
+    if (!division) throw new Error('No se encontró la división del partido')
+    const categoryId = division.matchesCategoryId
+    if (!categoryId) throw new Error('La división no tiene definida matchesCategoryId')
 
-        if (!resolved) {
-          console.warn(`❌ ID no encontrado: ${overwrite.id}`)
-        } else {
-          console.log(`✅ ID válido: ${overwrite.id}`)
-        }
-      } catch (err) {
-        console.error(`💥 Error al verificar ID ${overwrite.id}:`, err)
+    // Nombre esperado
+    const expectedName = `${matchConfig.channels.prefix}partido-${matchToUpd.matchIndex}`
+
+    // Evitar duplicados: buscar por name+parent en cache
+    let existingChannel = guild.channels.cache.find(c => c.name === expectedName && c.parentId === categoryId) || null
+
+    // Si match ya tiene channelId, intentar fetch y usarlo
+    if (!existingChannel && matchToUpd.channelId) {
+      existingChannel = await client.channels.fetch(matchToUpd.channelId).catch(() => null)
+    }
+
+    // Si ya existe, actualizar channelId y overwrites y retornar
+    if (existingChannel) {
+      if (matchToUpd.channelId !== existingChannel.id) {
+        matchToUpd.channelId = existingChannel.id
+        await matchToUpd.save()
+      }
+      try { await existingChannel.permissionOverwrites.set(permissionOverwrites) } catch (err) { console.warn('No se pudieron aplicar overwrites al canal existente:', err) }
+      return matchToUpd
+    }
+
+    // Antes de crear: re-lectura de match por si otro proceso creó el canal
+    const freshMatch = await Match.findById(match._id)
+    if (freshMatch?.channelId) {
+      // intentar usar ese canal
+      const ch = await client.channels.fetch(freshMatch.channelId).catch(() => null)
+      if (ch) {
+        // reaplicar perms y devolver
+        try { await ch.permissionOverwrites.set(permissionOverwrites) } catch {}
+        return freshMatch
       }
     }
 
-
-    // 6. Crear el canal en la categoría indicada
-    const guildToUse = await client.guilds.fetch(guild.id)
-    const channel = await guildToUse.channels.create({
-      name: `${matchConfig.channels.prefix}partido-${matchToUpd.matchIndex}`,
+    // Crear canal
+    const channel = await guild.channels.create({
+      name: expectedName,
       type: ChannelType.GuildText,
-      parent: categories.matches.id,
+      parent: categoryId,
       topic: `Partido entre ${teamA.name} y ${teamB.name} — Jornada ${matchToUpd.roundIndex + 1}`,
       permissionOverwrites
     })
@@ -118,17 +144,14 @@ const matchToUpd = await Match.findOne({ _id: match._id })
 
     return matchToUpd
   } catch (error) {
+    // Limpieza en caso de error parcial
     if (match.channelId) {
       try {
-        const channel = await client.channels.fetch(match.channelId);
-        if (channel) await channel.delete('Error al crear el canal del partido, limpieza de canal');
-      } catch (err) {
-        console.error('No se pudo eliminar el canal tras error:', err);
-      }
+        const channel = await client.channels.fetch(match.channelId)
+        if (channel) await channel.delete('Error al crear el canal del partido, limpieza de canal')
+      } catch (err) { console.error('No se pudo eliminar el canal tras error:', err) }
     }
-
-    await Match.findByIdAndDelete(match._id);
-
+    await Match.findByIdAndDelete(match._id).catch(() => {})
     throw error
   }
 }
@@ -174,22 +197,22 @@ const createMatch = async ({ client, seasonId, divisionDoc, roundIndex, teamADoc
 
     // Crear canal de Discord y actualizar el match con channelId
     const updatedMatch = await createMatchChannel({ match, client })
-    channelCreated = true; // Marcamos que ya se creó el canal
+    channelCreated = true // Marcamos que ya se creó el canal
 
     return updatedMatch
   } catch (error) {
   // Si hubo error y ya se creó el match, borrarlo
   if (match.channelId) {
     try {
-      const channel = await client.channels.fetch(match.channelId);
-      if (channel) await channel.delete('Error al crear el partido, limpieza de canal');
+      const channel = await client.channels.fetch(match.channelId)
+      if (channel) await channel.delete('Error al crear el partido, limpieza de canal')
     } catch (err) {
-      console.error('No se pudo eliminar el canal tras error:', err);
+      console.error('No se pudo eliminar el canal tras error:', err)
     }
   }
 
   // Luego eliminar el match de la base de datos
-  await Match.findByIdAndDelete(match._id);
+  await Match.findByIdAndDelete(match._id)
   throw error
   }
 }
@@ -435,7 +458,7 @@ const applyDefaultDates = async ({ client }) => {
       match.scheduledAt = defaultDate
       await match.save()
 
-     let channel = client.channels.cache.get(match.channelId);
+     let channel = client.channels.cache.get(match.channelId)
      if (!channel) channel = await client.channels.fetch(match.channelId)
 
       if (channel && channel.isTextBased()) {

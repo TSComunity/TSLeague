@@ -21,13 +21,14 @@ const calculatePromotionRelegation = async ({ season, updateDb = true } = {}) =>
     throw new Error("season inválido")
   }
 
-  const calcPromotions = (count) => {
+  const calcPromotions = count => {
     if (count >= maxTeams) return 3
     if (count >= 10) return 2
     if (count >= 8) return 1
     return 0
   }
-  const calcRelegations = (count) => {
+
+  const calcRelegations = count => {
     if (count >= maxTeams) return 3
     if (count >= 10) return 2
     if (count >= 8) return 1
@@ -94,44 +95,48 @@ const calculatePromotionRelegation = async ({ season, updateDb = true } = {}) =>
     const arr = arrCopies[i]
 
     const pCount = promotionsFrom[i] || 0
-    const promotedIds =
-      pCount > 0 ? arr.splice(0, Math.min(pCount, arr.length)).map(t => t.teamId) : []
+    const promotedTeams = arr.splice(0, Math.min(pCount, arr.length)).map(t => ({
+      teamId: t.teamId,
+      points: t.points
+    }))
 
-    let relegatedIds = []
-    if (i < n - 1) {
-      const rCount = relegationsFrom[i] || 0
-      if (rCount > 0) {
-        const take = Math.min(rCount, arr.length)
-        relegatedIds = arr.splice(arr.length - take, take).map(t => t.teamId)
-      }
-    }
+    const relegatedTeams = (i < n - 1 && relegationsFrom[i])
+      ? arr.splice(arr.length - relegationsFrom[i], relegationsFrom[i]).map(t => ({
+          teamId: t.teamId,
+          points: t.points
+        }))
+      : []
 
-    let expelledIds = []
-    if (i === lastIdx && expulsions > 0) {
-      const take = Math.min(expulsions, arr.length)
-      expelledIds = arr.splice(arr.length - take, take).map(t => t.teamId)
-    }
+    const expelledTeams = (i === lastIdx && expulsions > 0)
+      ? arr.splice(arr.length - expulsions, expulsions).map(t => ({
+          teamId: t.teamId,
+          points: t.points
+        }))
+      : []
 
-    let winnerArr = []
+    let winnerTeams = []
     if (i === 0 && arr.length > 0) {
       const sortedArr = arr.slice().sort((a, b) => (b.points || 0) - (a.points || 0))
       const winnerTeam = sortedArr[0]
       if (winnerTeam) {
-        winnerArr.push(winnerTeam.teamId)
+        winnerTeams.push({ teamId: winnerTeam.teamId, points: winnerTeam.points })
         const idx = arr.findIndex(t => t.teamId.toString() === winnerTeam.teamId.toString())
         if (idx > -1) arr.splice(idx, 1)
       }
     }
 
-    const stayedIds = arr.map(t => t.teamId)
+    const stayedTeams = arr.map(t => ({
+      teamId: t.teamId,
+      points: t.points
+    }))
 
     result.push({
       divisionId: allDivisions[i].divisionId,
-      promoted: promotedIds,
-      relegated: relegatedIds,
-      stayed: stayedIds,
-      expelled: expelledIds,
-      winner: winnerArr
+      promoted: promotedTeams,
+      relegated: relegatedTeams,
+      stayed: stayedTeams,
+      expelled: expelledTeams,
+      winner: winnerTeams
     })
   }
 
@@ -142,34 +147,32 @@ const calculatePromotionRelegation = async ({ season, updateDb = true } = {}) =>
     const r = result[i]
     const divisionId = r.divisionId
 
-    if (r.promoted.length && i > 0) {
-      const prevDivision = allDivisions[i - 1]
-      for (const teamId of r.promoted) {
+    const updateTeamsDivision = async (teams, newDivisionId) => {
+      if (!teams.length) return
+      for (const t of teams) {
         try {
-          await Team.findByIdAndUpdate(teamId, { divisionId: prevDivision.divisionId })
-        } catch (e) { console.error("Error promoviendo team:", e) }
+          await Team.findByIdAndUpdate(t.teamId, { divisionId: newDivisionId })
+        } catch (e) {
+          console.error("Error actualizando división del team:", e)
+        }
       }
+    }
+
+    if (r.promoted.length && i > 0) {
+      await updateTeamsDivision(r.promoted, allDivisions[i - 1].divisionId)
     }
     if (r.relegated.length && i < n - 1) {
-      const nextDivision = allDivisions[i + 1]
-      for (const teamId of r.relegated) {
-        try {
-          await Team.findByIdAndUpdate(teamId, { divisionId: nextDivision.divisionId })
-        } catch (e) { console.error("Error relegando team:", e) }
-      }
+      await updateTeamsDivision(r.relegated, allDivisions[i + 1].divisionId)
     }
     if (r.expelled.length) {
-      for (const teamId of r.expelled) {
-        try {
-          await Team.findByIdAndUpdate(teamId, { divisionId: null })
-        } catch (e) { console.error("Error expulsando team:", e) }
-      }
+      await updateTeamsDivision(r.expelled, null)
     }
+
     if (r.winner.length) {
-      for (const teamId of r.winner) {
+      for (const t of r.winner) {
         try {
-          await Team.findByIdAndUpdate(teamId, { $inc: { "stats.leaguesWon": 1 } })
-          const teamDoc = await Team.findById(teamId).lean()
+          await Team.findByIdAndUpdate(t.teamId, { $inc: { "stats.leaguesWon": 1 } })
+          const teamDoc = await Team.findById(t.teamId).lean()
           if (teamDoc?.members) {
             for (const m of teamDoc.members) {
               try {
@@ -179,17 +182,20 @@ const calculatePromotionRelegation = async ({ season, updateDb = true } = {}) =>
               }
             }
           }
-        } catch (e) { console.error("Error procesando ganador:", e) }
+        } catch (e) {
+          console.error("Error procesando ganador:", e)
+        }
       }
     }
 
     const setResult = async (ids, value) => {
       if (!ids.length) return
       try {
+        const teamIds = ids.map(t => t.teamId)
         await Season.updateOne(
           { _id: season._id, "divisions.divisionId": divisionId },
           { $set: { "divisions.$.teams.$[t].result": value } },
-          { arrayFilters: [{ "t.teamId": { $in: ids } }] }
+          { arrayFilters: [{ "t.teamId": { $in: teamIds } }] }
         )
       } catch (err) {
         console.error(`Error guardando result=${value} en Season:`, err)

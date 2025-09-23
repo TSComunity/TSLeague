@@ -37,6 +37,19 @@ module.exports = {
                 value: color.value
             })))
         )
+        .addChannelOption(opt =>
+          opt.setName('categoria-equipos')
+            .setDescription('Categoría de los canales de equipos')
+            .setRequired(true)
+            .addChannelTypes(4)
+        )
+        // Categoría de partidos
+        .addChannelOption(opt =>
+          opt.setName('categoria-partidos')
+            .setDescription('Categoría de los canales de partidos')
+            .setRequired(true)
+            .addChannelTypes(4)
+        )
     )
     .addSubcommand(sub =>
       sub
@@ -81,6 +94,19 @@ module.exports = {
                 value: color.value
             })))
         )
+          .addChannelOption(opt =>
+            opt.setName('nueva-categoria-equipos')
+              .setDescription('Categoría de los canales de equipos')
+              .setRequired(false)
+            .addChannelTypes(4)
+        )
+        // Categoría de partidos
+        .addChannelOption(opt =>
+          opt.setName('nueva-categoria-partidos')
+            .setDescription('Categoría de los canales de partidos')
+            .setRequired(false)
+            .addChannelTypes(4)
+        )
     ),
 
   async execute(interaction) {
@@ -92,12 +118,20 @@ module.exports = {
         const tier = interaction.options.getInteger('tier')
         const emoji = interaction.options.getString('emoji')
         const color = interaction.options.getString('color')
-        const división = await createDivision({ name, tier, emoji, color })
+        const teamsCategoryId = interaction.options.getChannel('categoria-equipos').id
+        const matchesCategoryId = interaction.options.getChannel('categoria-partidos').id
+
+        const division = await createDivision({
+          name, tier, emoji, color,
+          teamsCategoryId,
+          matchesCategoryId
+        })
+
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `División **${división.emoji} ${división.name}** creada.` })]
+          embeds: [getSuccesEmbed({ message: `División **${division.emoji} ${division.name}** creada.` })]
         })
         await sendLog({
-          content: `División **${división.emoji} ${división.name}** creada.\nTier: ${división.tier}\nColor: ${división.color}\nEmoji: ${división.emoji}`,
+          content: `División **${division.emoji} ${division.name}** creada.\nTier: ${division.tier}\nColor: ${division.color}\nEmoji: ${division.emoji}`,
           client: interaction.client,
           type: 'success',
           userId: interaction.user.id,
@@ -126,8 +160,10 @@ module.exports = {
         const newTier = interaction.options.getInteger('nuevo-tier')
         const newEmoji = interaction.options.getString('nuevo-emoji')
         const newColor = interaction.options.getString('nuevo-color')
+        const newTeamsCategoryId = interaction.options.getChannel('nueva-categoria-equipos')?.id
+        const newMatchesCategoryId = interaction.options.getChannel('nueva-categoria-partidos')?.id
 
-        const división = await updateDivision({ name, newName, newTier, newEmoji, newColor })
+        const división = await updateDivision({ name, newName, newTier, newEmoji, newColor, newTeamsCategoryId, newMatchesCategoryId })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `División **${división.emoji} ${división.name}** actualizada.` })]
         })

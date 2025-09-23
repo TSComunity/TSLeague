@@ -4,7 +4,9 @@ const DivisionSchema = new Schema({
   name: { type: String, required: true },
   tier: { type: Number, required: true },
   emoji: { type: String, required: true },
-  color: { type: String, required: true, default: 'Blue'}
+  color: { type: String, required: true, default: 'Blue'},
+  teamsCategoryId: { type: String, required: true },
+  matchesCategoryId: { type: String, required: true }
 })
 
 module.exports = model("Division", DivisionSchema)

@@ -13,49 +13,50 @@ const {
 const emojis = require('../../configs/emojis.json')
 
 const getDivisionEndedEmbed = ({ division, promoted = [], relegated = [], stayed = [], expelled = [], winner = [], finishedBefore = false }) => {
-  const div = division.divisionId
+  // division puede ser { divisionId: <doc> } o directamente el doc
+  const div = (division && division.divisionId) ? division.divisionId : division
+
   const container = new ContainerBuilder()
-    .setAccentColor(parseInt(div.color?.replace('#', ''), 16) || 3447003)
+    .setAccentColor(parseInt(div?.color?.replace('#', ''), 16) || 3447003)
     .addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        `### ${div.emoji || emojis.division} División ${div.name || 'Sin nombre'} — Finalizada`
+        `### ${div?.emoji || emojis.division} División ${div?.name || 'Sin nombre'} — Finalizada`
       )
     )
     .addSeparatorComponents(new SeparatorBuilder())
 
-    let desc = ''
-    winner.forEach(t => {
-      desc += `${emojis.winner} ${t.name}\n`
+  let desc = ''
+  const appendList = (arr, emojiName) => {
+    (arr || []).forEach(t => {
+      const teamDoc = t?.teamId || {}
+      const name = teamDoc?.name || 'Desconocido'
+      const points = typeof t?.points === 'number' ? t.points : (teamDoc?.points ?? 0)
+      desc += `${emojiName} ${name} (${emojis.points} ${points})\n`
     })
-    promoted.forEach(t => {
-      desc += `${emojis.promoted} ${t.name}\n`
-    })
-    stayed.forEach(t =>  {
-      desc += `${emojis.team} ${t.name}\n`
-    })
-    relegated.forEach(t =>  {
-      desc += `${emojis.relegated} ${t.name}\n`
-    })
-    expelled.forEach(t =>  {
-      desc += `${emojis.expelled} ${t.name}\n`
-    })
+  }
 
-    if ([...winner, ...promoted, ...relegated, ...stayed, ...expelled].length === 0) {
-      desc = '*División sin equipos.*'
-    }
+  appendList(winner, emojis.winner)
+  appendList(promoted, emojis.promoted)
+  appendList(stayed, emojis.team)
+  appendList(relegated, emojis.relegated)
+  appendList(expelled, emojis.expelled)
 
+  if ([...winner, ...promoted, ...relegated, ...stayed, ...expelled].length === 0) {
+    desc = '*División sin equipos.*'
+  }
+
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(desc)
+  )
+
+  if (finishedBefore) {
+    container.addSeparatorComponents(new SeparatorBuilder())
     container.addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(desc)
-    )
-    
-    if (finishedBefore) {
-      container.addSeparatorComponents(new SeparatorBuilder())
-      container.addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          `Estos datos son aproximados debido a que la división ha terminado antes del fin de la temporada, una vez terminada la temporada se enviaran los resultados definitivos de la división.`
-        )
+      new TextDisplayBuilder().setContent(
+        `Estos datos son aproximados debido a que la división ha terminado antes del fin de la temporada, una vez terminada la temporada se enviarán los resultados definitivos de la división.`
       )
-    }
+    )
+  }
 
   return container
 }

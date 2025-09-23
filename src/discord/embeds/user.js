@@ -53,7 +53,7 @@ async function getUserStatsEmbed({ client, user, data, isFreeAgent = false }) {
     { name: "Sets Jugados", value: safe(`${emojis?.match || ""} \`${setsPlayed}\` ${emojis.starPlayer} \`${setStarPlayer}\``), inline: true },
     { name: "Sets Ganados", value: safe(`\`${setsWon}\` \`(${setsWinrate}%)\``), inline: true },
     { name: "Sets Perdidos", value: safe(`\`${setsLost}\` \`(${setsLoserate}%)\``), inline: true },
-    { name: "Ligas Ganadas", value: safe(`\`${leaguesWon}\``), inline: true },
+    { name: "Ligas Ganadas", value: safe(`${emojis.season} \`${leaguesWon}\``), inline: true },
     { name: "\u200B", value: "\u200B", inline: true },
     { name: "\u200B", value: "\u200B", inline: true }
   )
@@ -61,10 +61,10 @@ async function getUserStatsEmbed({ client, user, data, isFreeAgent = false }) {
   // --- Campos: Brawl ---
   embed.addFields(
     { name: "Trofeos", value: safe(`${emojis.trophies} \`${data?.trophies || "No disponible"}\``), inline: true },
-    { name: "Trofeos Máximos", value: safe(`\`${data?.highestTrophies || "No disponible"}\``), inline: true },
+    { name: "Trofeos Máximos", value: safe(`${emojis.highestTrophies} \`${data?.highestTrophies || "No disponible"}\``), inline: true },
     { name: "Victorias 3vs3", value: safe(`${emojis.wins3vs3} \`${data?.["3vs3Victories"] || 0}\``), inline: true },
-    { name: "Nivel XP", value: safe(`\`${data?.expLevel || "No disponible"}\``), inline: true },
-    { name: "Club", value: safe(`${data?.club?.name || "Sin club"}`), inline: true },
+    { name: "Nivel de XP", value: safe(`${emojis.XPLevel} \`${data?.expLevel || "No disponible"}\``), inline: true },
+    { name: "Club", value: safe(`${emojis.club} \`${data?.club?.name || "Sin club"}`), inline: true },
     { name: "\u200B", value: "\u200B", inline: true }
   )
 

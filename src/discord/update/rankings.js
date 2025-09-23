@@ -24,6 +24,14 @@ function chunkArray(array, size) {
   return chunks
 }
 
+// Helper para normalizar ids (ObjectId o documento)
+function normalizeId(item) {
+  if (!item) return null
+  // si es documento poblado (tiene _id)
+  if (typeof item === 'object' && item._id) return String(item._id)
+  return String(item)
+}
+
 const updateRankingsEmbed = async ({ client }) => {
   const isV2 = (msg) =>
     (msg.flags & MessageFlags.IsComponentsV2) === MessageFlags.IsComponentsV2
@@ -53,29 +61,40 @@ const updateRankingsEmbed = async ({ client }) => {
   // build containers para todas las divisiones
   const containersByDivision = []
   for (const division of divisions) {
+    const divisionIdNorm = normalizeId(division.divisionId)
+
     const teams = division.teams
-      .sort((a, b) => b.points - a.points)
+      .slice() // por si acaso
+      .sort((a, b) => (b.points || 0) - (a.points || 0))
       .map((team, index) => {
-        // si hay predicciones, usamos esas
+        // resultado efectivo (predicciones)
         let effectiveResult = team.result
         if (predictions) {
-          const pred = predictions.find(p => p.divisionId.toString() === division.divisionId.toString())
+          const pred = predictions.find(p => normalizeId(p.divisionId) === divisionIdNorm)
           if (pred) {
-            if (pred.promoted.includes(team.teamId)) effectiveResult = 'promoted'
-            else if (pred.relegated.includes(team.teamId)) effectiveResult = 'relegated'
-            else if (pred.winner.includes(team.teamId)) effectiveResult = 'winner'
-            else if (pred.expelled.includes(team.teamId)) effectiveResult = 'expelled'
+            const teamIdNorm = normalizeId(team.teamId)
+            if ((pred.promoted || []).some(t => normalizeId(t.teamId) === teamIdNorm)) effectiveResult = 'promoted'
+            else if ((pred.relegated || []).some(t => normalizeId(t.teamId) === teamIdNorm)) effectiveResult = 'relegated'
+            else if ((pred.winner || []).some(t => normalizeId(t.teamId) === teamIdNorm)) effectiveResult = 'winner'
+            else if ((pred.expelled || []).some(t => normalizeId(t.teamId) === teamIdNorm)) effectiveResult = 'expelled'
             else effectiveResult = 'stayed'
           }
         }
 
+        // team.teamId puede ser documento poblado o ObjectId o incluso undefined si algo falló.
+        const teamDoc = team.teamId || {}
+        const teamIdForObj = teamDoc._id ? teamDoc._id : team.teamId
+
         return {
-          ...team.teamId,
-          points: team.points,
+          teamId: teamIdForObj,
+          name: teamDoc.name || 'Desconocido',
+          iconURL: teamDoc.iconURL || '',
+          points: team.points ?? 0,
           result: effectiveResult,
           rank: index + 1
         }
       })
+
     const containers = buildDivisionContainers({ division: division.divisionId, teams })
     containersByDivision.push(containers)
   }
@@ -167,10 +186,9 @@ function buildDivisionContainers({ division, teams, chunkSize = 9 }) {
 
     for (let j = 0; j < teamGroup.length; j++) {
       const team = teamGroup[j]
-      const { points, result, rank } = team
-      const { name, iconURL } = team._doc
+      const { points, result, rank, name, iconURL } = team
 
-      const thumbnailComponent = new ThumbnailBuilder({ media: { url: iconURL } })
+      const thumbnailComponent = new ThumbnailBuilder({ media: { url: iconURL || undefined } })
 
       const resultEmoji = (() => {
         if (result === 'promoted') return emojis.promoted
