@@ -4,6 +4,8 @@ const Division = require('../models/Division')
 const Match = require('../models/Match')
 const Team = require('../models/Team')
 
+const { sendTeamAnnouncement } = require('../discord/send/team.js')
+
 const { getActiveSeason } = require('../utils/season.js')
 const { getCurrentRoundNumber } = require('../utils/round.js')
 const { findMatch } = require('../utils/match.js')
@@ -13,7 +15,7 @@ const { generateMatchPreviewImageURL, generateMatchResultsImageURL } = require('
 const { getMatchInfoEmbed } = require('../discord/embeds/match.js')
 
 const { guild: guildConfig, channels, roles, match: matchConfig } = require('../configs/league.js')
-
+const emojis = require('../configs/emojis.js')
 /**
  * Crea un canal de Discord para un partido.
  * 
@@ -199,6 +201,18 @@ const createMatch = async ({ client, seasonId, divisionDoc, roundIndex, teamADoc
     const updatedMatch = await createMatchChannel({ match, client })
     channelCreated = true // Marcamos que ya se creó el canal
 
+    await sendTeamAnnouncement({
+      client,
+      team: teamADoc,
+      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamADoc.name}**.\nEl enfrentamiento será contra **${teamBDoc.name}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal ${emojis.channel} <#${updatedMatch.channelId}>.`
+    })
+
+    await sendTeamAnnouncement({
+      client,
+      team: teamBDoc,
+      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamBDoc.name}**.\nEl enfrentamiento será contra **${teamADoc.name}** en la jornada ${roundIndex + 1}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal ${emojis.channel} <#${updatedMatch.channelId}>.`
+    })
+
     return updatedMatch
   } catch (error) {
   // Si hubo error y ya se creó el match, borrarlo
@@ -321,6 +335,19 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
     await season.save()
 
     const updatedMatch = await createMatchChannel({ match, client })
+
+    await sendTeamAnnouncement({
+      client,
+      team: teamADoc,
+      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamAName}**.\nEl enfrentamiento será contra **${teamBName}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal ${emojis.channel} <#${updatedMatch.channelId}>.`
+    })
+
+    await sendTeamAnnouncement({
+      client,
+      team: teamBDoc,
+      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamBName}**.\nEl enfrentamiento será contra **${teamAName}** en la jornada ${roundIndex + 1}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal ${emojis.channel} <#${updatedMatch.channelId}>.`
+    })
+
     return updatedMatch
 
   } catch (error) {
@@ -334,19 +361,41 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
 /**
  * Cancela un partido (status = "cancelled")
  */
-const cancelMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName, reason = 'Partido cancelado', removeTeamId = null }) => {
+const cancelMatch = async ({ client, matchIndex, seasonIndex, teamAName, teamBName, reason = 'Partido cancelado', removeTeamId = null }) => {
+  // Buscar el match
   const match = await findMatch({ matchIndex, seasonIndex, teamAName, teamBName })
+  if (!match) throw new Error('Partido no encontrado')
 
-  // Si se quiere remover a un equipo del match
+  // Remover equipo si se indicó
   if (removeTeamId) {
     if (match.teamAId?._id?.equals(removeTeamId)) match.teamAId = null
     if (match.teamBId?._id?.equals(removeTeamId)) match.teamBId = null
   }
 
+  // Actualizar estado
   match.status = 'cancelled'
   match.reason = reason
-
   await match.save()
+
+  // Notificar a equipo A
+  if (match.teamAId) {
+    const teamADoc = match.teamAId
+    await sendTeamAnnouncement({
+      client,
+      team: teamADoc,
+      content: `### ${emojis.canceled} Partido cancelado\nEl partido que estaba programado contra el equipo ${teamBName} ha sido cancelado.\n**Motivo:**\n> ${reason}`
+    })
+  }
+
+  // Notificar a equipo B
+  if (match.teamBId) {
+    const teamBDoc = match.teamBId
+    await sendTeamAnnouncement({
+      client,
+      team: teamADoc,
+      content: `### ${emojis.canceled} Partido cancelado\nEl partido que estaba programado contra el equipo ${teamAName} ha sido cancelado.\n**Motivo:**\n> ${reason}`
+    })
+  }
 
   return match
 }
@@ -434,19 +483,34 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName }) => {
 /**
  * cambia la fecha de un partido
  */
-const changeMatchScheduledAt = async ({ matchIndex, seasonIndex, teamAName, teamBName, day, hour, minute }) => {
+const changeMatchScheduledAt = async ({ matchIndex, seasonIndex, teamAName, teamBName, day, hour, minute, client }) => {
   const match = await findMatch({ matchIndex, seasonIndex, teamAName, teamBName })
+  if (!match) throw new Error('Partido no encontrado')
 
   match.scheduledAt = getDate({ day, hour, minute })
-
   await match.save()
+
+  const scheduledTimestamp = Math.floor(match.scheduledAt.getTime() / 1000)
+  const teams = [match.teamAId, match.teamBId].filter(Boolean)
+
+  // Enviar anuncio a cada equipo
+  for (const team of teams) {
+    await sendTeamAnnouncement({
+      client,
+      team,
+      content: `### ${emojis.schedule} Partido reprogramado\n` +
+               `El partido de **${team.name}** contra **${team._id.equals(match.teamAId._id) ? match.teamBId.name : match.teamAId.name}** ` +
+               `ha sido reprogramado.\n**Nueva fecha:** <t:${scheduledTimestamp}:F>`
+    })
+  }
+
   return match
 }
 
+
+
 const applyDefaultDates = async ({ client }) => {
   const now = new Date()
-
-  // Traer partidos sin fecha programada
   const matches = await Match.find({ scheduledAt: { $exists: false } })
       .populate('teamAId teamBId divisionId seasonId')
 
@@ -454,22 +518,20 @@ const applyDefaultDates = async ({ client }) => {
     const { passed, deadline, defaultDate } = checkDeadline(match, now)
 
     if (passed) {
-      // Aplicar fecha por defecto
       match.scheduledAt = defaultDate
       await match.save()
 
-     let channel = client.channels.cache.get(match.channelId)
-     if (!channel) channel = await client.channels.fetch(match.channelId)
+      const scheduledTimestamp = Math.floor(match.scheduledAt.getTime() / 1000)
+      const teams = [match.teamAId, match.teamBId].filter(Boolean)
 
-      if (channel && channel.isTextBased()) {
-        channel.send({
-          content: `⚠️ **Fecha asignada automáticamente**\n\n` +
-                  `El plazo para modificar el horario ha pasado (<t:${Math.floor(deadline.getTime() / 1000)}:F>), ` +
-                  `por lo que se ha aplicado la fecha por defecto.\n` +
-                  `**Fecha:** <t:${Math.floor(match.scheduledAt.getTime() / 1000)}:F>\n` +
-                  `Revisa el embed para más detalles del partido.`,
-          components: [await getMatchInfoEmbed({ match })],
-        flags: MessageFlags.IsComponentsV2
+      // Enviar anuncio a cada equipo
+      for (const team of teams) {
+        await sendTeamAnnouncement({
+          client,
+          team,
+          content: `### ${emojis.schedule} Fecha asignada automáticamente\n` +
+                   `La fecha del partido de **${team.name}** contra **${team._id.equals(match.teamAId._id) ? match.teamBId.name : match.teamAId.name}** ` +
+                   `ha sido asignada automáticamente.\n**Fecha:** <t:${scheduledTimestamp}:F>`
         })
       }
     }
