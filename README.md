@@ -33,9 +33,9 @@
 ## Estructura del repositorio
 
 - **/src/**
-  - **ComandosSlash/**  
+  - **slashCommands/**  
     Comandos slash organizados por rol (admin, staff, tier, usuario) para gestión avanzada y segura de toda la liga.
-  - **ComandosPrefix/**  
+  - **prefixCommands/**  
     Comandos tradicionales de prefijo para utilidades, pruebas, administración legacy y paneles rápidos.
   - **discord/**
     - **buttons/**, **menus/**, **modals/**, **embeds/**, **inputs/**  
@@ -79,7 +79,7 @@
     - Horarios, permisos, límites y assets visuales.
     - Emojis custom para cada aspecto de la liga.
 - **Control y logs:**  
-  El staff dispone de comandos y paneles para reiniciar bots, ver logs PM2, actualizar desde git y gestionar el sistema con seguridad (ver `/src/ComandosPrefix/dev.js`).
+  El staff dispone de comandos y paneles para reiniciar bots, ver logs PM2, actualizar desde git y gestionar el sistema con seguridad (ver `/src/prefixCommands/dev.js`).
 - **Robustez:**  
   El sistema está preparado para limpiar equipos vacíos, canales huérfanos, errores en la creación de canales/partidos, y para reiniciar cualquier panel visual de forma automática en caso de desincronización.
 

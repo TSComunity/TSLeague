@@ -6,14 +6,14 @@ async function loadCommands(client) {
 
     let commandsArray = [];
     
-    const commandsFolder = fs.readdirSync("src/ComandosSlash");
+    const commandsFolder = fs.readdirSync("src/slashCommands");
     for (const folder of commandsFolder) {
       const commandFiles = fs
-        .readdirSync(`src/ComandosSlash/${folder}`)
+        .readdirSync(`src/slashCommands/${folder}`)
         .filter((file) => file.endsWith(".js"));
   
       for (const file of commandFiles) {
-        const commandFile = require(`../ComandosSlash/${folder}/${file}`);
+        const commandFile = require(`../slashCommands/${folder}/${file}`);
   
         const properties = { folder, ...commandFile };
 
