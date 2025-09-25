@@ -9,6 +9,7 @@ async function sendTeamAnnouncement({ client, team, content }) {
     const embed = new EmbedBuilder()
       .setDescription(content)
       .setColor(team.color || 'Blue')
+      .setThumbnail(team.iconURL)
 
     await channel.send({
       content: `<@&${configs.roles.ping.id}>`,

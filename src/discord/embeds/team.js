@@ -103,19 +103,15 @@ const getTeamStatsEmbed = ({ team }) => {
 }
 
 const getTeamChannelCreatedEmbed = ({ team }) => {
-
-    return new EmbedBuilder()
-        .setDescription(
-        `### ${emojis.team} ${team.name}\n\n` +
-        `Este canal es exclusivo para los miembros del equipo.\n` +
-        `Aquí se publicarán todas las actualizaciones, resultados y avisos importantes relacionados con el equipo.\n` +
-        `Si necesitas asistencia o tienes alguna duda, puedes contactar al staff directamente en este canal.`
-        )
-        .setColor(team.color || 'Blue')
-        .setThumbnail(team.iconURL || '')
-        .setFooter({ 
-        text: `Por favor, revisa el canal con regularidad para mantenerte al día con la información del equipo.` 
-        })
+  return new EmbedBuilder()
+    .setDescription(
+      `### ${emojis.team} Canal del equipo **${team.name}**\n\n` +
+      `Bienvenidos al canal exclusivo de vuestro equipo.\n\n` +
+      `Aquí se publicarán todas las actualizaciones importantes, resultados de partidos, avisos de la liga y cualquier comunicación relevante para los miembros.\n\n` +
+      `Por favor, manteneos atentos a los mensajes para no perder información sobre partidos y cambios en la división.`
+    )
+    .setColor(team.color || 'Blue')
+    .setThumbnail(team.iconURL || '')
 }
 
 
