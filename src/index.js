@@ -67,7 +67,7 @@ setInterval(() => {
   updateDivisionsEmbed({ client }).catch(error => console.error(error))
   syncFreeAgents({ client }).catch(error => console.error(error))
   updateTeamsChannels({ client }).catch(error => console.error(error))
-}, 1000 * 60) // cada 5 minuto
+}, 1000 * 60 * 5) // cada 5 minuto
 
 setInterval(() => {
   updateUsersPingRole({ client }).catch(error => console.error(error))

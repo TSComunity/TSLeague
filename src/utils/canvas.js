@@ -52,7 +52,6 @@ async function generateCustomImage({
     const bg = await loadImage(background)
     ctx.drawImage(bg, 0, 0, width, height)
   } catch (err) {
-    console.warn('⚠️ No se pudo cargar el background:', background, err.message)
     ctx.fillStyle = '#222'
     ctx.fillRect(0, 0, width, height)
   }
@@ -80,9 +79,7 @@ async function generateCustomImage({
       const w = img.width || image.width
       const h = img.height || image.height
       ctx.drawImage(image, img.x, img.y, w, h)
-    } catch (err) {
-      console.warn('⚠️ No se pudo cargar imagen:', img.src, err.message)
-    }
+    } catch {}
   }
 
   const buffer = canvas.toBuffer('image/png')

@@ -23,159 +23,76 @@ const checkTeamEligibility = (team) => {
   return team.members.length >= 3 || (team.divisionId !== null && team.divisionId !== undefined)
 }
 
+const applyTeamPermissions = async (guild, channel, team) => {
+  const leaderIds = team.members.filter(m => m.role === 'leader').map(m => m.userId?.discordId).filter(Boolean)
+  const subLeaderIds = team.members.filter(m => m.role === 'sub-leader').map(m => m.userId?.discordId).filter(Boolean)
+  const memberIds = team.members.filter(m => m.role === 'member').map(m => m.userId?.discordId).filter(Boolean)
+
+  const fetchMember = async id => { try { return await guild.members.fetch(id) } catch { return null } }
+  const leaderMembers = (await Promise.all([...leaderIds].map(fetchMember))).filter(Boolean)
+  const subLeaderMembers = (await Promise.all([...subLeaderIds].map(fetchMember))).filter(Boolean)
+  const normalMembers = (await Promise.all(memberIds.map(fetchMember))).filter(Boolean)
+
+  const fetchRole = async id => { try { return await guild.roles.fetch(id) } catch { return null } }
+  const staffRolesResolved = (await Promise.all((config.roles.staff || []).map(fetchRole))).filter(Boolean)
+
+  const parsePerms = names => names.map(name => PermissionsBitField.Flags[name])
+  const memberPermissions = parsePerms(config.channels.permissions.member)
+  const leaderPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.leader)]
+  const subLeaderPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.subLeader || [])]
+  const staffPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.staff)]
+
+  const permissionOverwrites = [
+    { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
+    ...leaderMembers.map(m => ({ id: m.id, allow: leaderPermissions })),
+    ...subLeaderMembers.map(m => ({ id: m.id, allow: subLeaderPermissions })),
+    ...normalMembers.map(m => ({ id: m.id, allow: memberPermissions })),
+    ...staffRolesResolved.map(r => ({ id: r.id, allow: staffPermissions }))
+  ]
+
+  await channel.permissionOverwrites.set(permissionOverwrites)
+}
+
 const createTeamChannel = async ({ client, team, categoryId }) => {
-  try {
-    // Asegurarse de que members estén poblados
-    if (!team.members || !team.members.length || !team.members[0].userId?.discordId) {
-      await team.populate('members.userId')
-    }
-
-    const guild = await client.guilds.fetch(config.guild.id)
-    const expectedName = `${config.team.channels.prefix}${team.name.toLowerCase()}`
-
-    // 1) Buscar canal existente por name+category en cache
-    let existingChannel = guild.channels.cache.find(c => c.name === expectedName && c.parentId === categoryId) || null
-
-    // 2) Si team tiene channelId intentar fetch
-    if (!existingChannel && team.channelId) {
-      existingChannel = await client.channels.fetch(team.channelId).catch(() => null)
-    }
-
-    // 3) Si ya existe un canal -> actualizar channelId y overwrites y retornar
-    if (existingChannel) {
-      if (team.channelId !== existingChannel.id) {
-        team.channelId = existingChannel.id
-        await team.save()
-      }
-
-      try {
-        // reconstruir y aplicar permisos
-        const leaderIds = team.members.filter(m => m.role === 'leader').map(m => m.userId?.discordId).filter(Boolean)
-        const subLeaderIds = team.members.filter(m => m.role === 'sub-leader').map(m => m.userId?.discordId).filter(Boolean)
-        const memberIds = team.members.filter(m => m.role === 'member').map(m => m.userId?.discordId).filter(Boolean)
-
-        const fetchMember = async id => { try { return await guild.members.fetch(id) } catch { return null } }
-        const leaderMembers = (await Promise.all([...leaderIds].map(fetchMember))).filter(Boolean)
-        const subLeaderMembers = (await Promise.all([...subLeaderIds].map(fetchMember))).filter(Boolean)
-        const normalMembers = (await Promise.all(memberIds.map(fetchMember))).filter(Boolean)
-
-        const fetchRole = async id => { try { return await guild.roles.fetch(id) } catch { return null } }
-        const staffRolesResolved = (await Promise.all((config.roles.staff || []).map(fetchRole))).filter(Boolean)
-
-        const parsePerms = names => names.map(name => PermissionsBitField.Flags[name])
-        const memberPermissions = parsePerms(config.channels.permissions.member)
-        const leaderPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.leader)]
-        const subLeaderPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.subLeader || [])]
-        const staffPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.staff)]
-
-        const permissionOverwrites = [
-          { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-          ...leaderMembers.map(m => ({ id: m.id, allow: leaderPermissions })),
-          ...subLeaderMembers.map(m => ({ id: m.id, allow: subLeaderPermissions })),
-          ...normalMembers.map(m => ({ id: m.id, allow: memberPermissions })),
-          ...staffRolesResolved.map(r => ({ id: r.id, allow: staffPermissions }))
-        ]
-
-        await existingChannel.permissionOverwrites.set(permissionOverwrites)
-      } catch (err) {
-        throw new Error('No se pudieron aplicar overwrites al canal existente:', err)
-      }
-
-      return existingChannel
-    }
-
-    // PREVENT RACE: re-lee el team desde DB justo antes de crear
-    const freshTeam = await Team.findById(team._id).populate('members.userId')
-    if (freshTeam?.channelId) {
-      const ch = await client.channels.fetch(freshTeam.channelId).catch(() => null)
-      if (ch) {
-        // reaplicar perms por si fuera necesario
-        try {
-          // (reconstruir permisos igual que abajo)
-          const leaderIds = freshTeam.members.filter(m => m.role === 'leader').map(m => m.userId?.discordId).filter(Boolean)
-          const subLeaderIds = freshTeam.members.filter(m => m.role === 'sub-leader').map(m => m.userId?.discordId).filter(Boolean)
-          const memberIds = freshTeam.members.filter(m => m.role === 'member').map(m => m.userId?.discordId).filter(Boolean)
-
-          const fetchMember = async id => { try { return await guild.members.fetch(id) } catch { return null } }
-          const leaderMembers = (await Promise.all([...leaderIds].map(fetchMember))).filter(Boolean)
-          const subLeaderMembers = (await Promise.all([...subLeaderIds].map(fetchMember))).filter(Boolean)
-          const normalMembers = (await Promise.all(memberIds.map(fetchMember))).filter(Boolean)
-
-          const fetchRole = async id => { try { return await guild.roles.fetch(id) } catch { return null } }
-          const staffRolesResolved = (await Promise.all((config.roles.staff || []).map(fetchRole))).filter(Boolean)
-
-          const parsePerms = names => names.map(name => PermissionsBitField.Flags[name])
-          const memberPermissions = parsePerms(config.channels.permissions.member)
-          const leaderPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.leader)]
-          const subLeaderPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.subLeader || [])]
-          const staffPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.staff)]
-
-          const permissionOverwrites = [
-            { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-            ...leaderMembers.map(m => ({ id: m.id, allow: leaderPermissions })),
-            ...subLeaderMembers.map(m => ({ id: m.id, allow: subLeaderPermissions })),
-            ...normalMembers.map(m => ({ id: m.id, allow: memberPermissions })),
-            ...staffRolesResolved.map(r => ({ id: r.id, allow: staffPermissions }))
-          ]
-
-          await ch.permissionOverwrites.set(permissionOverwrites)
-        } catch (err) { /* ignore */ }
-        return ch
-      }
-    }
-
-    // Construir arrays para crear
-    const leaderIds2 = team.members.filter(m => m.role === 'leader').map(m => m.userId?.discordId).filter(Boolean)
-    const subLeaderIds2 = team.members.filter(m => m.role === 'sub-leader').map(m => m.userId?.discordId).filter(Boolean)
-    const memberIds2 = team.members.filter(m => m.role === 'member').map(m => m.userId?.discordId).filter(Boolean)
-
-    const fetchMember2 = async id => { try { return await guild.members.fetch(id) } catch { return null } }
-    const leaderMembers2 = (await Promise.all([...leaderIds2].map(fetchMember2))).filter(Boolean)
-    const subLeaderMembers2 = (await Promise.all([...subLeaderIds2].map(fetchMember2))).filter(Boolean)
-    const normalMembers2 = (await Promise.all(memberIds2.map(fetchMember2))).filter(Boolean)
-
-    const fetchRole2 = async id => { try { return await guild.roles.fetch(id) } catch { return null } }
-    const staffRolesResolved2 = (await Promise.all((config.roles.staff || []).map(fetchRole2))).filter(Boolean)
-
-    const parsePerms = names => names.map(name => PermissionsBitField.Flags[name])
-    const memberPermissions = parsePerms(config.channels.permissions.member)
-    const leaderPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.leader)]
-    const subLeaderPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.subLeader || [])]
-    const staffPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.staff)]
-
-    const permissionOverwrites = [
-      { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-      ...leaderMembers2.map(m => ({ id: m.id, allow: leaderPermissions })),
-      ...subLeaderMembers2.map(m => ({ id: m.id, allow: subLeaderPermissions })),
-      ...normalMembers2.map(m => ({ id: m.id, allow: memberPermissions })),
-      ...staffRolesResolved2.map(r => ({ id: r.id, allow: staffPermissions }))
-    ]
-
-    const channel = await guild.channels.create({
-      name: expectedName,
-      type: ChannelType.GuildText,
-      parent: categoryId,
-      permissionOverwrites
-    })
-
-    await channel.send({
-      content: `<@&${config.roles.ping.id}>`,
-      embeds: [getTeamChannelCreatedEmbed({ team })]
-    })
-
-    team.channelId = channel.id
-    await team.save()
-    return channel
-  } catch (error) {
-    console.error('Error creando canal de equipo:', error)
-    if (team.channelId) {
-      try {
-        const ch = await client.channels.fetch(team.channelId)
-        if (ch) await ch.delete('Error creando canal de equipo, limpieza')
-      } catch {}
-    }
-    throw error
+  const guild = await client.guilds.fetch(config.guild.id)
+  if (!team.members || !team.members.length || !team.members[0].userId?.discordId) {
+    await team.populate('members.userId')
   }
+
+  const expectedName = `${config.team.channels.prefix}${team.name.toLowerCase()}`
+  let channel = null
+
+  if (team.channelId) {
+    channel = await guild.channels.fetch(team.channelId).catch(() => null)
+  }
+
+  if (!channel) {
+    channel = guild.channels.cache.find(c => c.name === expectedName && c.parentId === categoryId) || null
+  }
+
+  if (channel) {
+    if (channel.name !== expectedName) await channel.setName(expectedName)
+    if (categoryId && channel.parentId !== categoryId) await channel.setParent(categoryId)
+    await applyTeamPermissions(guild, channel, team)
+    if (team.channelId !== channel.id) {
+      team.channelId = channel.id
+      await team.save()
+    }
+    return channel
+  }
+
+  // crear canal nuevo
+  channel = await guild.channels.create({
+    name: expectedName,
+    type: ChannelType.GuildText,
+    parent: categoryId
+  })
+  await applyTeamPermissions(guild, channel, team)
+  await channel.send({ content: `<@&${config.roles.ping.id}>`, embeds: [getTeamChannelCreatedEmbed({ team })] })
+
+  team.channelId = channel.id
+  await team.save()
+  return channel
 }
 
 const checkTeamUserHasPerms = async ({ discordId }) => {
@@ -196,13 +113,8 @@ const checkTeamUserIsLeader = async ({ discordId }) => {
   return (member.role === 'leader')
 }
 
-/**
- * Actualiza los canales de equipos según la división y elegibilidad.
- * @param {Object} client - Cliente de Discord.
- */
 const updateTeamsChannels = async ({ client }) => {
   const guild = await client.guilds.fetch(config.guild.id)
-
   const divisions = await Division.find({})
   const divisionMap = Object.fromEntries(divisions.map(d => [d._id.toString(), d.teamsCategoryId]))
 
@@ -215,7 +127,7 @@ const updateTeamsChannels = async ({ client }) => {
       try {
         const ch = await guild.channels.fetch(team.channelId).catch(() => null)
         if (ch) await ch.delete('Equipo no elegible - limpieza de canal')
-      } catch (err) { throw new Error('Error eliminando canal no elegible:', err) }
+      } catch (err) { console.error('Error eliminando canal no elegible:', err) }
       team.channelId = null
       await team.save()
       continue
@@ -226,67 +138,7 @@ const updateTeamsChannels = async ({ client }) => {
       ? divisionMap[team.divisionId.toString()]
       : config.categories.teams.withOutDivision.id
 
-    const expectedName = `${config.team.channels.prefix}${team.name.toLowerCase()}`
-
-    // Intentar por channelId
-    let channel = null
-    if (team.channelId) {
-      channel = await guild.channels.fetch(team.channelId).catch(() => null)
-    }
-
-    // Si no encontrado, buscar por name+category para evitar duplicados
-    if (!channel) {
-      channel = guild.channels.cache.find(c => c.name === expectedName && c.parentId === categoryId) || null
-      if (channel && team.channelId !== channel.id) {
-        team.channelId = channel.id
-        await team.save()
-      }
-    }
-
-    if (channel) {
-      try {
-        if (channel.name !== expectedName) await channel.setName(expectedName)
-        if (categoryId && channel.parentId !== categoryId) await channel.setParent(categoryId)
-
-        // REAPLICAR perms
-        const leaderIds = team.members.filter(m => m.role === 'leader').map(m => m.userId?.discordId).filter(Boolean)
-        const subLeaderIds = team.members.filter(m => m.role === 'sub-leader').map(m => m.userId?.discordId).filter(Boolean)
-        const memberIds = team.members.filter(m => m.role === 'member').map(m => m.userId?.discordId).filter(Boolean)
-
-        const fetchMember = async id => { try { return await guild.members.fetch(id) } catch { return null } }
-        const leaderMembers = (await Promise.all([...leaderIds].map(fetchMember))).filter(Boolean)
-        const subLeaderMembers = (await Promise.all([...subLeaderIds].map(fetchMember))).filter(Boolean)
-        const normalMembers = (await Promise.all(memberIds.map(fetchMember))).filter(Boolean)
-
-        const fetchRole = async id => { try { return await guild.roles.fetch(id) } catch { return null } }
-        const staffRolesResolved = (await Promise.all((config.roles.staff || []).map(fetchRole))).filter(Boolean)
-
-        const parsePerms = names => names.map(name => PermissionsBitField.Flags[name])
-        const memberPermissions = parsePerms(config.channels.permissions.member)
-        const leaderPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.leader)]
-        const subLeaderPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.subLeader || [])]
-        const staffPermissions = [...memberPermissions, ...parsePerms(config.channels.permissions.staff)]
-
-        const permissionOverwrites = [
-          { id: guild.roles.everyone.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-          ...leaderMembers.map(m => ({ id: m.id, allow: leaderPermissions })),
-          ...subLeaderMembers.map(m => ({ id: m.id, allow: subLeaderPermissions })),
-          ...normalMembers.map(m => ({ id: m.id, allow: memberPermissions })),
-          ...staffRolesResolved.map(r => ({ id: r.id, allow: staffPermissions }))
-        ]
-
-        await channel.permissionOverwrites.set(permissionOverwrites)
-      } catch (err) {
-        throw new Error(`Error actualizando canal ${channel?.id}:`, err)
-      }
-    } else {
-      // crear si no existe
-      try {
-        await createTeamChannel({ client, team, categoryId })
-      } catch (err) {
-        throw new Error('Error creando canal en updateTeamsChannels:', err)
-      }
-    }
+    await createTeamChannel({ client, team, categoryId })
   }
 }
 
@@ -545,7 +397,6 @@ const addMemberToTeam = async ({ client, teamName = null, teamCode = null, disco
 }
 
 const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordId, client }) => {
-
   const team = await findTeam({ teamName, teamCode, discordId })
   if (!team) throw new Error('Equipo no encontrado.')
 
@@ -575,24 +426,28 @@ const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordI
   user.teamId = null
   await user.save()
 
+  const originalTeamName = team.name
+
+  // 3️⃣ Si no quedan miembros, cancelar partidos y limpiar referencias
   if (team.members.length === 0) {
     const teamId = team._id
 
-  const matches = await Match.find({
-    $or: [{ teamAId: teamId }, { teamBId: teamId }],
-    status: 'scheduled'
-  }).populate('teamAId teamBId')
+    const matches = await Match.find({
+      $or: [{ teamAId: teamId }, { teamBId: teamId }],
+      status: 'scheduled'
+    }).populate('teamAId teamBId')
 
-  for (const match of matches) {
+    for (const match of matches) {
+      await cancelMatch({
+        client,
+        matchIndex: match.matchIndex,
+        seasonIndex: match.seasonIndex,
+        teamAName: match.teamAId?.name,
+        teamBName: match.teamBId?.name,
+        reason: `El equipo **${originalTeamName}** se ha eliminado.`
+      })
+    }
 
-    await cancelMatch({
-      client,
-      matchIndex: match.matchIndex,
-      reason: 'El equipo se ha eliminado.'
-    })
-  }
-
-    // Limpiar referencias en la temporada activa solamente
     const activeSeason = await Season.findOne({ status: 'active' })
     if (activeSeason) {
       for (const division of activeSeason.divisions) {
@@ -601,7 +456,11 @@ const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordI
       await activeSeason.save()
     }
 
-    // Marcar equipo como eliminado
+    if (team.channelId) {
+      const channel = await client.channels.fetch(team.channelId).catch(() => null)
+      if (channel) await channel.delete('Equipo eliminado').catch(() => null)
+    }
+
     team.name = `Equipo Eliminado #${team._id.toString().slice(-5)}`
     team.divisionId = null
     team.code = null

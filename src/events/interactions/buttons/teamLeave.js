@@ -7,15 +7,18 @@ module.exports = {
 
   async execute(interaction, client) {
     try {
+      await interaction.reply({ ephemeral: true, content: 'Procesando tu solicitud...' });
+
       const team = await removeMemberFromTeam({ client, discordId: interaction.user.id })
 
-      return interaction.reply({
+      return interaction.editReply({
         ephemeral: true,
+        content: '',
         embeds: [getSuccesEmbed({ message: `Has abandonado el equipo **${team.name}**.`})]
       })
     } catch (error) {
       console.error(error)
-      return interaction.reply({
+      return interaction.editReply({
         ephemeral: true,
         embeds: [getErrorEmbed({ error: error.message })]
       })
