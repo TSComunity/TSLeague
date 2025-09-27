@@ -38,7 +38,7 @@ module.exports = {
           getTeamLeftButton()
       ))
       
-      const team = await removeMemberFromTeam({ discordId })
+      const team = await removeMemberFromTeam({ client, discordId })
 
       await interaction.update({
         embeds: [getTeamInfoEmbed({ team })],

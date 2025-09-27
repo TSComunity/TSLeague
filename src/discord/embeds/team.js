@@ -20,9 +20,9 @@ const getTeamInfoEmbed = ({ team, perms }) => {
 
     let formattedDivision = ''
     if (team.divisionId) {
-        formattedDivision = `${team.divisionId.emoji || emojis.division} \`${team.divisionId.name || 'División sin nombre'}\``
+        formattedDivision = `${team.divisionId.emoji || emojis.division} ${team.divisionId.name || 'División sin nombre'}`
     } else {
-        formattedDivision = `${emojis.division} \`En ninguna división\``
+        formattedDivision = `${emojis.division} En ninguna división`
     }
 
     const embed = new EmbedBuilder()

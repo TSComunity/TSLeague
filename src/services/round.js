@@ -93,7 +93,7 @@ const addRound = async ({ client }) => {
 
   await season.save()
   season = await getActiveSeason()
-  const promotionData = await calculatePromotionRelegation({ season, updateDb: false})
+  const promotionData = await calculatePromotionRelegation({ client, season, updateDb: false})
 
   // Si todas las divisiones están terminadas, termina la temporada
   if (divisionsSkipped.length === season.divisions.length) {

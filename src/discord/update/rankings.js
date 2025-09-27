@@ -46,7 +46,7 @@ const updateRankingsEmbed = async ({ client }) => {
   // Si la season está activa, calculamos predicciones
   let predictions = null
   if (status === 'active') {
-    predictions = await calculatePromotionRelegation({ season, updateDb: false })
+    predictions = await calculatePromotionRelegation({ client, season, updateDb: false })
   }
 
   const fetchedMessages = await channel.messages.fetch({ limit: 100 })

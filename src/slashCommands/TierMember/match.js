@@ -154,7 +154,7 @@ module.exports = {
         const matchIndex = interaction.options.getInteger('indice-partido')
         const reason = interaction.options.getString('motivo')
 
-        const match = await cancelMatch({ matchIndex })
+        const match = await cancelMatch({ client, matchIndex, reason })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `Cancelado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.` })]
         })
@@ -162,7 +162,7 @@ module.exports = {
       } else if (sub === 'terminar') {
         const matchIndex = interaction.options.getInteger('indice-partido')
 
-        const match = await endMatch({ matchIndex })
+        const match = await endMatch({ client, matchIndex })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message: `Terminado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.` })]
         })
@@ -173,7 +173,7 @@ module.exports = {
         const hour = interaction.options.getInteger('hora')
         const minute = interaction.options.getInteger('minuto')
 
-        const match = await changeMatchScheduledAt({ matchIndex, day, hour, minute })
+        const match = await changeMatchScheduledAt({ matchIndex, day, hour, minute, client })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message:`Cambiada la fecha del partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.` })]
         })

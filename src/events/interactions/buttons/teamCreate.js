@@ -1,5 +1,7 @@
 const { ActionRowBuilder } = require('discord.js')
 
+const User = require('../../../models/User.js')
+
 const { checkUserIsVerified } = require('../../../services/user.js')
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
@@ -23,6 +25,12 @@ module.exports = {
             modal.addComponents(modalRow)
 
             return interaction.showModal(modal)
+        }
+
+        const user = await User.findOne({ discordId: interaction.user.id })
+
+        if (user.teamId) {
+            throw new Error('Ya perteneces a un equipo, no puedes crear un nuevo equipo.')
         }
 
         const modal = getTeamCreateModal()

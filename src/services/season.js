@@ -9,14 +9,17 @@ const { addScheduledFunction } = require('./scheduledFunction.js')
 const { getActiveSeason } = require('../utils/season.js')
 
 const { sendAnnouncement } = require('../discord/send/general.js')
+const { sendTeamAnnouncement } = require('../discord/send/team.js')
+
 const { getSeasonStartedEmbed, getSeasonEndedEmbed } = require('../discord/embeds/season.js')
 const { getDivisionEndedEmbed } = require('../discord/embeds/division.js')
 
 const { round, roles, division } = require('../configs/league.js')
 const { startDay, startHour } = round
 const { maxTeams } = division
+const emojis = require('../configs/emojis.json')
 
-const calculatePromotionRelegation = async ({ season, updateDb = true } = {}) => {
+const calculatePromotionRelegation = async ({ client, season, updateDb = true } = {}) => {
   if (!season || !Array.isArray(season.divisions)) {
     throw new Error("season inválido")
   }
@@ -158,16 +161,64 @@ const calculatePromotionRelegation = async ({ season, updateDb = true } = {}) =>
       }
     }
 
+    // PROMOTED
     if (r.promoted.length && i > 0) {
+        const newDivision = allDivisions[i - 1].divisionId
       await updateTeamsDivision(r.promoted, allDivisions[i - 1].divisionId)
-    }
-    if (r.relegated.length && i < n - 1) {
-      await updateTeamsDivision(r.relegated, allDivisions[i + 1].divisionId)
-    }
-    if (r.expelled.length) {
-      await updateTeamsDivision(r.expelled, null)
+
+      for (const t of r.promoted) {
+        const teamDoc = await Team.findById(t.teamId).lean()
+        if (teamDoc) {
+          await sendTeamAnnouncement({
+            client,
+            team: teamDoc,
+            content:
+              `### ${emojis.promoted} Ascenso de división\n` +
+              `Vuestro equipo, **${teamDoc.name}**, ha sido ascendido a la división **${newDivision.emoji} ${newDivision.name}**.`
+          })
+        }
+      }
     }
 
+    // RELEGATED
+    if (r.relegated.length && i < n - 1) {
+      const newDivision = allDivisions[i + 1].divisionId
+      await updateTeamsDivision(r.relegated, allDivisions[i + 1].divisionId)
+
+      for (const t of r.relegated) {
+        const teamDoc = await Team.findById(t.teamId).lean()
+        if (teamDoc) {
+          await sendTeamAnnouncement({
+            client,
+            team: teamDoc,
+            content:
+              `### ${emojis.relegated} Descenso de división\n` +
+              `Vuestro equipo, **${teamDoc.name}**, ha descendido a la división **${newDivision.emoji} ${newDivision.name}**.`
+          })
+        }
+      }
+    }
+
+    // EXPELLED
+    if (r.expelled.length) {
+      const previousDivision = allDivisions[i].divisionId
+      await updateTeamsDivision(r.expelled, null)
+
+      for (const t of r.expelled) {
+        const teamDoc = await Team.findById(t.teamId).lean()
+        if (teamDoc) {
+          await sendTeamAnnouncement({
+            client,
+            team: teamDoc,
+            content:
+              `### ${emojis.expelled} Expulsión de división\n` +
+              `Vuestro equipo, **${teamDoc.name}**, ha sido expulsado de la división **${previousDivision.emoji} ${previousDivision.name}**.`
+          })
+        }
+      }
+    }
+
+    // WINNER
     if (r.winner.length) {
       for (const t of r.winner) {
         try {
@@ -181,6 +232,16 @@ const calculatePromotionRelegation = async ({ season, updateDb = true } = {}) =>
                 console.error("Error incrementando leagueStats de user:", err)
               }
             }
+          }
+
+          if (teamDoc) {
+            await sendTeamAnnouncement({
+              client,
+              team: teamDoc,
+              content:
+                `### ${emojis.winner} Ganadores de la liga\n` +
+                `Vuestro equipo, **${teamDoc.name}**, se ha proclamado campeón de la temporada **${season.name}**. ¡Enhorabuena!`
+            })
           }
         } catch (e) {
           console.error("Error procesando ganador:", e)
@@ -296,8 +357,7 @@ const endSeason = async ({ client }) => {
     division.status = 'ended'
   }
 
-  // Calcula y aplica ascensos/descensos
-  const promotionData = await calculatePromotionRelegation({ season })
+  const promotionData = await calculatePromotionRelegation({ client, season })
 
   await sendAnnouncement({
     client,

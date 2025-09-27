@@ -4,9 +4,9 @@ let TeamSchema = new Schema({
     name: { type: String, required: true, unique: true },
     iconURL: { type: String },
     color: { type: String },
-    code: { type: String, required: true, unique: true },
+    code: { type: String },
 
-    divisionId: { type: Types.ObjectId, ref: 'Division' }, // Usar ./id de la division
+    divisionId: { type: Types.ObjectId, ref: 'Division' },
 
     members: [
         {
@@ -14,6 +14,8 @@ let TeamSchema = new Schema({
             role: { type: String, enum: ['leader', 'sub-leader', 'member' ], default: 'member' }
         }
     ],
+
+    isDeleted: { type: Boolean, default: false, required: true },
 
     stats: {
         leaguesWon: { type: Number, default: 0 },

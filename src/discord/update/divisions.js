@@ -70,7 +70,7 @@ const updateDivisionsEmbed = async ({ client }) => {
           getTeamsSummaryEmbed({
             divisionsCount: divisions.length,
             teamsInDivisionsCount: await Team.countDocuments({ divisionId: { $ne: null } }),
-            teamsCount: await Team.countDocuments()
+            teamsCount: await Team.countDocuments({ isDeleted: { $in: [false, null] } })
           })
         ]
       })
@@ -83,7 +83,7 @@ const updateDivisionsEmbed = async ({ client }) => {
         getTeamsSummaryEmbed({
           divisionsCount: divisions.length,
           teamsInDivisionsCount: await Team.countDocuments({ divisionId: { $ne: null } }),
-          teamsCount: await Team.countDocuments()
+          teamsCount: await Team.countDocuments({ isDeleted: { $in: [false, null] } })
         })
       ]
     })

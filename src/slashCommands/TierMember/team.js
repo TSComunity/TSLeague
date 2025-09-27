@@ -2,7 +2,6 @@ const { SlashCommandBuilder } = require('discord.js')
 const {
     updateTeamCode,
     createTeam,
-    deleteTeam,
     updateTeam,
     addTeamToDivision,
     removeTeamFromDivision,
@@ -39,14 +38,6 @@ module.exports = {
             name: `${color.emoji} ${color.label}`, // Mostramos emoji + nombre
             value: color.value
         })))))
-
-    // /equipo eliminar
-    .addSubcommand(sub =>
-      sub
-        .setName('eliminar')
-        .setDescription('Elimina un equipo')
-        .addStringOption(opt =>
-          opt.setName('nombre').setDescription('Nombre del equipo').setRequired(true)))
 
     // /equipo actualizar
     .addSubcommand(sub =>
@@ -161,7 +152,7 @@ module.exports = {
             ))
     ),
 
-  async execute(interaction) {
+  async execute(interaction, client) {
 
     const member = interaction.member
     const hasPerms = member.roles.cache.some(role => ROLES_WITH_PERMS.includes(role.id))
@@ -191,20 +182,6 @@ module.exports = {
           eventType: 'team'
         })
 
-      } else if (sub === 'eliminar') {
-          const teamName = interaction.options.getString('nombre')
-          const team = await deleteTeam({ teamName })
-          await interaction.reply({
-            embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** eliminado.` })]
-          })
-          await sendLog({
-            content: `El equipo **${teamName}** ha sido eliminado.\nPresidente: <@${team.presidentDiscordId}>`,
-            client: interaction.client,
-            type: 'danger',
-            userId: interaction.user.id,
-            eventType: 'team'
-          })
-
       } else if (sub === 'actualizar') {
         const teamName = interaction.options.getString('nombre')
         const name = interaction.options.getString('nuevo-nombre')
@@ -226,7 +203,7 @@ module.exports = {
       } else if (sub === 'asignar-division') {
         const teamName = interaction.options.getString('nombre-equipo')
         const divisionName = interaction.options.getString('nombre-division')
-        const team = await addTeamToDivision({ teamName, divisionName })
+        const team = await addTeamToDivision({ client, teamName, divisionName })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** añadido a la división **${team.divisionId.name}**.` })]
         })
@@ -240,7 +217,7 @@ module.exports = {
 
       } else if (sub === 'desasignar-division') {
         const teamName = interaction.options.getString('nombre-equipo')
-        await removeTeamFromDivision({ teamName })
+        await removeTeamFromDivision({ client, teamName })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message:`Equipo **${teamName}** desasignado de su división.` })]
         })
@@ -255,7 +232,7 @@ module.exports = {
       } else if (sub === 'expulsar-miembro') {
         const user = interaction.options.getUser('usuario')
         const discordId = user.id
-        const team = await removeMemberFromTeam({ discordId })
+        const team = await removeMemberFromTeam({ client, discordId })
         await interaction.reply({
           embeds: [getSuccesEmbed({ message:`Miembro <@${discordId}> expulsado de **${teamName}**.` })]
         })

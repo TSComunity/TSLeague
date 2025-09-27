@@ -11,11 +11,13 @@ const { cancelMatch } = require('./match.js')
 const { getActiveSeason } = require('../utils/season.js')
 const { findTeam } = require('../utils/team.js')
 
+const { sendTeamAnnouncement } = require('../discord/send/team.js')
 const { getTeamChannelCreatedEmbed } = require('../discord/embeds/team.js')
 
 const colors = require('../configs/colors.json')
 const config = require('../configs/league.js')
 const maxMembers = config.team.maxMembers
+const emojis = require('../configs/emojis.json')
 
 const checkTeamEligibility = (team) => {
   return team.members.length >= 3 || !!team.divisionId
@@ -192,123 +194,6 @@ const checkTeamUserIsLeader = async ({ discordId }) => {
   if (!member) return false
 
   return (member.role === 'leader')
-}
-
-/**
- * Expulsa a un miembro del equipo usando su Discord ID.
- * @param {Object} params
- * @param {String} params.teamName - Nombre del equipo.
- * @param {String} params.discordId - ID de Discord del usuario.
- * @returns {Object} equipo actualizado.
- */
-const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordId }) => {
-  const team = await findTeam({ teamName, teamCode, discordId })
-
-  const user = await User.findOne({ discordId })
-
-  const memberToRemove = team.members.find(m => m.userId?.discordId === discordId)
-  if (!memberToRemove) throw new Error('El usuario no esta en el equipo.')
-
-  // Si el que se va es el líder, se transfiere el rol
-  if (memberToRemove.role === 'leader') {
-    const subLeaders = team.members.filter(m => m.role === 'sub-leader' && m.userId?.discordId !== discordId)
-    const otherMembers = team.members.filter(m => m.userId?.discordId !== discordId)
-
-    let newLeader
-    if (subLeaders.length > 0) {
-      newLeader = subLeaders[Math.floor(Math.random() * subLeaders.length)]
-      newLeader.role = 'leader'
-    } else if (otherMembers.length > 0) {
-      newLeader = otherMembers[Math.floor(Math.random() * otherMembers.length)]
-      newLeader.role = 'leader'
-    }
-  }
-
-  // Quitar al usuario del equipo
-  team.members = team.members.filter(m => m.userId?.discordId !== discordId)
-
-  if (team.members.length === 0) {
-    const teamSnapshot = { ...team.toObject() }
-    await Team.findByIdAndDelete(team._id)
-    user.teamId = null
-    await user.save()
-    return teamSnapshot
-  } else {
-    await team.save()
-    user.teamId = null
-    await user.save()
-    return team
-  }
-}
-
-/**
- * Elimina todos los equipos vacíos de la base de datos y sus referencias.
- * Un equipo se considera vacío si no tiene miembros.
- */
-const deleteAllEmptyTeams = async () => {
-  const emptyTeams = await Team.find({ members: { $size: 0 } }).populate('members.userId')
-
-  for (const team of emptyTeams) {
-    const teamId = team._id
-
-    // Buscar partidos donde participa el equipo
-    const matches = await Match.find({
-      $or: [{ teamA: teamId }, { teamB: teamId }]
-    })
-
-    for (const match of matches) {
-      // Si el partido está programado, cancelarlo y avisar al rival
-      if (match.status === 'scheduled') {
-        await cancelMatch({
-          match,
-          reason: 'Un equipo se ha retirado del partido.',
-          removeTeamId: teamId
-        })
-      } else {
-        // Para partidos ya jugados o cancelados, solo poner teamA/teamB a null si es necesario
-        const update = {}
-        if (match.teamAId.equals(teamId)) update.teamA = null
-        if (match.teamBId.equals(teamId)) update.teamB = null
-
-        if (Object.keys(update).length) {
-          await Match.updateOne({ _id: match._id }, update)
-        }
-      }
-    }
-
-    // Eliminar referencias del equipo en temporadas (teams)
-    await Season.updateMany(
-      {},
-      {
-        $pull: {
-          'divisions.$[].teams': { teamId: teamId }
-        }
-      }
-    )
-
-    // Eliminar referencias del equipo en descansos de rondas manualmente
-    const seasons = await Season.find({})
-    for (const season of seasons) {
-      let modified = false
-      for (const division of season.divisions) {
-        for (const round of division.rounds) {
-          const originalLength = round.resting?.length || 0
-          round.resting = (round.resting || []).filter(id => !id.equals(teamId))
-          if (round.resting.length !== originalLength) modified = true
-        }
-      }
-      if (modified) {
-        await season.save()
-      }
-    }
-
-    for (const { userId } of team.members) {
-      const discordId = userId.discordId
-      await removeMemberFromTeam({ discordId })
-    }
-    // Finalmente eliminar el equipo
-    await Team.deleteOne({ _id: teamId })
-  }
 }
 
 /**
@@ -516,7 +401,7 @@ const updateTeam = async ({ teamName = null, teamCode = null, discordId = null, 
  * @param {Number} params.maxTeams - Máximo de equipos permitidos por división.
  * @returns {Object} team actualizado.
  */
-const addTeamToDivision = async ({ teamName = null, teamCode = null, discordId = null, divisionName, maxTeams }) => {
+const addTeamToDivision = async ({ client, teamName = null, teamCode = null, discordId = null, divisionName, maxTeams }) => {
   // 🔹 Buscar división destino
   const division = await Division.findOne({ name: divisionName })
   if (!division) throw new Error('División no encontrada')
@@ -540,14 +425,12 @@ const addTeamToDivision = async ({ teamName = null, teamCode = null, discordId =
   let previousPoints = 0
   const activeSeason = await Season.findOne({ status: 'active' })
   if (activeSeason) {
-    // Buscar si el equipo ya estaba en alguna división
     const currentDivision = activeSeason.divisions.find(d =>
       d.teams.some(t => t.teamId.toString() === team._id.toString())
     )
     if (currentDivision) {
       const existingTeam = currentDivision.teams.find(t => t.teamId.toString() === team._id.toString())
       previousPoints = existingTeam?.points || 0
-      // Eliminar al equipo de la división anterior
       currentDivision.teams = currentDivision.teams.filter(t => t.teamId.toString() !== team._id.toString())
       await activeSeason.save()
     }
@@ -572,21 +455,25 @@ const addTeamToDivision = async ({ teamName = null, teamCode = null, discordId =
     }
   }
 
+  // 🔹 Notificación al equipo
+  await sendTeamAnnouncement({
+    client,
+    team,
+    content: `### ${emojis.division} Nueva división\n` +
+             `Vuestro equipo, **${team.name}**, ha sido añadido a la división **${division.name}**.`
+  })
+
   return team
 }
 
-/**
- * Elimina a un equipo de su división actual.
- * También lo elimina de la temporada activa si existe.
- */
-const removeTeamFromDivision = async ({ teamName = null, teamCode = null, discordId = null }) => {
+const removeTeamFromDivision = async ({ client, teamName = null, teamCode = null, discordId = null }) => {
   const team = await findTeam({ teamName, teamCode, discordId })
-
   if (!team.divisionId) {
     throw new Error('El equipo no pertenece a ninguna división')
   }
 
   const divisionId = team.divisionId
+  const division = await Division.findById(divisionId)
 
   // 🔹 Actualizar Team
   team.divisionId = null
@@ -605,6 +492,14 @@ const removeTeamFromDivision = async ({ teamName = null, teamCode = null, discor
       await activeSeason.save()
     }
   }
+
+  // 🔹 Notificación al equipo
+  await sendTeamAnnouncement({
+    client,
+    team,
+    content: `### ${emojis.expelled} Eliminación de división\n` +
+             `Vuestro equipo, **${team.name}**, ha sido eliminado de la división **${division?.name || 'desconocida'}**.`
+  })
 
   return team
 }
@@ -654,14 +549,73 @@ const addMemberToTeam = async ({ client, teamName = null, teamCode = null, disco
   return team
 }
 
-/**
- * Cambia el role de un miembro del equipo usando su Discord ID.
- * @param {Object} params
- * @param {String} params.teamName - Nombre del equipo.
- * @param {String} params.discordId - ID de Discord del usuario.
- * @param {'leader'|'sub-leader'|'member'} params.newRol - Nuevo role a asignar.
- * @returns {Object} equipo actualizado.
- */
+const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordId, client }) => {
+  const team = await findTeam({ teamName, teamCode, discordId })
+  if (!team) throw new Error('Equipo no encontrado.')
+
+  const user = await User.findOne({ discordId })
+  if (!user) throw new Error('Usuario no encontrado.')
+
+  const memberToRemove = team.members.find(m => m.userId?.discordId === discordId)
+  if (!memberToRemove) throw new Error('El usuario no está en el equipo.')
+
+  // 1️⃣ Transferir rol si el que se va es líder
+  if (memberToRemove.role === 'leader') {
+    const subLeaders = team.members.filter(m => m.role === 'sub-leader' && m.userId?.discordId !== discordId)
+    const otherMembers = team.members.filter(m => m.userId?.discordId !== discordId)
+
+    let newLeader
+    if (subLeaders.length > 0) {
+      newLeader = subLeaders[Math.floor(Math.random() * subLeaders.length)]
+      newLeader.role = 'leader'
+    } else if (otherMembers.length > 0) {
+      newLeader = otherMembers[Math.floor(Math.random() * otherMembers.length)]
+      newLeader.role = 'leader'
+    }
+  }
+
+  // 2️⃣ Quitar al usuario del equipo
+  team.members = team.members.filter(m => m.userId?.discordId !== discordId)
+  user.teamId = null
+  await user.save()
+
+  if (team.members.length === 0) {
+    const teamId = team._id
+
+  const matches = await Match.find({
+    $or: [{ teamAId: teamId }, { teamBId: teamId }],
+    status: 'scheduled'
+  }).populate('teamAId teamBId')
+
+  for (const match of matches) {
+
+    await cancelMatch({
+      client,
+      matchIndex: match.matchIndex,
+      reason: 'El equipo se ha eliminado.'
+    })
+  }
+
+    // Limpiar referencias en la temporada activa solamente
+    const activeSeason = await Season.findOne({ status: 'active' })
+    if (activeSeason) {
+      for (const division of activeSeason.divisions) {
+        division.teams = division.teams.filter(t => !t.teamId.equals(teamId))
+      }
+      await activeSeason.save()
+    }
+
+    // Marcar equipo como eliminado
+    team.name = `Equipo Eliminado #${team._id.toString().slice(-5)}`
+    team.divisionId = null
+    team.code = null
+    team.isDeleted = true
+  }
+
+  await team.save()
+  return team
+}
+
 const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, newRole }) => {
   if (!discordId || !newRole) {
     throw new Error('Faltan datos: discordId o newRole.')
@@ -675,7 +629,7 @@ const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, n
 
   const isCurrentLeader = member.role === 'leader'
 
-  // ❌ No se puede quitar el rol de líder directamente
+  // :x: No se puede quitar el rol de líder directamente
   if (isCurrentLeader && newRole !== 'leader') {
     throw new Error('No se puede quitar el rol de líder. Asigna primero a otro miembro como líder.')
   }
@@ -699,70 +653,6 @@ const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, n
   }
 
   await team.save()
-  return team
-}
-
-const deleteTeam = async ({ teamName = null, teamCode = null, discordId = null }) => {
-  const team = await findTeam({ teamName, teamCode, discordId })
-
-    const teamId = team._id
-
-    // Buscar partidos donde participa el equipo
-    const matches = await Match.find({
-      $or: [{ teamA: teamId }, { teamB: teamId }]
-    })
-
-    for (const match of matches) {
-      // Si el partido está programado, cancelarlo y avisar al rival
-      if (match.status === 'scheduled') {
-        await cancelMatch({
-          match,
-          reason: 'Un equipo se ha retirado del partido.',
-          removeTeamId: teamId
-        })
-      } else {
-        // Para partidos ya jugados o cancelados, solo poner teamA/teamB a null si es necesario
-        const update = {}
-        if (match.teamAId.equals(teamId)) update.teamA = null
-        if (match.teamBId.equals(teamId)) update.teamB = null
-
-        if (Object.keys(update).length) {
-          await Match.updateOne({ _id: match._id }, update)
-        }
-      }
-    }
-
-    // Eliminar referencias del equipo en temporadas (teams)
-    await Season.updateMany(
-      {},
-      {
-        $pull: {
-          'divisions.$[].teams': { teamId: teamId }
-        }
-      }
-    )
-
-    // Eliminar referencias del equipo en descansos de rondas manualmente
-    const seasons = await Season.find({})
-    for (const season of seasons) {
-      let modified = false
-      for (const division of season.divisions) {
-        for (const round of division.rounds) {
-          const originalLength = round.resting?.length || 0
-          round.resting = (round.resting || []).filter(id => !id.equals(teamId))
-          if (round.resting.length !== originalLength) modified = true
-        }
-      }
-      if (modified) {
-        await season.save()
-      }
-    }
-    
-    for (const { userId } of team.members) {
-      const discordId = userId.discordId
-      await removeMemberFromTeam({ discordId })
-    }
-
   return team
 }
 
@@ -805,7 +695,6 @@ const removePointsFromTeam = async ({ teamName, points }) => {
 module.exports = {
   checkTeamUserHasPerms,
   checkTeamUserIsLeader,
-  deleteAllEmptyTeams,
   updateTeamsChannels,
   generateTeamCode,
   updateTeamCode,
@@ -816,7 +705,6 @@ module.exports = {
   addMemberToTeam,
   removeMemberFromTeam,
   changeMemberRole,
-  deleteTeam,
   addPointsToTeam,
   removePointsFromTeam
 }

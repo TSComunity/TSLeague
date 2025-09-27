@@ -60,7 +60,7 @@ const { updateDivisionsEmbed } = require('./discord/update/divisions.js')
 const { executeDueScheduledFunctions } = require('./services/scheduledFunction.js')
 const { updateUsersPingRole, syncFreeAgents } = require('./services/user.js')
 const { applyDefaultDates } = require('./services/match.js')
-const { deleteAllEmptyTeams, updateTeamsChannels } = require('./services/team.js')
+const { updateTeamsChannels } = require('./services/team.js')
 
 setInterval(() => {
   updateRankingsEmbed({ client }).catch(error => console.error(error))
@@ -74,7 +74,3 @@ setInterval(() => {
   executeDueScheduledFunctions({ client }).catch(error => console.error(error))
   applyDefaultDates({ client }).catch(error => console.error(error))
 }, 1000 * 60 * 15) // cada 15 minutos
-
-setInterval(() => {
-  deleteAllEmptyTeams().catch(error => console.error(error))
-}, 1000 * 60 * 60) // cada 60 minutos

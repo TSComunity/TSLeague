@@ -15,7 +15,7 @@ const { generateMatchPreviewImageURL, generateMatchResultsImageURL } = require('
 const { getMatchInfoEmbed } = require('../discord/embeds/match.js')
 
 const { guild: guildConfig, channels, roles, match: matchConfig } = require('../configs/league.js')
-const emojis = require('../configs/emojis.js')
+const emojis = require('../configs/emojis.json')
 /**
  * Crea un canal de Discord para un partido.
  * 
@@ -210,7 +210,7 @@ const createMatch = async ({ client, seasonId, divisionDoc, roundIndex, teamADoc
     await sendTeamAnnouncement({
       client,
       team: teamBDoc,
-      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamBDoc.name}**.\nEl enfrentamiento será contra **${teamADoc.name}** en la jornada ${roundIndex + 1}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal ${emojis.channel} <#${updatedMatch.channelId}>.`
+      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamBDoc.name}**.\nEl enfrentamiento será contra **${teamADoc.name}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal ${emojis.channel} <#${updatedMatch.channelId}>.`
     })
 
     return updatedMatch
@@ -361,20 +361,24 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
 /**
  * Cancela un partido (status = "cancelled")
  */
-const cancelMatch = async ({ client, matchIndex, seasonIndex, teamAName, teamBName, reason = 'Partido cancelado', removeTeamId = null }) => {
+const cancelMatch = async ({ client, matchIndex, seasonIndex, teamAName, teamBName, reason = 'Partido cancelado' }) => {
   // Buscar el match
   const match = await findMatch({ matchIndex, seasonIndex, teamAName, teamBName })
   if (!match) throw new Error('Partido no encontrado')
 
-  // Remover equipo si se indicó
-  if (removeTeamId) {
-    if (match.teamAId?._id?.equals(removeTeamId)) match.teamAId = null
-    if (match.teamBId?._id?.equals(removeTeamId)) match.teamBId = null
-  }
+  if (match.status === 'cancelled') return
+  if (match.status === 'played') throw new Error('El partido ya está finalizado y no se puede cancelar.')
 
   // Actualizar estado
   match.status = 'cancelled'
   match.reason = reason
+
+  const channel = await client.channels.fetch(match.channelId).catch(() => null)
+  if (channel) {
+    await channel.delete('Partido cancelado, limpieza de canal').catch(() => null)
+  }
+  match.channelId = null
+  // Guardar cambios
   await match.save()
 
   // Notificar a equipo A
@@ -383,7 +387,7 @@ const cancelMatch = async ({ client, matchIndex, seasonIndex, teamAName, teamBNa
     await sendTeamAnnouncement({
       client,
       team: teamADoc,
-      content: `### ${emojis.canceled} Partido cancelado\nEl partido que estaba programado contra el equipo ${teamBName} ha sido cancelado.\n**Motivo:**\n> ${reason}`
+      content: `### ${emojis.canceled} Partido cancelado\nVuestro partido programado contra el equipo **${match.teamBId.name}** ha sido cancelado.\n**Motivo:**\n> ${reason}`
     })
   }
 
@@ -392,8 +396,8 @@ const cancelMatch = async ({ client, matchIndex, seasonIndex, teamAName, teamBNa
     const teamBDoc = match.teamBId
     await sendTeamAnnouncement({
       client,
-      team: teamADoc,
-      content: `### ${emojis.canceled} Partido cancelado\nEl partido que estaba programado contra el equipo ${teamAName} ha sido cancelado.\n**Motivo:**\n> ${reason}`
+      team: teamBDoc,
+      content: `### ${emojis.canceled} Partido cancelado\nVuestro partido programado contra el equipo **${match.teamAId.name}** ha sido cancelado.\n**Motivo:**\n> ${reason}`
     })
   }
 
@@ -414,6 +418,9 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName }) => {
 
   if (!match) throw new Error('Partido no encontrado.')
 
+  if (match.status === 'cancelled') throw new Error('El partido está cancelado y no se puede finalizar.')
+  if (match.status === 'played') throw new Error('El partido ya está finalizado.')
+    
   match.status = 'played'
 
   // 🔹 contar sets ganados
@@ -487,6 +494,9 @@ const changeMatchScheduledAt = async ({ matchIndex, seasonIndex, teamAName, team
   const match = await findMatch({ matchIndex, seasonIndex, teamAName, teamBName })
   if (!match) throw new Error('Partido no encontrado')
 
+  if (match.status === 'cancelled') throw new Error('El partido está cancelado y no se puede reprogramar.')
+  if (match.status === 'played') throw new Error('El partido ya está finalizado y no se puede reprogramar.')
+
   match.scheduledAt = getDate({ day, hour, minute })
   await match.save()
 
@@ -499,41 +509,64 @@ const changeMatchScheduledAt = async ({ matchIndex, seasonIndex, teamAName, team
       client,
       team,
       content: `### ${emojis.schedule} Partido reprogramado\n` +
-               `El partido de **${team.name}** contra **${team._id.equals(match.teamAId._id) ? match.teamBId.name : match.teamAId.name}** ` +
-               `ha sido reprogramado.\n**Nueva fecha:** <t:${scheduledTimestamp}:F>`
+               `Vuestro partido contra el equipo **${team._id.equals(match.teamAId._id) ? match.teamBId.name : match.teamAId.name}** ha sido reprogramado.\n**Nueva fecha:** <t:${scheduledTimestamp}:F>.`
     })
   }
 
   return match
 }
 
-
-
 const applyDefaultDates = async ({ client }) => {
   const now = new Date()
   const matches = await Match.find({ scheduledAt: { $exists: false } })
-      .populate('teamAId teamBId divisionId seasonId')
+    .populate('teamAId teamBId divisionId seasonId')
 
   for (const match of matches) {
     const { passed, deadline, defaultDate } = checkDeadline(match, now)
+    if (!passed) continue
 
-    if (passed) {
-      match.scheduledAt = defaultDate
-      await match.save()
+    // Aplicar fecha por defecto y guardar
+    match.scheduledAt = defaultDate
+    await match.save()
 
-      const scheduledTimestamp = Math.floor(match.scheduledAt.getTime() / 1000)
-      const teams = [match.teamAId, match.teamBId].filter(Boolean)
+    const scheduledTimestamp = Math.floor(match.scheduledAt.getTime() / 1000)
+    const deadlineTimestamp = deadline ? Math.floor(deadline.getTime() / 1000) : null
 
-      // Enviar anuncio a cada equipo
-      for (const team of teams) {
+    // 1) Mensaje en el canal del partido (SIN ping). Incluye embed de match info.
+    try {
+      let matchChannel = client.channels.cache.get(match.channelId) || await client.channels.fetch(match.channelId).catch(() => null)
+      if (matchChannel && matchChannel.isTextBased()) {
+        const content =
+          `<@&${config.roles.ping.id}>\n` +
+          `### ${emojis.schedule} Fecha asignada automáticamente\n` +
+          (deadlineTimestamp ? `El plazo para proponer horario ha expirado (<t:${deadlineTimestamp}:F>), por lo que se ha aplicado la fecha por defecto.\n` :
+                               `Se ha aplicado la fecha por defecto.\n`) +
+          `**Fecha:** <t:${scheduledTimestamp}:F>`
+
+        await matchChannel.send({ content })
+        await matchChannel.send({
+          components: [await getMatchInfoEmbed({ match, showButtons: false })],
+          flags: MessageFlags.IsComponentsV2
+        })
+      }
+    } catch {}
+
+    // 2) Notificar a cada equipo (sendTeamAnnouncement)
+    const teams = [match.teamAId, match.teamBId].filter(Boolean)
+    for (const team of teams) {
+      try {
+        const rivalName = team._id.equals(match.teamAId._id) ? match.teamBId.name : match.teamAId.name
         await sendTeamAnnouncement({
           client,
           team,
-          content: `### ${emojis.schedule} Fecha asignada automáticamente\n` +
-                   `La fecha del partido de **${team.name}** contra **${team._id.equals(match.teamAId._id) ? match.teamBId.name : match.teamAId.name}** ` +
-                   `ha sido asignada automáticamente.\n**Fecha:** <t:${scheduledTimestamp}:F>`
+          content:
+            `### ${emojis.schedule} Fecha asignada automáticamente\n` +
+            (deadlineTimestamp ? `El plazo para proponer horario ha expirado (<t:${deadlineTimestamp}:F>), por lo que se ha asignado la fecha por defecto.\n` :
+                                 `Se ha asignado la fecha por defecto.\n`) +
+            `La fecha del partido de **${team.name}** contra **${rivalName}** ha sido fijada en **<t:${scheduledTimestamp}:F>**.\n\n` +
+            `Revisad el canal ${emojis.channel} <#${match.channelId}> para más detalles.`
         })
-      }
+      } catch {}
     }
   }
 }

@@ -5,9 +5,9 @@ const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/manag
 module.exports = {
   customId: 'teamLeave',
 
-  async execute(interaction) {
+  async execute(interaction, client) {
     try {
-      const team = await removeMemberFromTeam({ discordId: interaction.user.id })
+      const team = await removeMemberFromTeam({ client, discordId: interaction.user.id })
 
       return interaction.reply({
         ephemeral: true,

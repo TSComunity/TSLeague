@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require("discord.js")
 const configs = require("../../configs/league.js")
 
-async function sendTeamAnnouncement({ client, team, content }) {
+async function sendTeamAnnouncement({ client, team, content = 'No se ha recibido ningun contenido.' }) {
   try {
     const channel = await client.channels.fetch(team.channelId)
     if (!channel) return
@@ -17,7 +17,7 @@ async function sendTeamAnnouncement({ client, team, content }) {
     })
 
   } catch (error) {
-    console.error('Error sending team announcement')
+    console.error('Error sending team announcement:', error)
   }
 }
 
