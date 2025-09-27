@@ -73,4 +73,4 @@ setInterval(() => {
   updateUsersPingRole({ client }).catch(error => console.error(error))
   executeDueScheduledFunctions({ client }).catch(error => console.error(error))
   applyDefaultDates({ client }).catch(error => console.error(error))
-}, 1000 * 60 * 15) // cada 15 minutos
+}, 1000 * 60 * 30) // cada 30 minutos

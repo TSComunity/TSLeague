@@ -43,7 +43,7 @@ async function getUserStatsEmbed({ client, user, data, isFreeAgent = false }) {
   const freeAgentText = isFreeAgent
     ? ` — Agente Libre\n> Usa el botón **Buscar Equipo** de <#${configs.channels.register.id}> para activar o desactivar el estado de agente libre.`
     : ""
-  embed.setDescription(`## <@${user.discordId}>${freeAgentText}`.trim() || "\u200B")
+  embed.setDescription(`### <@${user.discordId}>${freeAgentText}`.trim() || "\u200B")
 
   // --- Campos: Liga ---
   embed.addFields(
@@ -64,7 +64,7 @@ async function getUserStatsEmbed({ client, user, data, isFreeAgent = false }) {
     { name: "Trofeos Máximos", value: safe(`${emojis.highestTrophies} \`${data?.highestTrophies || "No disponible"}\``), inline: true },
     { name: "Victorias 3vs3", value: safe(`${emojis.wins3vs3} \`${data?.["3vs3Victories"] || 0}\``), inline: true },
     { name: "Nivel de XP", value: safe(`${emojis.XPLevel} \`${data?.expLevel || "No disponible"}\``), inline: true },
-    { name: "Club", value: safe(`${emojis.club} \`${data?.club?.name || "Sin club"}`), inline: true },
+    { name: "Club", value: safe(`${emojis.club} ${data?.club?.name || "Sin club"}`), inline: true },
     { name: "\u200B", value: "\u200B", inline: true }
   )
 

@@ -107,7 +107,7 @@ const getTeamChannelCreatedEmbed = ({ team }) => {
     .setDescription(
       `### ${emojis.team} Canal del equipo **${team.name}**\n\n` +
       `Bienvenidos al canal exclusivo de vuestro equipo.\n\n` +
-      `Aquí se publicarán todas las actualizaciones importantes, resultados de partidos, avisos de la liga y cualquier comunicación relevante para los miembros.\n\n` +
+      `Aquí se publicarán todas las actualizaciones importantes, resultados de partidos, avisos de la liga y cualquier comunicación relevante.\n\n` +
       `Por favor, manteneos atentos a los mensajes para no perder información sobre partidos y cambios en la división.`
     )
     .setColor(team.color || 'Blue')

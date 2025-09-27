@@ -57,7 +57,7 @@ module.exports = {
 
       await interaction.followUp({
         ephemeral: true,
-        embeds: [getSuccesEmbed({ message: `Se ha actualizado el rol de <@${discordId}> ha \`${rol}\`.`})]
+        embeds: [getSuccesEmbed({ message: `Se ha actualizado el rol de <@${discordId}> ha ${rol}.`})]
       })
     } catch (error) {
       console.error(error)

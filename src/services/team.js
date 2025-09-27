@@ -20,7 +20,7 @@ const maxMembers = config.team.maxMembers
 const emojis = require('../configs/emojis.json')
 
 const checkTeamEligibility = (team) => {
-  return team.members.length >= 3 || !!team.divisionId
+  return team.members.length >= 3 || (team.divisionId !== null && team.divisionId !== undefined)
 }
 
 const createTeamChannel = async ({ client, team, categoryId }) => {
@@ -356,6 +356,7 @@ const createTeam = async ({ name, iconURL, presidentDiscordId, color = 'Blue' })
   })
 
   user.teamId = team._id
+  user.isFreeAgent = false
   await user.save()
   await team.save()
   await team.populate('members.userId')
@@ -531,18 +532,12 @@ const addMemberToTeam = async ({ client, teamName = null, teamCode = null, disco
   await team.save()
 
   user.team = team._id
+  user.isFreeAgent = false
+
   await user.save()
 
-  // Determinar categoría para el canal
-  const division = team.divisionId
-    ? await Division.findById(team.divisionId)
-    : null
-
-  const categoryId = division?.teamsCategoryId
-    || config.categories.teams.withOutDivision.id
-
-  // Crear canal inmediatamente si el equipo cumple criterios
   if (checkTeamEligibility(team)) {
+    const categoryId = config.categories.teams.withOutDivision.id
     await createTeamChannel({ client, team, categoryId })
   }
 
@@ -550,6 +545,7 @@ const addMemberToTeam = async ({ client, teamName = null, teamCode = null, disco
 }
 
 const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordId, client }) => {
+
   const team = await findTeam({ teamName, teamCode, discordId })
   if (!team) throw new Error('Equipo no encontrado.')
 
@@ -609,6 +605,7 @@ const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordI
     team.name = `Equipo Eliminado #${team._id.toString().slice(-5)}`
     team.divisionId = null
     team.code = null
+    team.channelId = null
     team.isDeleted = true
   }
 

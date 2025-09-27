@@ -21,9 +21,6 @@ module.exports = {
       "withOutDivision": {
         "id": '1420050816076742676',
       }
-    },
-    "teams": {
-      "id": '1409912754843947149'
     }
   },
   "channels": {

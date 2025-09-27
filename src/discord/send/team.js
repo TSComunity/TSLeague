@@ -3,6 +3,8 @@ const configs = require("../../configs/league.js")
 
 async function sendTeamAnnouncement({ client, team, content = 'No se ha recibido ningun contenido.' }) {
   try {
+    if (!team.channelId) return
+    
     const channel = await client.channels.fetch(team.channelId)
     if (!channel) return
 

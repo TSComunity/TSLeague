@@ -5,6 +5,7 @@ const { findTeam } = require('../../../utils/team.js')
 const { getTeamChangeMemberRoleMenu } = require('../../../discord/menus/team.js')
 const { getUserDisplayName } = require('../../../services/user.js')
 const { getTeamCancelButton } = require('../../../discord/buttons/team.js')
+const emojis = require('../../../configs/emojis.json')
 
 module.exports = {
   customId: 'teamChangeMemberRole',
@@ -26,7 +27,12 @@ module.exports = {
         'leader': 'Líder',
         'sub-leader': 'Sub-líder',
         'member': 'Miembro'
-      };
+      }
+      const roleEmojis = {
+        'leader': emojis.leader,
+        'sub-leader': emojis.subLeader,
+        'member': emojis.member
+      }
       const member = team.members.find(m => m.userId.discordId === discordId)
       let filteredMembers = [];
 
@@ -54,6 +60,7 @@ module.exports = {
           label: await getUserDisplayName({ guild: interaction.guild, discordId: m.userId.discordId }),
           description: rolesJSON[m.role],
           value: m.userId.discordId,
+          emoji: roleEmojis[m.role]
         }))
       )
 

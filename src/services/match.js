@@ -198,25 +198,24 @@ const createMatch = async ({ client, seasonId, divisionDoc, roundIndex, teamADoc
     })
 
     // Crear canal de Discord y actualizar el match con channelId
-    const updatedMatch = await createMatchChannel({ match, client })
-    channelCreated = true // Marcamos que ya se creó el canal
+    const match = await createMatchChannel({ match, client })
 
     await sendTeamAnnouncement({
       client,
       team: teamADoc,
-      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamADoc.name}**.\nEl enfrentamiento será contra **${teamBDoc.name}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal ${emojis.channel} <#${updatedMatch.channelId}>.`
+      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamADoc.name}**.\nEl enfrentamiento será contra **${teamBDoc.name}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal ${emojis.channel} <#${match.channelId}>.`
     })
 
     await sendTeamAnnouncement({
       client,
       team: teamBDoc,
-      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamBDoc.name}**.\nEl enfrentamiento será contra **${teamADoc.name}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal ${emojis.channel} <#${updatedMatch.channelId}>.`
+      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamBDoc.name}**.\nEl enfrentamiento será contra **${teamADoc.name}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal ${emojis.channel} <#${match.channelId}>.`
     })
 
-    return updatedMatch
+    return match
   } catch (error) {
   // Si hubo error y ya se creó el match, borrarlo
-  if (match.channelId) {
+  if (match?.channelId) {
     try {
       const channel = await client.channels.fetch(match.channelId)
       if (channel) await channel.delete('Error al crear el partido, limpieza de canal')
@@ -226,7 +225,7 @@ const createMatch = async ({ client, seasonId, divisionDoc, roundIndex, teamADoc
   }
 
   // Luego eliminar el match de la base de datos
-  await Match.findByIdAndDelete(match._id)
+  await Match.findByIdAndDelete(match?._id)
   throw error
   }
 }
@@ -351,16 +350,13 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
     return updatedMatch
 
   } catch (error) {
-    if (match && match._id) {
-      await Match.findByIdAndDelete(match._id)
+    if (match && match?._id) {
+      await Match.findByIdAndDelete(match?._id)
     }
     throw new Error(`Error al crear el partido: ${error.message}`)
   }
 }
 
-/**
- * Cancela un partido (status = "cancelled")
- */
 const cancelMatch = async ({ client, matchIndex, seasonIndex, teamAName, teamBName, reason = 'Partido cancelado' }) => {
   // Buscar el match
   const match = await findMatch({ matchIndex, seasonIndex, teamAName, teamBName })
@@ -380,6 +376,8 @@ const cancelMatch = async ({ client, matchIndex, seasonIndex, teamAName, teamBNa
   match.channelId = null
   // Guardar cambios
   await match.save()
+
+  await match.populate('teamAId teamBId')
 
   // Notificar a equipo A
   if (match.teamAId) {

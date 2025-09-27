@@ -7,6 +7,8 @@ const { getTeamKickMemberMenu } = require('../../../discord/menus/team.js')
 const { getTeamCancelButton } = require('../../../discord/buttons/team.js')
 const { getUserDisplayName } = require('../../../services/user.js')
 
+const emojis = require('../../../configs/emojis.json')
+
 module.exports = {
   customId: 'teamKickMember',
 
@@ -54,11 +56,17 @@ module.exports = {
           'sub-leader': 'Sub-líder',
           'member': 'Miembro'
         }
+        const roleEmojis = {
+          'leader': emojis.leader,
+          'sub-leader': emojis.subLeader,
+          'member': emojis.member
+        }
         const options = await Promise.all(
         membersToKick.map(async m => ({
             label: await getUserDisplayName({ guild: interaction.guild, discordId: m.userId.discordId }),
             description: rolesJSON[m.role],
             value: m.userId.discordId,
+            emoji: roleEmojis[m.role]
         }))
         )
 
