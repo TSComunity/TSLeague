@@ -131,19 +131,21 @@ const createMatchChannel = async ({ match, client }) => {
       name: expectedName,
       type: ChannelType.GuildText,
       parent: categoryId,
-      topic: `Partido entre ${teamA.name} y ${teamB.name} — Jornada ${matchToUpd.roundIndex + 1}`,
+      topic: `Partido entre **${teamA.name}** y **${teamB.name}** — Jornada ${matchToUpd.roundIndex + 1}`,
       permissionOverwrites
     })
 
     matchToUpd.channelId = channel.id
-    await matchToUpd.save()
 
     await channel.send({ content: `<@&${roles.ping.id}>` })
-    await channel.send({
+    const infoMsg = await channel.send({
       components: [await getMatchInfoEmbed({ match: matchToUpd, showButtons: true })],
       flags: MessageFlags.IsComponentsV2
     })
+    await infoMsg.pin().catch(() => null)
+    match.infoMessageId = infoMsg.id
 
+    await matchToUpd.save()
     return matchToUpd
   } catch (error) {
     // Limpieza en caso de error parcial
@@ -570,6 +572,31 @@ const applyDefaultDates = async ({ client }) => {
   }
 }
 
+async function processScheduledMatches({ client }) {
+  const now = new Date()
+
+  const matches = await Match.find({
+    status: 'scheduled',
+    scheduledAt: { $lte: now }
+  })
+
+  for (const match of matches) {
+    if (!match.channelId) continue
+    const channel = await client.channels.fetch(match.channelId).catch(() => null)
+    if (!channel) continue
+
+    const onGoingMsg = await channel.send({
+      content: `<@&${roles.ping.id}>`,
+      // TODO
+    })
+
+    await onGoingMsg.pin().catch(() => null)
+    match.onGoingMessageId = onGoingMsg.id
+    match.status = 'ongoing'
+    await match.save()
+  }
+}
+
 module.exports = {
   createMatchChannel,
   createMatch,
@@ -577,5 +604,6 @@ module.exports = {
   cancelMatch,
   endMatch,
   changeMatchScheduledAt,
-  applyDefaultDates
+  applyDefaultDates,
+  processScheduledMatches
 }

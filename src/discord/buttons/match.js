@@ -42,4 +42,14 @@ const getMatchCancelInteractionButton = () => {
     )
 }
 
-module.exports = { getMatchChangeScheduleButton, getMatchCancelInteractionButton, getMatchAcceptScheduleButton, getMatchRejectScheduleButton }
+const getMatchShareRoom = () => {
+    return (
+        new ButtonBuilder()
+        .setCustomId('matchShareRoom') 
+        .setLabel('Compartir Sala')
+        .setEmoji(emojis.code)
+        .setStyle(ButtonStyle.Secondary)
+    )
+}
+
+module.exports = { getMatchChangeScheduleButton, getMatchCancelInteractionButton, getMatchAcceptScheduleButton, getMatchRejectScheduleButton, getMatchShareRoom }

@@ -14,23 +14,21 @@ module.exports = {
 
       const match = await findMatch({ matchIndex })
 
-        const { passed, deadline, defaultDate } = checkDeadline(match)
+      const { passed, deadline, defaultDate } = checkDeadline(match)
 
-        if (passed) {
-          return interaction.reply({
-            ephemeral: true,
-            embeds: [getErrorEmbed({
-              error: `Ya ha pasado el plazo para modificar el horario.\n\n` +
-                    `**Fecha límite:** <t:${Math.floor(deadline.getTime() / 1000)}:F>\n` +
-                    `**Horario aplicado por defecto:** <t:${Math.floor(defaultDate.getTime() / 1000)}:F>`
-            })]
-          })
-        }
-
+      if (passed) {
+        return interaction.reply({
+          ephemeral: true,
+          embeds: [getErrorEmbed({
+            error: `Ya ha pasado el plazo para modificar el horario.\n\n` +
+                  `**Fecha límite:** <t:${Math.floor(deadline.getTime() / 1000)}:F>\n` +
+                  `**Horario aplicado por defecto:** <t:${Math.floor(defaultDate.getTime() / 1000)}:F>`
+          })]
+        })
+      }
 
       const leaderId = splittedId[2]
 
-      // Solo el líder correspondiente puede aceptar
       if (interaction.user.id !== leaderId) {
         return interaction.reply({
           ephemeral: true,
@@ -38,7 +36,6 @@ module.exports = {
         })
       }
 
-      // Verificar si hay propuesta pendiente
       if (!match.proposedSchedule || match.proposedSchedule.status !== 'pending') {
         throw new Error('No hay una propuesta pendiente para aceptar.')
       }
@@ -59,25 +56,30 @@ module.exports = {
         ? Math.floor(match.scheduledAt.getTime() / 1000)
         : null
 
-      // Timestamp de la hora propuesta
       const timestampUnix = match.proposedSchedule?.newDate
         ? Math.floor(match.proposedSchedule.newDate.getTime() / 1000)
         : null
 
-      await interaction.update({ embeds: [getMatchProposedScheduleEmbed({
-  interaction,
-  oldTimestampUnix,
-  timestampUnix,
-  status: 'accepted'
-})], components: [disabledRow] })
+      // Actualizar mensaje de la interacción
+      await interaction.update({ 
+        embeds: [getMatchProposedScheduleEmbed({ interaction, oldTimestampUnix, timestampUnix, status: 'accepted' })], 
+        components: [disabledRow] 
+      })
 
       await interaction.followUp({
-        embeds: [getSuccesEmbed({ message: `<@${leaderId}> ha aceptado la propuesta de cambio de hora.` })]
-      })      
-      await interaction.channel.send({
-        components: [await getMatchInfoEmbed({ match, showButtons: true })],
-        flags: MessageFlags.IsComponentsV2
+        embeds: [getSuccesEmbed({ message: `<@${leaderId}> ha aceptado la propuesta de cambio de hora.` })],
+        ephemeral: false
       })
+
+      // Editar el mensaje de info existente si existe
+      if (match.infoMessageId) {
+        const infoMessage = await interaction.channel.messages.fetch(match.infoMessageId).catch(() => null)
+        if (infoMessage) {
+          await infoMessage.edit({
+            components: [await getMatchInfoEmbed({ match, showButtons: true })]
+          })
+        }
+      }
 
     } catch (error) {
       console.error(error)

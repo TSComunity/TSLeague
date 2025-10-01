@@ -8,10 +8,16 @@ const {
   MediaGalleryItemBuilder
 } = require('discord.js')
 const { generateMapCollage } = require('../../services/sets.js')
-const emojis = require('../../configs/emojis.json')
 const { getMatchChangeScheduleButton } = require('../buttons/match.js')
+const emojis = require('../../configs/emojis.json')
 const modesData = require('../../configs/gameModes.json')
 
+/**
+ * Genera el embed/container con info completa de un match
+ * @param {Object} match - Documento de match de Mongo
+ * @param {Boolean} showButtons - Mostrar botones de interacción
+ * @returns {ContainerBuilder}
+ */
 const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
   const {
     matchIndex,
@@ -28,12 +34,8 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
     starPlayerId
   } = match
 
-  // --- Helpers ---
-  function getModeData(modeId) {
-    return modesData.find(m => m.id === modeId) || null
-  }
-
-  function getMapData(mapId) {
+  const getModeData = (modeId) => modesData.find(m => m.id === modeId) || null
+  const getMapData = (mapId) => {
     for (const mode of modesData) {
       const map = mode.maps.find(m => m.id === mapId)
       if (map) return map
@@ -41,50 +43,69 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
     return null
   }
 
-  // --- Imagen principal según estado ---
+  // Imagen principal según estado
   let imageURL = null
-  if (status === 'played' && resultsImageURL) imageURL = resultsImageURL
-  if ((status === 'scheduled' || status === 'cancelled') && previewImageURL) imageURL = previewImageURL
+  if ((status === 'played') && resultsImageURL) imageURL = resultsImageURL
+  if ((status === 'scheduled' || status === 'cancelled' || status === 'onGoing') && previewImageURL) imageURL = previewImageURL
 
-  // --- Accent color por estado ---
+  // Color según estado
   const statusColors = {
-    scheduled: '#FFD700', // Amarillo
-    cancelled: '#FF0000', // Rojo
-    played: '#1E90FF'     // Azul
+    scheduled: '#FFD700',
+    cancelled: '#FF0000',
+    played: '#1E90FF',
+    onGoing: '#32CD32'
   }
-  const accentColor = parseInt(statusColors[status].replace('#', ''), 16)
+  const accentColor = parseInt(statusColors[status]?.replace('#','') || '1E90FF', 16)
 
-  // --- Info principal con resumen de sets ---
-  let title = `## ${emojis.match} ${teamAId?.name || "Equipo A"} vs ${teamBId?.name || "Equipo B"}\n`
+  // Título y texto principal
+  const title = `## ${emojis.match} ${teamAId?.name || "Equipo A"} vs ${teamBId?.name || "Equipo B"}\n`
   let infoText = ''
 
   if (status === 'scheduled') {
-    infoText += `${emojis.schedule} ${scheduledAt ? `<t:${new Date(scheduledAt).getTime() / 1000}:D> (<t:${new Date(scheduledAt).getTime() / 1000}:R>)` : "Por definir"}`
+    infoText += `${emojis.schedule} ${scheduledAt ? `<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}:D>` : "Por definir"}`
+  } else if (status === 'onGoing') {
+    infoText += `${emojis.onGoing} Partida en curso\n`
   } else if (status === 'played') {
-    infoText += `${emojis.ended} ${scoreA} - ${scoreB}\n${emojis.starPlayer} <@${starPlayerId.discordId}>`
+    const winnerFirst = scoreA >= scoreB
+      ? [teamAId.name, scoreA, scoreB,]
+      : [teamBId.name, scoreB, scoreA,]
+
+    infoText += `${emojis.ended} **${winnerFirst[0]}** ${winnerFirst[1]} - ${winnerFirst[2]}\n`
+    if (starPlayerId) infoText += `${emojis.starPlayer} <@${starPlayerId.discordId}>`
   } else if (status === 'cancelled') {
-    infoText += `${emojis.canceled} Cancelado ${reason ? `\n> ${reason}` : ""}`
+    infoText += `${emojis.canceled} Cancelado${reason ? `\n> ${reason}` : ''}`
   }
 
   // Resumen de sets
   if (sets?.length > 0) {
     infoText += `\n### Sets\n`
-    sets.forEach((set, i) => {
+    sets.forEach((set) => {
       const mode = getModeData(set.mode)
       const map = getMapData(set.map)
       const modeEmoji = mode?.emoji || "🎮"
       const mapName = map?.name || "Mapa desconocido"
-      const winnerName = set.winner
-        ? (set.winner.equals(teamAId._id) ? teamAId.name : teamBId.name)
-        : "Sin gandor"
-      infoText += `${modeEmoji} ${mapName}${match.status === 'played' ? `\n> ${emojis.winner} ${winnerName}` : ''}\n`
+
+      let winnerText = "No definido"
+      if (set.winner) {
+        if (set.winner.equals(teamAId._id)) winnerText = teamAId.name
+        else if (set.winner.equals(teamBId._id)) winnerText = teamBId.name
+      }
+
+      // Solo mostrar ganador si ha terminado
+      if (status === 'played') {
+        infoText += `${modeEmoji} ${mapName} — **${winnerText}**\n`
+      } else if (status === 'onGoing' || status === 'cancelled') {
+        // Para ongoing mostrar solo los sets que ya tienen ganador o modo/mapa definido
+        infoText += `${modeEmoji} ${mapName} — ${set.winner ? `**${winnerText}**` : "No definido"}\n`
+      } else {
+        infoText += `${modeEmoji} ${mapName} — No definido\n`
+      }
     })
   }
 
-  // --- Construcción del contenedor ---
+  // Construcción del container
   const container = new ContainerBuilder().setAccentColor(accentColor)
 
-  // Imagen principal
   if (imageURL) {
     const image = new MediaGalleryItemBuilder()
       .setURL(imageURL)
@@ -98,39 +119,25 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
     container.addSeparatorComponents(new SeparatorBuilder())
   }
 
-  
   container.addTextDisplayComponents(new TextDisplayBuilder().setContent(title))
   container.addSeparatorComponents(new SeparatorBuilder())
   container.addTextDisplayComponents(new TextDisplayBuilder().setContent(infoText))
 
-  // --- Galería de sets (solo imágenes) ---
+  // Galería de sets
   if (sets?.length > 0) {
-    const setGallery = new MediaGalleryBuilder().setId(2)
-    sets.forEach((set, i) => {
-      const map = getMapData(set.map)
-      if (map?.imageURL) {
-        setGallery.addItems([
-          new MediaGalleryItemBuilder()
-            .setURL(map.imageURL)
-            .setDescription(`Set ${i + 1} — ${map.name}`)
-        ])
-      }
-    })
-    container.addSeparatorComponents(new SeparatorBuilder())
     const collageBuffer = await generateMapCollage({ sets })
-
-    const imageItem = new MediaGalleryItemBuilder()
-      .setURL(collageBuffer, 'maps.png')
-      .setDescription('Mapas de la partida')
-
     const gallery = new MediaGalleryBuilder()
       .setId(2)
-      .addItems([imageItem])
-
+      .addItems([
+        new MediaGalleryItemBuilder()
+          .setURL(collageBuffer, 'maps.png')
+          .setDescription('Mapas de la partida')
+      ])
+    container.addSeparatorComponents(new SeparatorBuilder())
     container.addMediaGalleryComponents([gallery])
   }
 
-  // --- Botón opcional ---
+  // Botón opcional
   if (showButtons) {
     container.addSeparatorComponents(new SeparatorBuilder())
     container.addActionRowComponents(
@@ -141,7 +148,9 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
   return container
 }
 
-
+/**
+ * Embed para propuesta de cambio de horario
+ */
 const getMatchProposedScheduleEmbed = ({ interaction, oldTimestampUnix, timestampUnix, status = 'pending' }) => {
   let color = 'Yellow'
   let description = `### <@${interaction.user.id}> ha propuesto cambiar la hora del partido.`

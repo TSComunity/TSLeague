@@ -59,7 +59,7 @@ const { updateRankingsEmbed } = require('./discord/update/rankings.js')
 const { updateDivisionsEmbed } = require('./discord/update/divisions.js')
 const { executeDueScheduledFunctions } = require('./services/scheduledFunction.js')
 const { updateUsersPingRole, syncFreeAgents } = require('./services/user.js')
-const { applyDefaultDates } = require('./services/match.js')
+const { applyDefaultDates, processScheduledMatches } = require('./services/match.js')
 const { updateTeamsChannels } = require('./services/team.js')
 
 setInterval(() => {
@@ -67,6 +67,7 @@ setInterval(() => {
   updateDivisionsEmbed({ client }).catch(error => console.error(error))
   syncFreeAgents({ client }).catch(error => console.error(error))
   updateTeamsChannels({ client }).catch(error => console.error(error))
+  processScheduledMatches({ client }).catch(error => console.error(error))
 }, 1000 * 60 * 5) // cada 5 minuto
 
 setInterval(() => {

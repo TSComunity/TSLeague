@@ -7,6 +7,8 @@ const MatchSchema = new Schema({
   seasonId: { type: Types.ObjectId, ref: 'Season', required: true },
   divisionId: { type: Types.ObjectId, ref: 'Division', required: true },
   channelId: { type: String },
+  infoMessageId: { type: String },
+  onGoingMessageId: { type: String },
 
   teamAId: { type: Types.ObjectId, ref: 'Team' },
   teamBId: { type: Types.ObjectId, ref: 'Team' },
@@ -18,7 +20,7 @@ const MatchSchema = new Schema({
 
   status: {
     type: String,
-    enum: ['scheduled', 'played', 'cancelled'],
+    enum: ['scheduled', 'ongoing', 'played', 'cancelled'],
     default: 'scheduled'
   },
   reason: { type: String },
