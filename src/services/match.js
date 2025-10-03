@@ -500,6 +500,16 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName, client 
   const resultsImageURL = await generateMatchResultsImageURL({ match })
   match.resultsImageURL = resultsImageURL
   await match.save()
+  
+  const season = await getActiveSeason()
+  const division = season.divisions.find(d => d.divisionId._id.toString() === match.divisionId.toString())
+  const teamASeason = division.teams.find(t => t.teamId._id.toString() === match.teamAId._id.toString())
+  const teamBSeason = division.teams.find(t => t.teamId._id.toString() === match.teamBId._id.toString())
+
+  teamASeason.points += setsWonA
+  teamBSeason.points += setsWonB
+
+  await season.save()
 
   // 🔹 enviar mensajes a canales
   const guild = await client.guilds.fetch(guildConfig.id)
