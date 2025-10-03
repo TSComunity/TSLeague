@@ -67,38 +67,77 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
     infoText += `${emojis.onGoing} Partida en curso\n`
   } else if (status === 'played') {
     const winnerFirst = scoreA >= scoreB
-      ? [teamAId.name, scoreA, scoreB,]
-      : [teamBId.name, scoreB, scoreA,]
+      ? [teamAId.name, scoreA, scoreB]
+      : [teamBId.name, scoreB, scoreA]
 
     infoText += `${emojis.ended} **${winnerFirst[0]}** ${winnerFirst[1]} - ${winnerFirst[2]}\n`
-    if (starPlayerId) infoText += `${emojis.starPlayer} <@${starPlayerId.discordId}>`
+    if (starPlayerId) infoText += `${emojis.starPlayer} <@${starPlayerId.discordId}>\n`
   } else if (status === 'cancelled') {
     infoText += `${emojis.canceled} Cancelado${reason ? `\n> ${reason}` : ''}`
   }
 
   // Resumen de sets
+// ...
+  // Resumen de sets según estado
   if (sets?.length > 0) {
     infoText += `\n### Sets\n`
-    sets.forEach((set) => {
+
+    sets.forEach((set, i) => {
       const mode = getModeData(set.mode)
       const map = getMapData(set.map)
       const modeEmoji = mode?.emoji || "🎮"
-      const mapName = map?.name || "Mapa desconocido"
+      const mapName = map?.name || `Mapa ${i + 1}`
 
-      let winnerText = "No definido"
-      if (set.winner) {
-        if (set.winner.equals(teamAId._id)) winnerText = teamAId.name
-        else if (set.winner.equals(teamBId._id)) winnerText = teamBId.name
+      if (status === 'scheduled') {
+        // Solo icono y nombre
+        infoText += `${modeEmoji} ${mapName}\n`
       }
 
-      // Solo mostrar ganador si ha terminado
-      if (status === 'played') {
-        infoText += `${modeEmoji} ${mapName} — **${winnerText}**\n`
-      } else if (status === 'onGoing' || status === 'cancelled') {
-        // Para ongoing mostrar solo los sets que ya tienen ganador o modo/mapa definido
-        infoText += `${modeEmoji} ${mapName} — ${set.winner ? `**${winnerText}**` : "No definido"}\n`
-      } else {
-        infoText += `${modeEmoji} ${mapName} — No definido\n`
+      else if (status === 'onGoing') {
+        // Mostrar solo lo jugado
+        if (set.winner) {
+          let winnerText = ""
+          if (set.winner.equals(teamAId._id)) winnerText = `${emojis.winner} ${teamAId.name}`
+          else if (set.winner.equals(teamBId._id)) winnerText = `${emojis.winner} ${teamBId.name}`
+
+          let starPlayerText = set.starPlayerId
+            ? `\n${emojis.starPlayer} <@${set.starPlayerId.discordId}>`
+            : ""
+
+          infoText += `${modeEmoji} ${mapName}\n${winnerText}${starPlayerText}\n`
+        }
+      }
+
+      else if (status === 'played') {
+        // Igual que ongoing pero mostrando todo
+        let winnerText = ""
+        if (set.winner) {
+          if (set.winner.equals(teamAId._id)) winnerText = `${emojis.winner} ${teamAId.name}`
+          else if (set.winner.equals(teamBId._id)) winnerText = `${emojis.winner} ${teamBId.name}`
+        }
+
+        let starPlayerText = set.starPlayerId
+          ? `\n${emojis.starPlayer} <@${set.starPlayerId.discordId}>`
+          : ""
+
+        infoText += `${modeEmoji} ${mapName}\n${winnerText}${starPlayerText}\n`
+      }
+
+      else if (status === 'cancelled') {
+        // Solo sets con info, los vacíos no se muestran
+        if (set.winner || set.starPlayerId) {
+          let winnerText = ""
+          if (set.winner) {
+            if (set.winner.equals(teamAId._id)) winnerText = `${emojis.winner} ${teamAId.name}`
+            else if (set.winner.equals(teamBId._id)) winnerText = `${emojis.winner} ${teamBId.name}`
+          }
+
+          let starPlayerText = set.starPlayerId
+            ? `\n${emojis.starPlayer} <@${set.starPlayerId.discordId}>`
+            : ""
+
+          infoText += `${modeEmoji} ${mapName}\n${winnerText}${starPlayerText}\n`
+        }
       }
     })
   }
@@ -172,4 +211,171 @@ const getMatchProposedScheduleEmbed = ({ interaction, oldTimestampUnix, timestam
     )
 }
 
-module.exports = { getMatchInfoEmbed, getMatchProposedScheduleEmbed }
+const getOnGoingMatchEmbed = async ({ match }) => {
+  const { teamAId, teamBId, sets } = match
+
+  const getModeData = (modeId) => modesData.find(m => m.id === modeId) || null
+  const getMapData = (mapId) => {
+    for (const mode of modesData) {
+      const map = mode.maps.find(m => m.id === mapId)
+      if (map) return map
+    }
+    return null
+  }
+
+  const container = new ContainerBuilder().setAccentColor(0x32CD32)
+
+  // Título
+  const title = `## ${teamAId?.name || "Equipo A"} vs ${teamBId?.name || "Equipo B"}`
+  container.addTextDisplayComponents(new TextDisplayBuilder().setContent(title))
+  container.addSeparatorComponents(new SeparatorBuilder())
+
+  // Sets
+  if (sets?.length > 0) {
+    const blocks = sets.map((set, i) => {
+      const mode = getModeData(set.mode)
+      const map = getMapData(set.map)
+      const modeEmoji = mode?.emoji || "🎮"
+      const mapName = map?.name || `Mapa ${i + 1}`
+
+      let winnerText = `${emojis.winner} Pendiente`
+      if (set.winner) {
+        if (set.winner.equals(teamAId._id)) winnerText = `${emojis.winner} ${teamAId.name}`
+        else if (set.winner.equals(teamBId._id)) winnerText = `${emojis.winner} ${teamBId.name}`
+      }
+
+      let starPlayerText = ""
+      if (set.starPlayerId) {
+        starPlayerText = `\n${emojis.starPlayer} <@${set.starPlayerId.discordId}>`
+      }
+
+      return `### ${modeEmoji} ${mapName}\n${winnerText}${starPlayerText}`
+    })
+
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(blocks.join("\n\n")))
+  } else {
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent("Sets aún no definidos"))
+  }
+
+  container.addSeparatorComponents(new SeparatorBuilder())
+
+  // Imagen con collage de mapas
+  if (sets?.length > 0) {
+    const collageBuffer = await generateMapCollage({ sets })
+    if (collageBuffer) {
+      const gallery = new MediaGalleryBuilder()
+        .setId(1)
+        .addItems([
+          new MediaGalleryItemBuilder()
+            .setURL(collageBuffer, "maps.png")
+            .setDescription("Mapas de la partida")
+        ])
+      container.addMediaGalleryComponents([gallery])
+    }
+  }
+
+  return container
+}
+
+const getMatchResultsEmbed = ({ match, team = null }) => {
+  let orderedTeams;
+
+  if (team) {
+    // Canal de un equipo: equipo del canal primero
+    if (team._id.toString() === match.teamAId._id.toString()) {
+      orderedTeams = [
+        { team: match.teamAId, score: match.scoreA },
+        { team: match.teamBId, score: match.scoreB }
+      ];
+    } else {
+      orderedTeams = [
+        { team: match.teamBId, score: match.scoreB },
+        { team: match.teamAId, score: match.scoreA }
+      ];
+    }
+  } else {
+    // Canal general: ganador arriba
+    if (match.scoreA >= match.scoreB) {
+      orderedTeams = [
+        { team: match.teamAId, score: match.scoreA },
+        { team: match.teamBId, score: match.scoreB }
+      ];
+    } else {
+      orderedTeams = [
+        { team: match.teamBId, score: match.scoreB },
+        { team: match.teamAId, score: match.scoreA }
+      ];
+    }
+  }
+
+  // Color según resultado para el equipo principal
+  let accentColor = 0x1E90FF; // azul por defecto
+  if (team) {
+    const won =
+      (team._id.toString() === match.teamAId._id.toString() && match.scoreA > match.scoreB) ||
+      (team._id.toString() === match.teamBId._id.toString() && match.scoreB > match.scoreA);
+    accentColor = won ? 0x00FF00 : 0xFF0000; // verde si ganó, rojo si perdió
+  }
+
+  // Texto según tipo de canal
+  let textContent;
+  if (team) {
+    const otherTeam = orderedTeams[1].team;
+    textContent = `## ${emojis.ended} Resultados de vuestro partido contra ${otherTeam?.name || "Equipo B"} — ${orderedTeams[0].score} - ${orderedTeams[1].score}\n`;
+  } else {
+    textContent = `## ${emojis.ended} ${orderedTeams[0].team?.name || "Equipo A"} vs ${orderedTeams[1].team?.name || "Equipo B"} — ${orderedTeams[0].score} - ${orderedTeams[1].score}\n`;
+  }
+  if (match.starPlayerId) {
+    textContent += `### ${emojis.starPlayer} <@${match.starPlayerId.discordId}>\n`
+  }
+  // Bloques de sets
+  const setsText = match.sets.map((set, i) => {
+    const mode = modesData.find(m => m.id === set.mode) || null;
+    const map = (() => {
+      for (const mode of modesData) {
+        const map = mode.maps.find(m => m.id === set.map);
+        if (map) return map;
+      }
+      return null;
+    })();
+
+    const modeEmoji = mode?.emoji || "🎮";
+    const mapName = map?.name || `Mapa ${i + 1}`;
+
+    let block = `### ${modeEmoji} ${mapName}`;
+
+    if (set.winner) {
+      if (set.winner.equals(match.teamAId._id)) block += `\n> ${emojis.winner} ${match.teamAId.name}`;
+      else if (set.winner.equals(match.teamBId._id)) block += `\n> ${emojis.winner} ${match.teamBId.name}`;
+    }
+
+    if (set.starPlayerId) {
+      block += `\n> ${emojis.starPlayer} <@${set.starPlayerId.discordId}>`;
+    }
+
+    return block;
+  }).join("\n\n");
+
+  // Construcción del container
+  const container = new ContainerBuilder()
+    .setAccentColor(accentColor)
+    .setTextDisplayComponents(new TextDisplayBuilder().setContent(textContent))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## Sets\n${setsText}`))
+    .addSeparatorComponents(new SeparatorBuilder());
+
+  if (match.resultsImageURL) {
+    const gallery = new MediaGalleryBuilder()
+      .setId(1)
+      .addItems([
+        new MediaGalleryItemBuilder()
+          .setURL(match.resultsImageURL)
+          .setDescription(`Resultados de ${match.teamAId?.name || "Equipo A"} vs ${match.teamBId?.name || "Equipo B"}`)
+      ]);
+    container.addMediaGalleryComponents([gallery]);
+  }
+
+  return container;
+};
+
+module.exports = { getMatchInfoEmbed, getMatchProposedScheduleEmbed, getOnGoingMatchEmbed, getMatchResultsEmbed  }

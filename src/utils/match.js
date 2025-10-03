@@ -16,7 +16,8 @@ const findMatchByNamesAndSeason = async ({ seasonIndex, teamAName, teamBName }) 
       { teamAId: teamA._id, teamBId: teamB._id },
       { teamAId: teamB._id, teamBId: teamA._id }
     ]
-  }).populate({
+  })
+    .populate({
       path: 'teamAId',
       populate: { path: 'members.userId' }
     })
@@ -25,6 +26,14 @@ const findMatchByNamesAndSeason = async ({ seasonIndex, teamAName, teamBName }) 
       populate: { path: 'members.userId' }
     })
     .populate('seasonId divisionId starPlayerId')
+    .populate({
+      path: 'sets.winner',
+      model: 'Team'
+    })
+    .populate({
+      path: 'sets.starPlayerId',
+      model: 'User'
+    })
 
   if (!match) throw new Error('Partido no encontrado.')
 
@@ -32,8 +41,8 @@ const findMatchByNamesAndSeason = async ({ seasonIndex, teamAName, teamBName }) 
 }
 
 const findMatchByIndex = async ({ matchIndex }) => {
-
-  const match = await Match.findOne({ matchIndex }).populate({
+  const match = await Match.findOne({ matchIndex })
+    .populate({
       path: 'teamAId',
       populate: { path: 'members.userId' }
     })
@@ -42,6 +51,14 @@ const findMatchByIndex = async ({ matchIndex }) => {
       populate: { path: 'members.userId' }
     })
     .populate('seasonId divisionId starPlayerId')
+    .populate({
+      path: 'sets.winner',
+      model: 'Team'
+    })
+    .populate({
+      path: 'sets.starPlayerId',
+      model: 'User'
+    })
 
   if (!match) throw new Error('Partido no encontrado.')
 
@@ -49,19 +66,13 @@ const findMatchByIndex = async ({ matchIndex }) => {
 }
 
 const findMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName }) => {
-  let match
-
-    if (matchIndex != null) {
-      // Caso 1: Buscar por índice
-      match = await findMatchByIndex({ matchIndex })
-    } else if (seasonIndex != null && teamAName && teamBName) {
-      // Caso 2: Buscar por season + nombres de equipos
-      match = await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
-    } else {
-      throw new Error('Debes proporcionar matchIndex o bien seasonIndex + teamAName + teamBName.')
-    }
-    
-  return match
+  if (matchIndex != null) {
+    return await findMatchByIndex({ matchIndex })
+  } else if (seasonIndex != null && teamAName && teamBName) {
+    return await findMatchByNamesAndSeason({ seasonIndex, teamAName, teamBName })
+  } else {
+    throw new Error('Debes proporcionar matchIndex o bien seasonIndex + teamAName + teamBName.')
+  }
 }
 
 module.exports = { findMatch }

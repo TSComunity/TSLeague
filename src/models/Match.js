@@ -20,7 +20,7 @@ const MatchSchema = new Schema({
 
   status: {
     type: String,
-    enum: ['scheduled', 'ongoing', 'played', 'cancelled'],
+    enum: ['scheduled', 'onGoing', 'played', 'cancelled'],
     default: 'scheduled'
   },
   reason: { type: String },
@@ -29,7 +29,8 @@ const MatchSchema = new Schema({
     { 
       map: { type: String, required: true },
       mode: { type: String, required: true },
-      winner: { type: Schema.Types.ObjectId, ref: "Team", default: null }
+      winner: { type: Types.ObjectId, ref: "Team" },
+      starPlayerId: { type: Types.ObjectId, ref: 'User' }
     }
   ],
 

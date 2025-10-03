@@ -59,19 +59,45 @@ const { updateRankingsEmbed } = require('./discord/update/rankings.js')
 const { updateDivisionsEmbed } = require('./discord/update/divisions.js')
 const { executeDueScheduledFunctions } = require('./services/scheduledFunction.js')
 const { updateUsersPingRole, syncFreeAgents } = require('./services/user.js')
-const { applyDefaultDates, processScheduledMatches } = require('./services/match.js')
+const { applyDefaultDates, processScheduledMatches, monitorOnGoingMatches } = require('./services/match.js')
 const { updateTeamsChannels } = require('./services/team.js')
 
-setInterval(() => {
-  updateRankingsEmbed({ client }).catch(error => console.error(error))
-  updateDivisionsEmbed({ client }).catch(error => console.error(error))
-  syncFreeAgents({ client }).catch(error => console.error(error))
-  updateTeamsChannels({ client }).catch(error => console.error(error))
-  processScheduledMatches({ client }).catch(error => console.error(error))
-}, 1000 * 60 * 5) // cada 5 minuto
+function runInterval(tasks, intervalMs) {
+  const run = async () => {
+    try {
+      await Promise.allSettled(tasks.map(fn => fn()))
+    } catch (err) {
+      console.error('Error inesperado en safe interval:', err)
+    } finally {
+      setTimeout(run, intervalMs)
+    }
+  }
+  run()
+}
 
-setInterval(() => {
-  updateUsersPingRole({ client }).catch(error => console.error(error))
-  executeDueScheduledFunctions({ client }).catch(error => console.error(error))
-  applyDefaultDates({ client }).catch(error => console.error(error))
-}, 1000 * 60 * 30) // cada 30 minutos
+runInterval(
+  [
+    () => processScheduledMatches({ client }),
+    () => monitorOnGoingMatches({ client })
+  ],
+  1000 * 60 * 5 // 5 min
+)
+
+runInterval(
+  [
+    () => updateRankingsEmbed({ client }),
+    () => updateDivisionsEmbed({ client }),
+    () => executeDueScheduledFunctions({ client }),
+    () => applyDefaultDates({ client })
+  ],
+  1000 * 60 * 30 // 30 min
+)
+
+runInterval(
+  [
+    () => updateUsersPingRole({ client }),
+    () => syncFreeAgents({ client }),
+    () => updateTeamsChannels({ client })
+  ],
+  1000 * 60 * 120 // 2 horas
+)
