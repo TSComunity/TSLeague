@@ -3,103 +3,86 @@
 [![Stars](https://img.shields.io/github/stars/Zer0Dev-exe/TSLeague?style=for-the-badge&color=yellow)](https://github.com/Zer0Dev-exe/TSLeague/stargazers)
 [![Forks](https://img.shields.io/github/forks/Zer0Dev-exe/TSLeague?style=for-the-badge&color=blue)](https://github.com/Zer0Dev-exe/TSLeague/network/members)
 [![Issues](https://img.shields.io/github/issues/Zer0Dev-exe/TSLeague?style=for-the-badge&color=orange)](https://github.com/Zer0Dev-exe/TSLeague/issues)
-[![Licencia](https://img.shields.io/badge/Licencia-CC%20BY--NC--ND%204.0-red?style=for-the-badge)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E=20.10.0-green?style=for-the-badge&logo=node.js&logoColor=white)](#)
-[![Discord.js](https://img.shields.io/badge/discord.js-v14-blueviolet?style=for-the-badge&logo=discord&logoColor=white)](#)
+[![Pull Requests](https://img.shields.io/github/issues-pr/Zer0Dev-exe/TSLeague?style=for-the-badge&color=purple)](https://github.com/Zer0Dev-exe/TSLeague/pulls)
 
 ---
 
-## Descripción general
+# Descripción General
 
-**TSLeague** es un sistema avanzado de automatización y gestión para ligas competitivas de Brawl Stars dentro de Discord, orientado a reducir la carga del staff y ofrecer una experiencia profesional y visualmente cuidada a los jugadores y organizadores.
-
-- **Servidor oficial:** [discord.gg/8nu3ZdDkp7](https://discord.gg/8nu3ZdDkp7)
+Sistema avanzado para la gestión y automatización de ligas competitivas de Brawl Stars en Discord. Desarrollado con Node.js, Discord.js y MongoDB, con una arquitectura modular y visualmente profesional. Permite gestionar toda la liga de forma automática, con paneles visuales, imágenes customizadas y algoritmos inteligentes para la organización de partidos, equipos y rondas.
 
 ---
 
-## Características destacadas
+# Librerías y Tecnologías Utilizadas
 
-- **Automatización total de la liga:** Generación de jornadas, partidos, canales, roles, embeds, imágenes y avisos sin intervención manual.
-- **Gestión dinámica y parametrizable:** Todas las reglas (nº de equipos por división, modos, mapas, horarios, puntos, colores, límites, permisos...) son configurables desde `/src/configs/`.
-- **Imágenes customizadas en tiempo real:** El bot genera imágenes de presentación y resultados de los partidos usando Canvas y las sube automáticamente a ImgBB para visualización en Discord.
-- **Paneles y menús interactivos:** Uso intensivo de modals, botones y menús select para gestionar equipos, partidos y usuarios de forma visual y segura.
-- **Integración con la API de Brawl Stars:** Verificación, stats y rankings de jugadores y equipos con datos oficiales en tiempo real.
-- **Funciones programadas (scheduling):** El sistema permite programar tareas y events (rondas, deadlines, limpieza de equipos, etc) que se ejecutan automáticamente.
-- **Logs y avisos inteligentes:** Toda acción relevante se loguea y los canales de clasificaciones/divisiones se actualizan en tiempo real.
-- **Arquitectura robusta y mantenible:** Separación clara de servicios, events, comandos, utilidades, configuraciones y modelos de datos.
-
----
-
-## Estructura del repositorio
-
-- **/src/**
-  - **slashCommands/**  
-    Comandos slash organizados por rol (admin, staff, tier, usuario) para gestión avanzada y segura de toda la liga.
-  - **prefixCommands/**  
-    Comandos tradicionales de prefijo para utilidades, pruebas, administración legacy y paneles rápidos.
-  - **discord/**
-    - **buttons/**, **menus/**, **modals/**, **embeds/**, **inputs/**  
-      Todos los componentes visuales interactivos de Discord (botones, menús select, modals, embeds, inputs de texto...) con lógica desacoplada.
-    - **send/**  
-      Utilidades para enviar mensajes y logs a canales específicos (anuncios, logs, equipos...).
-    - **update/**  
-      Scripts para actualizar de forma automática y robusta los paneles de divisiones, rankings y equipos.
-  - **services/**  
-    - Lógica de negocio de alto nivel: gestión de equipos, divisiones, partidos, rondas, usuarios, puntos, matches, scheduling de funciones, generación de sets, matchmaking, etc.
-    - Incluye algoritmos para evitar partidos repetidos, control de elegibilidad de equipos, y limpieza/actualización autónoma de entidades.
-  - **models/**  
-    Modelos de datos Mongoose: Season, Division, Team, Match, User, ScheduledFunction.
-  - **configs/**  
-    - **league.js:** Configuración general de la liga (canales, roles, límites, parámetros de partidos y equipos).
-    - **colors.json, emojis.json, gameModes.json:** Paletas de colores, emojis custom y modos/mapas con pesos y assets para sorteos y lógica visual.
-  - **utils/**  
-    - Funciones utilitarias para fechas, rounds, matches, mapas, generación de imágenes (canvas.js), etc.
-  - **handlers/**  
-    - Carga dinámica y modular de events, comandos y comandos de prefijo.
-  - **events/**  
-    - Listeners de events Discord.js para interacciones, botones, menús, modals y mensajes.
-    - handlers desacoplados para facilitar el desarrollo y pruebas.
-  - **assets/**  
-    - Recursos gráficos de fondo y de apoyo para la generación de imágenes customizadas (por ejemplo: backgrounds de partidos).
+- **Node.js**: Entorno de ejecución principal.
+- **discord.js**: Interacción avanzada con la API de Discord y componentes visuales.
+- **mongoose**: Modelado y gestión de la base de datos MongoDB.
+- **canvas**: Generación de imágenes personalizadas para partidos y resultados.
+- **axios**: Peticiones HTTP para integración con APIs externas (ImgBB, Brawl Stars).
+- **luxon**: Manipulación avanzada de fechas y horarios.
+- **dotenv**: Gestión de variables de entorno y configuración segura.
+- **sharp**: Procesamiento de imágenes adicional.
+- **colors**: Coloreado de logs y mensajes en consola.
 
 ---
 
-## Implementación técnica y detalles interesantes
+# Estructura del Proyecto
 
-- **Node.js requerido:**  
-  **Se recomienda Node.js `>= 20.10.0`** (por uso de dependencias modernas y mejor compatibilidad con Discord.js v14 y Canvas).
-- **Imágenes customizadas:**  
-  El bot usa Canvas y recursos de `/src/assets/` para generar imágenes de partidos, combina iconos, nombres, colores y textos, y sube el resultado automáticamente a ImgBB para integrarlo en los embeds de Discord.
-- **Scheduling y automatización:**  
-  El sistema de funciones programadas permite automatizar tareas críticas como el avance de jornadas, deadlines, limpieza de entidades, asignación de horarios, etc. Se ejecutan mediante jobs internos y pueden extenderse fácilmente.
-- **Configuración avanzada:**  
-  Prácticamente todo es editable desde `/src/configs/`:  
-    - Tamaño máximo de equipos/divisiones/partidos.
-    - Modos y mapas disponibles y sus pesos.
-    - Horarios, permisos, límites y assets visuales.
-    - Emojis custom para cada aspecto de la liga.
-- **Control y logs:**  
-  El staff dispone de comandos y paneles para reiniciar bots, ver logs PM2, actualizar desde git y gestionar el sistema con seguridad (ver `/src/prefixCommands/dev.js`).
-- **Robustez:**  
-  El sistema está preparado para limpiar equipos vacíos, canales huérfanos, errores en la creación de canales/partidos, y para reiniciar cualquier panel visual de forma automática en caso de desincronización.
+```
+src/
+  ├─ slashCommands/      # Comandos avanzados por rol
+  ├─ prefixCommands/     # Comandos legacy y utilidades
+  ├─ discord/            # Botones, menús, modals, embeds, inputs
+  ├─ services/           # Lógica de negocio y automatización
+  ├─ models/             # Modelos Mongoose: Season, Division, Team, Match, User
+  ├─ configs/            # Configuración, colores, emojis, modos/mapas
+  ├─ utils/              # Funciones para fechas, imágenes, rounds, etc.
+  ├─ handlers/           # Carga modular de eventos y comandos
+  ├─ events/             # Listeners para interacciones y mensajes
+  └─ assets/             # Recursos gráficos para imágenes
+```
 
 ---
 
-## Créditos y licencia
+# Funcionalidades Destacadas
 
-Desarrollado por **@tumonulo** sobre la idea y propiedad intelectual original de **@Zer0Dev-exe**.
+## Automatización Total
+- Generación automática de jornadas, partidos, canales, roles, imágenes y avisos.
+- Scheduling avanzado: rondas, deadlines, limpieza y asignación de horarios sin intervención manual.
+- Algoritmos para evitar partidos repetidos y gestionar descansos de equipos.
 
-Este proyecto está protegido bajo la licencia [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)](https://creativecommons.org/licenses/by-nc-nd/4.0/).
+## Paneles Visuales e Interactivos
+- Paneles de divisiones y rankings que se actualizan tras cada partido.
+- Botones, menús select y modals para gestionar equipos, partidos y usuarios.
+- Experiencia visual con emojis, colores personalizados y assets gráficos.
 
-- **Atribución obligatoria.**
-- **Prohibido su uso comercial y la creación de obras derivadas.**
-- Para cualquier uso, referencia académica o transferencia de propiedad, contactar con **@tumonulo**.
+## Imágenes Customizadas
+- Generación dinámica de imágenes de partidos y resultados con Canvas.
+- Integración directa en Discord mediante ImgBB.
+- Personalización visual con fondos, iconos y colores de equipos.
+
+## Integración con Brawl Stars
+- Verificación y estadísticas en tiempo real de jugadores y equipos usando la API oficial.
+- Control de elegibilidad y gestión de ascensos/descensos de equipos.
+- Sincronización automática de datos y stats.
+
+## Algoritmos Inteligentes y Gestión Avanzada
+- Sorteo de modos y mapas con pesos personalizados y sin repeticiones.
+- Gestión automática de ascensos, descensos y expulsiones según rendimiento.
+- Limpieza automática de equipos vacíos y canales huérfanos.
+- Programación de funciones para eventos futuros (rondas, deadlines, avisos).
+
+## Sistema de Roles y Permisos
+- Roles configurables para líderes, sublíderes, miembros y staff.
+- Permisos personalizados para cada acción relevante en la liga.
+
+## Base de Datos y Tecnología
+- Backend con Discord.js y MongoDB (Mongoose) para máxima flexibilidad y escalabilidad.
+- Estructura modular y mantenible, fácil de ampliar y adaptar.
 
 ---
 
-## Enlaces útiles
+# Comunidad y Soporte
 
-- **Servidor oficial y soporte:** [discord.gg/8nu3ZdDkp7](https://discord.gg/8nu3ZdDkp7)
-- **Licencia completa:** [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/)
-
----
+Este sistema está desarrollado específicamente para la comunidad de [discord.gg/8nu3ZdDkp7](https://discord.gg/8nu3ZdDkp7), donde se gestiona la liga y se ofrece soporte directo a los participantes.
