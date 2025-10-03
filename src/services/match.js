@@ -571,60 +571,101 @@ const changeMatchScheduledAt = async ({ matchIndex, seasonIndex, teamAName, team
 }
 
 const applyDefaultDates = async ({ client }) => {
-  const now = new Date()
-  const matches = await Match.find({ scheduledAt: { $exists: false } })
-    .populate('teamAId teamBId divisionId seasonId')
+  const now = new Date()
 
-  for (const match of matches) {
-    const { passed, deadline, defaultDate } = checkDeadline(match, now)
-    if (!passed) continue
+  // Buscar tanto los sin campo scheduledAt como los que tengan scheduledAt: null
+  const matches = await Match.find({
+    $or: [
+      { scheduledAt: { $exists: false } },
+      { scheduledAt: null }
+    ]
+  }).populate('teamAId teamBId divisionId seasonId')
 
-    // Aplicar fecha por defecto y guardar
-    match.scheduledAt = defaultDate
-    await match.save()
+  for (const match of matches) {
+    try {
+      const { passed, deadline, defaultDate } = checkDeadline(match, now)
 
-    const scheduledTimestamp = Math.floor(match.scheduledAt.getTime() / 1000)
-    const deadlineTimestamp = deadline ? Math.floor(deadline.getTime() / 1000) : null
+      // passed debe significar "ha pasado el plazo y hay que aplicar la fecha por defecto"
+      if (!passed) {
+        continue
+      }
 
-    // 1) Mensaje en el canal del partido (SIN ping). Incluye embed de match info.
-    try {
-      let matchChannel = client.channels.cache.get(match.channelId) || await client.channels.fetch(match.channelId).catch(() => null)
-      if (matchChannel && matchChannel.isTextBased()) {
-        const content =
-          `<@&${config.roles.ping.id}>\n` +
-          `### ${emojis.schedule} Fecha asignada automáticamente\n` +
-          (deadlineTimestamp ? `El plazo para proponer horario ha expirado (<t:${deadlineTimestamp}:F>), por lo que se ha aplicado la fecha por defecto.\n` :
-                               `Se ha aplicado la fecha por defecto.\n`) +
-          `**Fecha:** <t:${scheduledTimestamp}:F>`
+      if (!defaultDate) {
+        continue
+      }
 
-        await matchChannel.send({ content })
-        await matchChannel.send({
-          components: [await getMatchInfoEmbed({ match, showButtons: false })],
-          flags: MessageFlags.IsComponentsV2
-        })
-      }
-    } catch {}
+      // Aplicar fecha por defecto y guardar
+      match.scheduledAt = defaultDate
+      await match.save()
 
-    // 2) Notificar a cada equipo (sendTeamAnnouncement)
-    const teams = [match.teamAId, match.teamBId].filter(Boolean)
-    for (const team of teams) {
-      try {
-        const rivalName = team._id.equals(match.teamAId._id) ? match.teamBId.name : match.teamAId.name
-        await sendTeamAnnouncement({
-          client,
-          team,
-          content:
-            `### ${emojis.schedule} Fecha asignada automáticamente\n` +
-            (deadlineTimestamp ? `El plazo para proponer horario ha expirado (<t:${deadlineTimestamp}:F>), por lo que se ha asignado la fecha por defecto.\n` :
-                                 `Se ha asignado la fecha por defecto.\n`) +
-            `La fecha del partido de **${team.name}** contra **${rivalName}** ha sido fijada en **<t:${scheduledTimestamp}:F>**.\n\n` +
-            `Revisad el canal ${emojis.channel} <#${match.channelId}> para más detalles.`
-        })
-      } catch {}
-    }
-  }
+      const scheduledTimestamp = Math.floor(match.scheduledAt.getTime() / 1000)
+      const deadlineTimestamp = deadline ? Math.floor(deadline.getTime() / 1000) : null
+
+      // 1) Mensaje en canal del partido
+      try {
+        let matchChannel = client.channels.cache.get(match.channelId) || await client.channels.fetch(match.channelId).catch(() => null)
+
+        if (matchChannel && matchChannel.isTextBased()) {
+          const pingRoleId = roles?.ping?.id
+          const mention = pingRoleId ? `<@&${pingRoleId}>\n` : ''
+          const content =
+            `${mention}### ${emojis.schedule} Fecha asignada automáticamente\n` +
+            (deadlineTimestamp
+              ? `El plazo para proponer horario ha expirado (<t:${deadlineTimestamp}:F>), por lo que se ha aplicado la fecha por defecto.\n`
+              : `Se ha aplicado la fecha por defecto.\n`) +
+            `**Fecha:** <t:${scheduledTimestamp}:F>`
+
+          await matchChannel.send({
+            content,
+            allowedMentions: pingRoleId ? { roles: [pingRoleId] } : { parse: [] }
+          })
+
+          // Envía el embed/info (usa el mismo patrón que tienes en el resto del bot)
+          await matchChannel.send({
+            components: [await getMatchInfoEmbed({ match, showButtons: false })],
+            flags: MessageFlags.IsComponentsV2,
+            allowedMentions: { parse: [] }
+          })
+        } else {
+          console.log(`[applyDefaultDates] canal no encontrado o no es texto para match ${match._id} (channelId=${match.channelId})`)
+        }
+      } catch (err) {
+        console.error(`[applyDefaultDates] error enviando mensaje al canal del partido ${match._id}:`, err)
+      }
+
+      // 2) Notificar a cada equipo
+      const teams = [match.teamAId, match.teamBId].filter(Boolean)
+      for (const team of teams) {
+        try {
+          // Comprueba si es equipo A (usa equals si está poblado)
+          const isTeamA = match.teamAId && match.teamAId._id
+            ? team._id.equals(match.teamAId._id)
+            : team._id.toString() === match.teamAId.toString()
+
+          const rivalName = isTeamA ? match.teamBId.name : match.teamAId.name
+
+          await sendTeamAnnouncement({
+            client,
+            team,
+            content:
+              `### ${emojis.schedule} Fecha asignada automáticamente\n` +
+              (deadlineTimestamp
+                ? `El plazo para proponer horario ha expirado (<t:${deadlineTimestamp}:F>), por lo que se ha asignado la fecha por defecto.\n`
+                : `Se ha asignado la fecha por defecto.\n`) +
+              `La fecha del partido de **${team.name}** contra **${rivalName}** ha sido fijada en **<t:${scheduledTimestamp}:F>**.\n\n` +
+              `Revisad el canal ${emojis.channel} <#${match.channelId}> para más detalles.`
+          })
+        } catch (err) {
+          console.error(`[applyDefaultDates] fallo notificando al equipo ${team._id} del match ${match._id}:`, err)
+        }
+      }
+
+    } catch (err) {
+      console.error(`[applyDefaultDates] error procesando match ${match._id}:`, err)
+    }
+  }
 }
-
+  
 async function processScheduledMatches({ client }) {
   const now = new Date()
 
