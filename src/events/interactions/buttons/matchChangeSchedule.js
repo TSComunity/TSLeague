@@ -31,9 +31,7 @@ module.exports = {
           return interaction.reply({
             ephemeral: true,
             embeds: [getErrorEmbed({
-              error: `Ya ha pasado el plazo para modificar el horario.\n\n` +
-                    `**Fecha límite:** <t:${Math.floor(deadline.getTime() / 1000)}:F>\n` +
-                    `**Horario aplicado por defecto:** <t:${Math.floor(defaultDate.getTime() / 1000)}:F>`
+              error: `Ya ha pasado el plazo para modificar el horario.`
             })]
           })
         }

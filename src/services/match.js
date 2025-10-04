@@ -142,7 +142,7 @@ const createMatchChannel = async ({ match, client }) => {
       allowedMentions: { parse: [] }
     })
     await infoMsg.pin().catch(() => null)
-    match.infoMessageId = infoMsg.id
+    matchToUpd.infoMessageId = infoMsg.id
 
     await matchToUpd.save()
     return matchToUpd
@@ -205,13 +205,13 @@ const createMatch = async ({ client, seasonId, divisionDoc, roundIndex, teamADoc
     await sendTeamAnnouncement({
       client,
       team: teamADoc,
-      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamADoc.name}**. El enfrentamiento será contra **${teamBDoc.name}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal <#${updatedMatch.channelId}>.`
+      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un nuevo partido para vuestro equipo **${teamADoc.name}**. El enfrentamiento será contra **${teamBDoc.name}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal <#${updatedMatch.channelId}>.`
     })
 
     await sendTeamAnnouncement({
       client,
       team: teamBDoc,
-      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamBDoc.name}**. El enfrentamiento será contra **${teamADoc.name}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal <#${updatedMatch.channelId}>.`
+      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un nuevo partido para vuestro equipo **${teamBDoc.name}**. El enfrentamiento será contra **${teamADoc.name}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal <#${updatedMatch.channelId}>.`
     })
 
     return updatedMatch
@@ -342,13 +342,13 @@ const createMatchManually = async ({ teamAName, teamBName, client }) => {
     await sendTeamAnnouncement({
       client,
       team: teamADoc,
-      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamAName}**. El enfrentamiento será contra **${teamBName}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal <#${updatedMatch.channelId}>.`
+      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un nuevo partido para vuestro equipo **${teamAName}**. El enfrentamiento será contra **${teamBName}** en la jornada ${roundIndex}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal <#${updatedMatch.channelId}>.`
     })
 
     await sendTeamAnnouncement({
       client,
       team: teamBDoc,
-      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un partido para vuestro equipo **${teamBName}**. El enfrentamiento será contra **${teamAName}** en la jornada ${roundIndex + 1}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal <#${updatedMatch.channelId}>.`
+      content: `### ${emojis.match} Nuevo partido programado\nSe ha programado un nuevo partido para vuestro equipo **${teamBName}**. El enfrentamiento será contra **${teamAName}** en la jornada ${roundIndex + 1}.\n\nPodéis consultar todos los detalles y la información actualizada del partido en el canal <#${updatedMatch.channelId}>.`
     })
 
     return updatedMatch
@@ -557,6 +557,22 @@ const changeMatchScheduledAt = async ({ matchIndex, seasonIndex, teamAName, team
   const scheduledTimestamp = Math.floor(match.scheduledAt.getTime() / 1000)
   const teams = [match.teamAId, match.teamBId].filter(Boolean)
 
+  const channel = await client.channels.fetch(match.channelId).catch(() => null)
+  if (channel && channel.isTextBased && channel.isTextBased()) {
+    const infoMessage = await channel.messages.fetch(match.infoMessageId).catch(() => null)
+    if (infoMessage) {
+      try {
+        await infoMessage.edit({
+          components: [await getMatchInfoEmbed({ match, showButtons: true })],
+          flags: MessageFlags.IsComponentsV2,
+          allowedMentions: { parse: [] }
+        })
+      } catch (err) {
+        console.error('Error editando mensaje infoMessageId tras cambio de fecha:', err)
+      }
+    }
+  }
+
   // Enviar anuncio a cada equipo
   for (const team of teams) {
     await sendTeamAnnouncement({
@@ -610,12 +626,10 @@ const applyDefaultDates = async ({ client }) => {
 
       // 1) Mensaje principal en canal del partido (SIN PING)
       if (matchChannel && matchChannel.isTextBased && matchChannel.isTextBased()) {
-        const content =
-          `### ${emojis.schedule || '📅'} Fecha asignada automáticamente\n` +
-          (deadlineTimestamp
-            ? `El plazo para proponer horario ha finalizado (<t:${deadlineTimestamp}>), por lo que el partido se ha programado automáticamente.\n`
-            : `Se ha asignado la fecha por defecto.\n`) +
-          `📅 **Fecha aplicada:** <t:${scheduledTimestamp}> (<t:${scheduledTimestamp}:R>)`
+      const content =
+        `### ${emojis.schedule || '📅'} Fecha asignada automáticamente\n\n` +
+        `El plazo para proponer horario ha finalizado (<t:${deadlineTimestamp}>), por lo que el partido ha sido programado automáticamente.\n\n` +
+        `**Fecha asignada:** <t:${scheduledTimestamp}> (<t:${scheduledTimestamp}:R>)`
 
         try {
           await matchChannel.send({
@@ -629,47 +643,25 @@ const applyDefaultDates = async ({ client }) => {
         // 1.b) En lugar de enviar el embed/info, EDITAR mensaje match.infoMessageId
         try {
           const embedComponent = await getMatchInfoEmbed({ match, showButtons: false })
+          let infoMsg;
+          try {
+            infoMsg = await matchChannel.messages.fetch(match.infoMessageId);
+          } catch (error) {
+            console.error(`[applyDefaultDates] error fetch infoMessageId ${match.infoMessageId} para match ${match._id}:`, error);
+          }
 
-          if (match.infoMessageId) {
-            // intentar editar
-            const infoMsg = await matchChannel.messages.fetch(match.infoMessageId).catch(() => null)
-            if (infoMsg) {
-              // editamos componentes / contenido si procede
+          if (infoMsg && infoMsg.edit) { // <-- verificamos que edit exista
+            try {
               await infoMsg.edit({
-                components: [embedComponent],
-                allowedMentions: { parse: [] }
-              }).catch(err => {
-                console.error(`[applyDefaultDates] error editando infoMessageId ${match.infoMessageId} para match ${match._id}:`, err)
-              })
-            } else {
-              // si no se encuentra el mensaje, enviarlo y guardar id
-              const sent = await matchChannel.send({
                 components: [embedComponent],
                 flags: MessageFlags.IsComponentsV2,
                 allowedMentions: { parse: [] }
-              }).catch(err => {
-                console.error(`[applyDefaultDates] error enviando embed (fallback) para match ${match._id}:`, err)
-                return null
-              })
-              if (sent && sent.id) {
-                match.infoMessageId = sent.id
-                await match.save().catch(err => console.error(`[applyDefaultDates] fallo guardando infoMessageId en match ${match._id}:`, err))
-              }
+              });
+            } catch (err) {
+              console.error(`[applyDefaultDates] error editando infoMessageId ${match.infoMessageId} para match ${match._id}:`, err);
             }
           } else {
-            // no hay infoMessageId: enviar y guardar id
-            const sent = await matchChannel.send({
-              components: [embedComponent],
-              flags: MessageFlags.IsComponentsV2,
-              allowedMentions: { parse: [] }
-            }).catch(err => {
-              console.error(`[applyDefaultDates] error enviando embed para match ${match._id}:`, err)
-              return null
-            })
-            if (sent && sent.id) {
-              match.infoMessageId = sent.id
-              await match.save().catch(err => console.error(`[applyDefaultDates] fallo guardando infoMessageId en match ${match._id}:`, err))
-            }
+            console.warn(`[applyDefaultDates] infoMessageId ${match.infoMessageId} no encontrado o no editable`);
           }
         } catch (err) {
           console.error(`[applyDefaultDates] error preparando/actualizando embed para match ${match._id}:`, err)
@@ -689,9 +681,10 @@ const applyDefaultDates = async ({ client }) => {
           const rivalName = isTeamA ? (match.teamBId && match.teamBId.name ? match.teamBId.name : 'Rival') : (match.teamAId && match.teamAId.name ? match.teamAId.name : 'Rival')
 
           const content =
-            `### ${emojis.schedule || '📅'} Fecha asignada automáticamente\n` +
-            `Debido a que el plazo para proponer horario ha terminado (<t:${deadlineTimestamp}>), vuestro partido contra **${rivalName}** ha sido programado automaticamente para <t:${scheduledTimestamp}> (<t:${scheduledTimestamp}:R>).\n\n` +
-            `Revisad el canal ${emojis.channel || '🔗'} <#${match.channelId}> para más detalles.`
+            `### ${emojis.schedule || '📅'} Fecha asignada automáticamente\n\n` +
+            `El plazo para proponer horario ha finalizado (<t:${deadlineTimestamp}>), por lo que vuestro partido contra **${rivalName}** ha sido programado automáticamente.\n\n` +
+            `**Fecha asignada:** <t:${scheduledTimestamp}> (<t:${scheduledTimestamp}:R>)\n\n` +
+            `Revisad el canal ${emojis.channel || '🔗'} <#${match.channelId}> para más detalles y confirmad vuestra disponibilidad.`;
 
           await sendTeamAnnouncement({
             client,
@@ -735,6 +728,15 @@ async function processScheduledMatches({ client }) {
     match.onGoingMessageId = onGoingMsg.id
     match.status = 'onGoing'
     await match.save()
+
+    const infoMessage = await channel.messages.fetch(match.infoMessageId).catch(() => null)
+    if (infoMessage) {
+      infoMessage.edit({
+        components: [await getMatchInfoEmbed({ match, showButtons: false })],
+        flags: MessageFlags.IsComponentsV2,
+        allowedMentions: { parse: [] }
+      }).catch(() => null)
+    }
   }
 }
 

@@ -62,7 +62,7 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
   let infoText = ''
 
   if (status === 'scheduled') {
-    infoText += `${emojis.schedule} ${scheduledAt ? `<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}> (<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}:R>)` : "Por definir"}`
+    infoText += `${emojis.schedule} ${scheduledAt ? `<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}> (<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}:R>)` : "*Por definir*"}`
   } else if (status === 'onGoing') {
     infoText += `${emojis.onGoing} Partido en curso\n`
   } else if (status === 'played') {
@@ -174,7 +174,7 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
   }
 
   // Botón opcional
-  if (showButtons) {
+  if (showButtons && status === 'scheduled') {
     container.addSeparatorComponents(new SeparatorBuilder())
     container.addActionRowComponents(
       new ActionRowBuilder().addComponents(getMatchChangeScheduleButton({ matchIndex }))
@@ -223,7 +223,7 @@ const getOnGoingMatchEmbed = async ({ match }) => {
   const container = new ContainerBuilder().setAccentColor(0xFFA500)
 
   // Título
-  const title = `## ${emojis.team} ${teamAId?.name || "Equipo A"} vs ${teamBId?.name || "Equipo B"}`
+  const title = `## ${emojis.onGoing} ${teamAId?.name || "Equipo A"} vs ${teamBId?.name || "Equipo B"}`
   container.addTextDisplayComponents(new TextDisplayBuilder().setContent(title))
   container.addSeparatorComponents(new SeparatorBuilder())
 
