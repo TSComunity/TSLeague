@@ -62,7 +62,7 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
   let infoText = ''
 
   if (status === 'scheduled') {
-    infoText += `${emojis.schedule} ${scheduledAt ? `<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}:D>` : "Por definir"}`
+    infoText += `${emojis.schedule} ${scheduledAt ? `<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}:F>` : "Por definir"}`
   } else if (status === 'onGoing') {
     infoText += `${emojis.onGoing} Partida en curso\n`
   } else if (status === 'played') {

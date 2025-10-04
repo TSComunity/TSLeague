@@ -68,18 +68,53 @@ module.exports = {
           eventType: 'season'
         })
       } else if (subcomand === 'prueba') {
-        const Team = require('../../models/Team.js')
-        await Team.deleteOne({ name: 'añas'})
-
+        const addRound = require('../../services/round.js').addRound
+        await addRound({ client })
 interaction.reply({
   content: `a`
 })
-      } else if (subcomand === 'prueba2') {
-        await addRound({ client })
-        await interaction.reply({
-          content: 'a'
-        })
+} else if (subcomand === 'prueba2') {
+  try {
+    // Importa los modelos arriba si no lo has hecho ya
+    const Match = require('../../models/Match')
+    const Team = require('../../models/Team')
+    const User = require('../../models/User')
+    const Season = require('../../models/Season')
+
+    const deleted = await Promise.allSettled([
+      Match.deleteMany({}),
+      User.deleteMany({
+        $or: [
+          { brawlId: null },
+          { brawlId: { $exists: false } }
+        ]
+      }),
+      Season.deleteMany({})
+    ])
+
+    console.log('[prueba2] Resultados de borrado:')
+    for (const [i, res] of deleted.entries()) {
+      const name = ['Match', 'Team', 'User', 'Season'][i]
+      if (res.status === 'fulfilled') {
+        console.log(` - ${name}: borrado correcto`)
+      } else {
+        console.error(` - ${name}: error`, res.reason)
       }
+    }
+
+    await interaction.reply({
+      content: '🧨 Todos los documentos de **Match**, **Team**, **User** y **Season** han sido eliminados.',
+      ephemeral: true
+    })
+
+  } catch (err) {
+    console.error('[prueba2] Error al borrar colecciones:', err)
+    await interaction.reply({
+      content: '❌ Error al eliminar las colecciones. Revisa la consola.',
+      ephemeral: true
+    })
+  }
+}
     } catch (error) {
       console.error(error)
       await interaction.reply({
