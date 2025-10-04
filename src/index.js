@@ -90,7 +90,7 @@ runInterval(
     () => executeDueScheduledFunctions({ client }),
     () => applyDefaultDates({ client })
   ],
-  1000 * 60 * 10 // 30 min
+  1000 * 60 * 30 // 30 min
 )
 
 runInterval(

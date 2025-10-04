@@ -613,9 +613,9 @@ const applyDefaultDates = async ({ client }) => {
         const content =
           `### ${emojis.schedule || '📅'} Fecha asignada automáticamente\n` +
           (deadlineTimestamp
-            ? `El plazo para proponer horario ha expirado (<t:${deadlineTimestamp}:F>), por lo que se ha aplicado la fecha por defecto.\n`
-            : `Se ha aplicado la fecha por defecto.\n`) +
-          `**Fecha:** <t:${scheduledTimestamp}:F>`
+            ? `El plazo para proponer horario ha finalizado (<t:${deadlineTimestamp}>), por lo que el partido se ha programado automáticamente.\n`
+            : `Se ha asignado la fecha por defecto.\n`) +
+          `📅 **Fecha aplicada:** <t:${scheduledTimestamp}> (<t:${scheduledTimestamp}:R>)`
 
         try {
           await matchChannel.send({
@@ -690,10 +690,7 @@ const applyDefaultDates = async ({ client }) => {
 
           const content =
             `### ${emojis.schedule || '📅'} Fecha asignada automáticamente\n` +
-            (deadlineTimestamp
-              ? `El plazo para proponer horario ha expirado (<t:${deadlineTimestamp}:F>), por lo que se ha asignado la fecha por defecto.\n`
-              : `Se ha asignado la fecha por defecto.\n`) +
-            `La fecha del partido de **${team.name || 'Equipo'}** contra **${rivalName}** ha sido fijada en **<t:${scheduledTimestamp}:F>**.\n\n` +
+            `Debido a que el plazo para proponer horario ha terminado (<t:${deadlineTimestamp}>), vuestro partido contra **${rivalName}** ha sido programado automaticamente para <t:${scheduledTimestamp}> (<t:${scheduledTimestamp}:R>).\n\n` +
             `Revisad el canal ${emojis.channel || '🔗'} <#${match.channelId}> para más detalles.`
 
           await sendTeamAnnouncement({
@@ -718,7 +715,7 @@ async function processScheduledMatches({ client }) {
   const matches = await Match.find({
     status: 'scheduled',
     scheduledAt: { $lte: now }
-  })
+  }).populate('teamAId teamBId')
 
   for (const match of matches) {
     if (!match.channelId) continue
@@ -746,101 +743,107 @@ async function monitorOnGoingMatches({ client }) {
     .populate({
       path: 'teamAId teamBId',
       populate: { path: 'members.userId' }
-    })
+    });
 
   for (const match of matches) {
-    const teamAMembers = match.teamAId.members.map(m => m.userId).filter(Boolean)
-    const teamBMembers = match.teamBId.members.map(m => m.userId).filter(Boolean)
+    const teamAMembers = match.teamAId.members.map(m => m.userId).filter(Boolean);
+    const teamBMembers = match.teamBId.members.map(m => m.userId).filter(Boolean);
 
-    const teamABrawlIds = teamAMembers.map(u => u.brawlId).filter(Boolean)
-    const teamBBrawlIds = teamBMembers.map(u => u.brawlId).filter(Boolean)
-    const allPlayerIds = [...new Set([...teamABrawlIds, ...teamBBrawlIds])]
-    if (!allPlayerIds.length) continue
+    const teamABrawlIds = teamAMembers.map(u => u.brawlId).filter(Boolean);
+    const teamBBrawlIds = teamBMembers.map(u => u.brawlId).filter(Boolean);
+    const allPlayerIds = [...new Set([...teamABrawlIds, ...teamBBrawlIds])];
+    if (!allPlayerIds.length) continue;
 
-    // fetch battlelogs en paralelo
     const battleLogResults = await Promise.allSettled(
       allPlayerIds.map(brawlId =>
         fetch(`https://api.brawlstars.com/v1/players/${encodeURIComponent(brawlId)}/battlelog`, {
           headers: { Authorization: `Bearer ${BRAWL_STARS_API_KEY}` }
         }).then(r => r.ok ? r.json() : null).catch(() => null)
       )
-    )
+    );
 
     const battleLogs = battleLogResults
       .filter(r => r.status === 'fulfilled' && r.value)
-      .flatMap(r => r.value.items || [])
+      .flatMap(r => r.value.items || []);
+
+    let updated = false;
 
     for (const battle of battleLogs) {
-      if (!battle.battle?.starPlayer) continue // solo definitiva
+      if (!battle.battle?.starPlayer) continue;
 
-      const battleTeams = (battle.battle.teams || []).flat()
-      const battleTags = battleTeams.map(p => p.tag)
+      const battleTeams = (battle.battle.teams || []).flat();
+      const battleTags = battleTeams.map(p => p.tag);
 
-      // verificar que hay 2+ jugadores de cada equipo en la partida
-      const teamACount = teamABrawlIds.filter(tag => battleTags.includes(tag)).length
-      const teamBCount = teamBBrawlIds.filter(tag => battleTags.includes(tag)).length
-      if (teamACount < 2 || teamBCount < 2) continue
+      const teamACount = teamABrawlIds.filter(tag => battleTags.includes(tag)).length;
+      const teamBCount = teamBBrawlIds.filter(tag => battleTags.includes(tag)).length;
+      if (teamACount < 2 || teamBCount < 2) continue;
 
-      // buscar sets pendientes (map + mode)
+      // buscar sets pendientes
       const possibleSets = match.sets.filter(s =>
         s.map === battle.event.map &&
         s.mode === battle.event.mode &&
         !s.winner
-      )
-      if (!possibleSets.length) continue
+      );
+      if (!possibleSets.length) continue;
 
-      const targetSet = possibleSets[0]
+      const targetSet = possibleSets[0];
 
-      // determinar ganador según la perspectiva
-      let winner = null
+      // determinar ganador
+      let winner = null;
       for (const tag of battleTags) {
         if (teamABrawlIds.includes(tag)) {
-          if (battle.battle.result === 'victory') winner = match.teamAId._id
-          if (battle.battle.result === 'defeat') winner = match.teamBId._id
-          break
+          if (battle.battle.result === 'victory') winner = match.teamAId._id;
+          if (battle.battle.result === 'defeat') winner = match.teamBId._id;
+          break;
         }
         if (teamBBrawlIds.includes(tag)) {
-          if (battle.battle.result === 'victory') winner = match.teamBId._id
-          if (battle.battle.result === 'defeat') winner = match.teamAId._id
-          break
+          if (battle.battle.result === 'victory') winner = match.teamBId._id;
+          if (battle.battle.result === 'defeat') winner = match.teamAId._id;
+          break;
         }
       }
+      if (!winner) continue; // ⚠️ solo sets jugados
 
-      // star player (solo para registrar, no para decidir ganador)
-      let starPlayerId = null
-      const spTag = battle.battle.starPlayer.tag
-      const starUser = [...teamAMembers, ...teamBMembers].find(u => u.brawlId === spTag)
-      if (starUser) starPlayerId = starUser._id
+      // star player
+      let starPlayerId = null;
+      const spTag = battle.battle.starPlayer.tag;
+      const starUser = [...teamAMembers, ...teamBMembers].find(u => u.brawlId === spTag);
+      if (starUser) starPlayerId = starUser._id;
 
-      targetSet.winner = winner
-      targetSet.starPlayerId = starPlayerId
+      targetSet.winner = winner;
+      targetSet.starPlayerId = starPlayerId;
+
+      updated = true;
     }
 
-    await match.save()
+    if (updated) {
+      await match.save();
 
-    // si todos los sets ya tienen ganador → terminar el match
-    const allSetsCompleted = match.sets.every(s => s.winner)
-    if (allSetsCompleted) {
-      await endMatch({ matchIndex: match.matchIndex, client })
-      continue
-    }
+      // terminar match si todos los sets tienen ganador
+      const allSetsCompleted = match.sets.every(s => s.winner);
+      if (allSetsCompleted) {
+        await endMatch({ matchIndex: match.matchIndex, client });
+        continue;
+      }
 
-    // actualizar embed onGoing en Discord
-    if (match.onGoingMessageId && match.channelId) {
-      try {
-        const channel = await client.channels.fetch(match.channelId)
-        if (channel?.isTextBased()) {
-          const message = await channel.messages.fetch(match.onGoingMessageId).catch(() => null)
-          if (message) {
-            const embed = await getOnGoingMatchEmbed({ match })
-            await message.edit({
-              embeds: [embed],
-              allowedMentions: { parse: [] }
-            })
+      // actualizar embed solo si se jugó algún set
+      if (match.onGoingMessageId && match.channelId) {
+        try {
+          const channel = await client.channels.fetch(match.channelId);
+          if (channel?.isTextBased()) {
+            const message = await channel.messages.fetch(match.onGoingMessageId).catch(() => null);
+            if (message) {
+              const embed = await getOnGoingMatchEmbed({ match });
+              await message.edit({
+                components: [embed],
+                flags: MessageFlags.IsComponentsV2,
+                allowedMentions: { parse: [] }
+              });
+            }
           }
+        } catch (err) {
+          console.error(`Error actualizando onGoingMessageId para match ${match._id}:`, err);
         }
-      } catch (err) {
-        console.error(`Error actualizando onGoingMessageId para match ${match._id}:`, err)
       }
     }
   }

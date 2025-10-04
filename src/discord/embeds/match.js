@@ -53,7 +53,7 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
     scheduled: '#FFD700',
     cancelled: '#FF0000',
     played: '#1E90FF',
-    onGoing: '#32CD32'
+    onGoing: '#FFA500'
   }
   const accentColor = parseInt(statusColors[status]?.replace('#','') || '1E90FF', 16)
 
@@ -62,9 +62,9 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
   let infoText = ''
 
   if (status === 'scheduled') {
-    infoText += `${emojis.schedule} ${scheduledAt ? `<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}:F>` : "Por definir"}`
+    infoText += `${emojis.schedule} ${scheduledAt ? `<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}> (<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}:R>)` : "Por definir"}`
   } else if (status === 'onGoing') {
-    infoText += `${emojis.onGoing} Partida en curso\n`
+    infoText += `${emojis.onGoing} Partido en curso\n`
   } else if (status === 'played') {
     const winnerFirst = scoreA >= scoreB
       ? [teamAId.name, scoreA, scoreB]
@@ -95,16 +95,16 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
 
       else if (status === 'onGoing') {
         // Mostrar solo lo jugado
+        infoText += `${modeEmoji} ${mapName}\n`
         if (set.winner) {
-          let winnerText = ""
-          if (set.winner.equals(teamAId._id)) winnerText = `${emojis.winner} ${teamAId.name}`
-          else if (set.winner.equals(teamBId._id)) winnerText = `${emojis.winner} ${teamBId.name}`
+          let winnerText = `> ${emojis.winner} *No definido*\n`
+          if (set.winner.equals(teamAId._id)) winnerText = `> ${emojis.winner} ${teamAId.name}\n`
+          else if (set.winner.equals(teamBId._id)) winnerText = `> ${emojis.winner} ${teamBId.name}\n`
 
           let starPlayerText = set.starPlayerId
-            ? `\n${emojis.starPlayer} <@${set.starPlayerId.discordId}>`
-            : ""
-
-          infoText += `${modeEmoji} ${mapName}\n${winnerText}${starPlayerText}\n`
+            ? `> ${emojis.starPlayer} <@${set.starPlayerId.discordId}>`
+            : `> ${emojis.starPlayer} *No definido*`
+          infoText += `${winnerText}${starPlayerText}`
         }
       }
 
@@ -120,23 +120,20 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
           ? `\n${emojis.starPlayer} <@${set.starPlayerId.discordId}>`
           : ""
 
-        infoText += `${modeEmoji} ${mapName}\n${winnerText}${starPlayerText}\n`
+        infoText += `${modeEmoji} ${mapName}\n${winnerText}${starPlayerText}`
       }
 
       else if (status === 'cancelled') {
-        // Solo sets con info, los vacíos no se muestran
-        if (set.winner || set.starPlayerId) {
+        infoText += `${modeEmoji} ${mapName}\n`
+        if (set.winner) {
           let winnerText = ""
-          if (set.winner) {
-            if (set.winner.equals(teamAId._id)) winnerText = `${emojis.winner} ${teamAId.name}`
-            else if (set.winner.equals(teamBId._id)) winnerText = `${emojis.winner} ${teamBId.name}`
-          }
+          if (set.winner.equals(teamAId._id)) winnerText = `${emojis.winner} ${teamAId.name}\n`
+          else if (set.winner.equals(teamBId._id)) winnerText = `${emojis.winner} ${teamBId.name}\n`
 
           let starPlayerText = set.starPlayerId
-            ? `\n${emojis.starPlayer} <@${set.starPlayerId.discordId}>`
-            : ""
-
-          infoText += `${modeEmoji} ${mapName}\n${winnerText}${starPlayerText}\n`
+            ? `${emojis.starPlayer} <@${set.starPlayerId.discordId}>`
+            : "*No definido*"
+          infoText += `${winnerText}${starPlayerText}\n`
         }
       }
     })
@@ -223,10 +220,10 @@ const getOnGoingMatchEmbed = async ({ match }) => {
     return null
   }
 
-  const container = new ContainerBuilder().setAccentColor(0x32CD32)
+  const container = new ContainerBuilder().setAccentColor(0xFFA500)
 
   // Título
-  const title = `## ${teamAId?.name || "Equipo A"} vs ${teamBId?.name || "Equipo B"}`
+  const title = `## ${emojis.team} ${teamAId?.name || "Equipo A"} vs ${teamBId?.name || "Equipo B"}`
   container.addTextDisplayComponents(new TextDisplayBuilder().setContent(title))
   container.addSeparatorComponents(new SeparatorBuilder())
 
@@ -238,13 +235,13 @@ const getOnGoingMatchEmbed = async ({ match }) => {
       const modeEmoji = mode?.emoji || "🎮"
       const mapName = map?.name || `Mapa ${i + 1}`
 
-      let winnerText = `${emojis.winner} Pendiente`
+      let winnerText = `${emojis.winner} *No definido*`
       if (set.winner) {
         if (set.winner.equals(teamAId._id)) winnerText = `${emojis.winner} ${teamAId.name}`
         else if (set.winner.equals(teamBId._id)) winnerText = `${emojis.winner} ${teamBId.name}`
       }
 
-      let starPlayerText = ""
+      let starPlayerText = `\n${emojis.starPlayer} *No definido*`
       if (set.starPlayerId) {
         starPlayerText = `\n${emojis.starPlayer} <@${set.starPlayerId.discordId}>`
       }
@@ -252,7 +249,7 @@ const getOnGoingMatchEmbed = async ({ match }) => {
       return `### ${modeEmoji} ${mapName}\n${winnerText}${starPlayerText}`
     })
 
-    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(blocks.join("\n\n")))
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(blocks.join("\n")))
   } else {
     container.addTextDisplayComponents(new TextDisplayBuilder().setContent("Sets aún no definidos"))
   }
