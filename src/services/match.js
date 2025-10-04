@@ -527,7 +527,15 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName, client 
     const embed = getMatchResultsEmbed({ match })
     await matchChannel.send({ components: [embed], flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } })
     await msg.pin().catch(() => null)
-  }
+    const infoMsg = matchChannel.messages.fetch(match.infoMessageId).catch(() => null)
+    if (infoMsg) {
+      infoMsg.edit({
+        components: [await getMatchInfoEmbed({ match })],
+        flags: MessageFlags.IsComponentsV2,
+        allowedMentions: { parse: [] }
+      })
+     }
+  }          
 
   // Canal de cada equipo
   for (const teamObj of [teamA, teamB]) {
