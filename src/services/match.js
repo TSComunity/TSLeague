@@ -620,8 +620,6 @@ const applyDefaultDates = async ({ client }) => {
       let matchChannel = null
       if (match.channelId) {
         matchChannel = client.channels.cache.get(match.channelId) || await client.channels.fetch(match.channelId).catch(() => null)
-      } else {
-        console.warn(`[applyDefaultDates] match ${match._id} sin channelId`)
       }
 
       // 1) Mensaje principal en canal del partido (SIN PING)
@@ -660,14 +658,10 @@ const applyDefaultDates = async ({ client }) => {
             } catch (err) {
               console.error(`[applyDefaultDates] error editando infoMessageId ${match.infoMessageId} para match ${match._id}:`, err);
             }
-          } else {
-            console.warn(`[applyDefaultDates] infoMessageId ${match.infoMessageId} no encontrado o no editable`);
           }
         } catch (err) {
           console.error(`[applyDefaultDates] error preparando/actualizando embed para match ${match._id}:`, err)
         }
-      } else {
-        console.warn(`[applyDefaultDates] canal no encontrado o no texto para match ${match._id} (channelId=${match.channelId})`)
       }
 
       // 2) Notificar a cada equipo (sin cambios: seguimos usando sendTeamAnnouncement)
