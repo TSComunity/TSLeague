@@ -6,7 +6,7 @@ const Match = require('../models/Match.js')
 const Team = require('../models/Team.js')
 const User = require('../models/User.js')
 
-const { cancelMatch } = require('./match.js')
+const { updatePermissionsForMatch, cancelMatch } = require('./match.js')
 
 const { getActiveSeason } = require('../utils/season.js')
 const { findTeam } = require('../utils/team.js')
@@ -198,6 +198,11 @@ const createTeam = async ({ name, iconURL, presidentDiscordId, color = 'Blue' })
     throw new Error('El usuario ya se encuentra en un equipo.')
   }
 
+  const searchedTeam = await Team.findOne({ name })
+  if (searchedTeam) {
+    throw new Error('Ya existe un equipo con ese nombre.')
+  }
+
   const team = new Team({
     name,
     iconURL,
@@ -226,6 +231,11 @@ const createTeam = async ({ name, iconURL, presidentDiscordId, color = 'Blue' })
  */
 const updateTeam = async ({ teamName = null, teamCode = null, discordId = null, name, iconURL, color }) => {
   const team = await findTeam({ teamName, teamCode, discordId })
+
+  const searchedTeam = await Team.findOne({ name })
+  if (searchedTeam) {
+    throw new Error('Ya existe un equipo con ese nombre.')
+  }
 
   if (name) team.name = name
   if (iconURL) team.iconURL = iconURL
@@ -336,7 +346,7 @@ const removeTeamFromDivision = async ({ client, teamName = null, teamCode = null
   const activeSeason = await Season.findOne({ status: 'active' })
   if (activeSeason) {
     const seasonDivision = activeSeason.divisions.find(d =>
-      d.divisionId.toString() === divisionId.toString()
+      d.divisionId.toString() === divisionId._id.toString()
     )
     if (seasonDivision) {
       seasonDivision.teams = seasonDivision.teams.filter(
@@ -388,9 +398,26 @@ const addMemberToTeam = async ({ client, teamName = null, teamCode = null, disco
 
   await user.save()
 
-  if (checkTeamEligibility(team)) {
-    const categoryId = config.categories.teams.withOutDivision.id
-    await createTeamChannel({ client, team, categoryId })
+  if (checkTeamEligibility(team) && !team.channelId) {
+    let categoryId
+    
+    if (team.divisionId) {
+      const division = await Division.findById(team.divisionId);
+      categoryId = division?.teamsCategoryId || config.categories.teams.withOutDivision.id;
+    } else {
+      categoryId = config.categories.teams.withOutDivision.id;
+    }
+
+    await createTeamChannel({ client, team, categoryId });
+  }
+
+  const matches = await Match.find({
+    $or: [{ teamAId: team._id }, { teamBId: team._id }],
+    channelId: { $exists: true, $ne: null }
+  })
+
+  for (const match of matches) {
+    await updatePermissionsForMatch({ client, match });
   }
 
   return team
@@ -469,10 +496,18 @@ const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordI
   }
 
   await team.save()
+  const matches = await Match.find({
+    $or: [{ teamAId: team._id }, { teamBId: team._id }],
+    channelId: { $exists: true, $ne: null }
+  })
+
+  for (const match of matches) {
+    await updatePermissionsForMatch({ client, match });
+  }
   return team
 }
 
-const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, newRole }) => {
+const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, newRole, client }) => {
   if (!discordId || !newRole) {
     throw new Error('Faltan datos: discordId o newRole.')
   }
@@ -509,6 +544,16 @@ const changeMemberRole = async ({ teamName = null, teamCode = null, discordId, n
   }
 
   await team.save()
+
+  const matches = await Match.find({
+    $or: [{ teamAId: team._id }, { teamBId: team._id }],
+    channelId: { $exists: true, $ne: null }
+  })
+
+  for (const match of matches) {
+    await updatePermissionsForMatch({ client, match });
+  }
+
   return team
 }
 

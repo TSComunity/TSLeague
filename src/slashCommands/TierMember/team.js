@@ -248,7 +248,7 @@ module.exports = {
         const user = interaction.options.getUser('usuario')
         const discordId = user.id
         const newRole = interaction.options.getString('nuevo-rol')
-        const team = await changeMemberRole({ discordId, newRole })
+        const team = await changeMemberRole({ discordId, newRole, client })
         let role = ''
         if (newRole === 'leader') role = 'líder'
         if (newRole === 'sub-leader') role = 'sub-líder'

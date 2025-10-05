@@ -5,6 +5,8 @@ const { changeMemberRole, checkTeamUserHasPerms } = require('../../../services/t
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
 
+const emojis = require('../../../configs/emojis.json')
+
 const {
     getTeamLeftButton,
     getTeamChangeNameButton,
@@ -24,9 +26,9 @@ module.exports = {
       const newRole = splittedId[1]
 
       let rol = ''
-      if (newRole === 'leader') rol = '<:leader:1395916423695564881> Líder'
-      if (newRole === 'sub-leader') rol = '<subleader:1395916298025832519> Sublíder'
-      if (newRole === 'member') rol = '<:member:1395916668869283860> Miembro'
+      if (newRole === 'leader') rol = `${emojis.leader} Líder`
+      if (newRole === 'sub-leader') rol = `${emojis.subLeader} Sublíder`
+      if (newRole === 'member') rol = `${emojis.member} Miembro`
 
 
       const perms = await checkTeamUserHasPerms({ discordId: interaction.user.id })
@@ -48,7 +50,7 @@ module.exports = {
       ))
       
 
-      const team = await changeMemberRole({ discordId, newRole })
+      const team = await changeMemberRole({ discordId, newRole, client: interaction.client })
 
       await interaction.update({
         embeds: [getTeamInfoEmbed({ team })],

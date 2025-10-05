@@ -20,6 +20,160 @@ const emojis = require('../configs/emojis.json')
 
 const { BRAWL_STARS_API_KEY } = require('../configs/configs.js')
 
+async function updatePermissionsForMatch({ client, match }) {
+  if (!match || !client || !match?.channelId) return { ok: false, reason: 'no match or client or channelId' };
+
+  const guild = await client.guilds.fetch(guildConfig.id).catch(err => { console.error('fetch guild err', err); return null; });
+  if (!guild) return { ok: false, reason: 'guild not found' };
+
+  // Poblar equipos y miembros
+  const matchToUpd = await Match.findById(match._id)
+    .populate({ path: 'teamAId teamBId', populate: { path: 'members.userId' } });
+
+  if (!matchToUpd?.teamAId || !matchToUpd?.teamBId) return { ok: false, reason: 'teams not populated' };
+
+  const parsePermissionsToBigInt = (names = []) => {
+    let bits = 0n;
+    for (const name of names) {
+      if (PermissionsBitField.Flags[name]) bits |= BigInt(PermissionsBitField.Flags[name]);
+    }
+    return bits;
+  };
+
+  try {
+    const channel = await guild.channels.fetch(matchToUpd.channelId).catch(() => null);
+    if (!channel) return { ok: false, reason: 'channel not found' };
+
+    // Check bot permissions
+    const botMember = await guild.members.fetch(client.user.id).catch(() => null);
+    if (!botMember) return { ok: false, reason: 'bot member not fetchable' };
+    const botPerms = botMember.permissionsIn(channel);
+    if (!botPerms.has(PermissionsBitField.Flags.ManageChannels)) {
+      return { ok: false, reason: 'bot missing ManageChannels permission' };
+    }
+
+    // === Construir teamMemberIds (strings) y desiredMap (members + role overwrites) ===
+    const desiredMap = new Map();
+    const teamMemberIds = new Set();
+    const botId = client.user.id;
+
+    // Helper
+    const fetchGuildMember = async (discordId) => {
+      try { return await guild.members.fetch(discordId); } catch { return null; }
+    };
+
+    // Team members -> individual overwrites
+    for (const teamDoc of [matchToUpd.teamAId, matchToUpd.teamBId]) {
+      for (const m of teamDoc.members) {
+        const discordId = m.userId?.discordId;
+        if (!discordId) continue;
+        const gm = await fetchGuildMember(discordId);
+        if (!gm) {
+          console.warn(`[updatePermissionsForMatch] Member ${discordId} not in guild, skipping`);
+          continue;
+        }
+        teamMemberIds.add(gm.id);
+        let permsArray = [...channels.permissions.member];
+        if (m.role === 'leader') permsArray = [...permsArray, ...channels.permissions.leader];
+        if (m.role === 'sub-leader') permsArray = [...permsArray, ...channels.permissions.subLeader];
+        desiredMap.set(gm.id, parsePermissionsToBigInt(permsArray));
+      }
+    }
+
+    // Staff roles -> role overwrites only
+    const staffRolesResolved = [];
+    for (const rId of roles.staff || []) {
+      const r = await guild.roles.fetch(rId).catch(() => null);
+      if (r) staffRolesResolved.push(r);
+      else console.warn(`[updatePermissionsForMatch] Staff role ${rId} not found`);
+    }
+    for (const role of staffRolesResolved) {
+      const bits = parsePermissionsToBigInt([...channels.permissions.member, ...channels.permissions.staff]);
+      desiredMap.set(role.id, bits);
+    }
+
+    // Preserve bot entry
+    desiredMap.set(botId, desiredMap.get(botId) || 0n);
+
+    // === Leer overwrites actuales ===
+    const existingOverwrites = channel.permissionOverwrites.cache.map(o => ({
+      id: o.id,
+      allow: BigInt(o.allow?.bitfield ?? o.allow?.value ?? 0n),
+      deny: BigInt(o.deny?.bitfield ?? o.deny?.value ?? 0n),
+      type: o.type
+    }));
+
+    // Intentar identificar qué overwrites actuales son miembros del guild (fetch en paralelo)
+    const existingIds = existingOverwrites.map(x => x.id);
+    const fetchPromises = existingIds.map(id =>
+      guild.members.fetch(id).then(m => ({ id, member: m })).catch(() => ({ id, member: null }))
+    );
+    const fetchResults = await Promise.all(fetchPromises);
+    const existingIsMemberMap = new Map(fetchResults.map(r => [r.id, !!r.member]));
+
+    // === Construir finalMap empezando por los existentes (preservar roles/otros) ===
+    const finalMap = new Map();
+    for (const ex of existingOverwrites) finalMap.set(ex.id, { id: ex.id, allow: ex.allow, deny: ex.deny, type: ex.type });
+
+    // Guarantee @everyone present
+    const everyoneId = guild.roles.everyone.id;
+    if (!finalMap.has(everyoneId)) finalMap.set(everyoneId, { id: everyoneId, allow: 0n, deny: 0n, type: 'role' });
+
+    // Apply desired overwrites (override allow)
+    for (const [id, allowBits] of desiredMap.entries()) {
+      const prev = finalMap.get(id);
+      finalMap.set(id, {
+        id,
+        allow: allowBits,
+        deny: prev ? prev.deny : 0n,
+        type: prev ? prev.type : 'member'
+      });
+    }
+
+    // === Determine members to force-deny: those existing that are members (identified) AND
+    //     NOT in teamMemberIds AND NOT the bot.
+    const viewChannelBit = BigInt(PermissionsBitField.Flags.ViewChannel);
+    const toForceDeny = [];
+
+    for (const ex of existingOverwrites) {
+      const id = ex.id;
+      const isMemberOverwrite = existingIsMemberMap.get(id) === true || ex.type === 'member';
+      if (!isMemberOverwrite) continue; // not a user member overwrite
+      if (id === botId) continue;
+      if (teamMemberIds.has(id)) continue; // current member -> keep as desiredMap above
+      // Not a team member -> we will force deny ViewChannel and clear allow
+      toForceDeny.push(id);
+      const prev = finalMap.get(id);
+      const prevDeny = prev ? prev.deny : ex.deny || 0n;
+      finalMap.set(id, {
+        id,
+        allow: 0n,
+        deny: (prevDeny || 0n) | viewChannelBit,
+        type: 'member'
+      });
+    }
+
+    // Ensure @everyone denies ViewChannel
+    const everyoneEntry = finalMap.get(everyoneId);
+    everyoneEntry.deny = (everyoneEntry.deny || 0n) | viewChannelBit;
+
+    // Build array and apply atomically
+    const finalArray = Array.from(finalMap.values()).map(entry => ({
+      id: entry.id,
+      allow: entry.allow,
+      deny: entry.deny,
+      type: entry.type
+    }));
+
+    await channel.permissionOverwrites.set(finalArray, `Sync perms for match ${matchToUpd._id}`);
+
+    return { ok: true, applied: [...desiredMap.keys()].length, forcedDenied: toForceDeny.length, forcedDeniedIds: toForceDeny };
+  } catch (err) {
+    console.error('[updatePermissionsForMatch] error:', err);
+    return { ok: false, reason: err.message || String(err) };
+  }
+}
+
 const createMatchChannel = async ({ match, client }) => {
   try {
     const matchToUpd = await Match.findById(match._id)
@@ -854,6 +1008,7 @@ async function monitorOnGoingMatches({ client }) {
 }
 
 module.exports = {
+  updatePermissionsForMatch,
   createMatchChannel,
   createMatch,
   createMatchManually,

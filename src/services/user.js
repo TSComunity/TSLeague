@@ -5,20 +5,17 @@ const { getUserBrawlData } = require('../utils/user.js')
 const { getUserStatsEmbed } = require('../discord/embeds/user.js')
 const { roles, guild: configGuild, channels } = require('../configs/league.js')
 
-/**
- * Actualiza la elegibilidad de un equipo dependiendo de si tiene al menos 3 miembros y devuelve su elegibilidad.
- * @param {Object} team - Equipo a checkear.
- * @returns {Boolean} isEligible - Si es elegible o no.
- */
 const checkUserIsVerified = async ({ discordId }) => {
+  const user = await User.findOne({ discordId })
+  if (!user) return false
 
-    const user = await User.findOne({ discordId })
-    if (!user) return false
+  const isVerified = !!user.brawlId
 
-    const isVerified = !!user.brawlId
-    user.isVerified = isVerified
-    await user.save()
-    return isVerified
+  // actualizar el flag global
+  user.isVerified = isVerified
+  await user.save()
+
+  return isVerified
 }
 
 const verifyUser = async ({ discordId, brawlId }) => {
@@ -37,9 +34,10 @@ const verifyUser = async ({ discordId, brawlId }) => {
   let user = await User.findOne({ discordId })
 
   if (!user)
-    user = await User.create({ discordId, brawlId: formattedBrawlId })
+    user = await User.create({ discordId, brawlId: formattedBrawlId, isVerified: true })
   else {
     user.brawlId = formattedBrawlId
+    user.isVerified = true
     await user.save()
   }
 
@@ -202,14 +200,14 @@ async function syncFreeAgents({ client }) {
   const channel = await client.channels.fetch(channels.freeAgents.id)
   if (!channel || !channel.isTextBased()) throw new Error("Canal no encontrado o no es de texto.")
 
-  const freeAgents = await User.find({ isFreeAgent: true })
+  const freeAgents = await User.find({})
 
   for (const user of freeAgents) {
     // Si ya tiene equipo → eliminar mensaje y limpiar
     if (user.teamId) {
       try {
         if (user.freeAgentMessageId) {
-          const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
+          const msg = await channel.messages.fetch(user.freeAgentMessageId)
           if (msg) await msg.delete()
         }
       } catch (e) {
@@ -221,7 +219,7 @@ async function syncFreeAgents({ client }) {
       await user.save()
       continue
     }
-
+    if (user.isFreeAgent === false) continue
     // Obtener datos actualizados de Brawl
     let data = null
     if (user.brawlId) {
