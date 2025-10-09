@@ -6,7 +6,7 @@ const wait = require('node:timers/promises').setTimeout;
 var colors = require('colors');
 
 module.exports = {
-    name: "ready",
+    name: "clientReady",
     once: true,
     async execute(client) {
 
