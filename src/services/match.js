@@ -239,7 +239,7 @@ const createMatchChannel = async ({ match, client }) => {
     ]
 
     // Obtener categoría de la división
-    const divisionId = teamA.divisionId
+    const divisionId = teamA.divisionId?._id || teamA.divisionId
     const division = await Division.findById(divisionId)
     if (!division) throw new Error('No se encontró la división del partido')
     const categoryId = division.matchesCategoryId
