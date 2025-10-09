@@ -1,115 +1,111 @@
-  // services/dates.js
-  // Versión definitiva: determinista, sin sorpresas los domingos,
-  // defaultDate = próxima ocurrencia (entre defaultStartDays) -> la más cercana en el futuro
-  // deadline = última ocurrencia pasada (<= now) del día/hora configurado
-  // Logs mínimos incluidos para depuración.
+// services/dates.js
+// ✅ Versión definitiva: determinista y con semanas de LUNES a DOMINGO.
+// - defaultDate → próxima ocurrencia (entre defaultStartDays) → la más cercana en el futuro.
+// - deadline → ocurrencia de ESTA SEMANA (lunes-domingo). Si ya pasó → la de la próxima semana.
 
-  const { DateTime } = require('luxon')
-  const configs = require('../configs/league.js')
+const { DateTime } = require('luxon')
+const configs = require('../configs/league.js')
 
-  function validateConfigs() {
-    if (!configs || !configs.match) throw new Error('configs.match no está definido')
-    const m = configs.match
-    if (!Number.isInteger(m.deadlineDay) || m.deadlineDay < 0 || m.deadlineDay > 6)
-      throw new Error(`configs.match.deadlineDay inválido (${m.deadlineDay}). Debe ser 0..6 (0=domingo).`)
-    if (!Number.isInteger(m.deadlineHour) || m.deadlineHour < 0 || m.deadlineHour > 23)
-      throw new Error(`configs.match.deadlineHour inválido (${m.deadlineHour}). Debe ser 0..23.`)
-    if (!Number.isInteger(m.deadlineMinute) || m.deadlineMinute < 0 || m.deadlineMinute > 59)
-      throw new Error(`configs.match.deadlineMinute inválido (${m.deadlineMinute}). Debe ser 0..59.`)
+// ------------------------------------------------------
+// Validación de configuración base
+// ------------------------------------------------------
+function validateConfigs() {
+  if (!configs || !configs.match) throw new Error('configs.match no está definido')
+  const m = configs.match
+  if (!Number.isInteger(m.deadlineDay) || m.deadlineDay < 0 || m.deadlineDay > 6)
+    throw new Error(`configs.match.deadlineDay inválido (${m.deadlineDay}). Debe ser 0..6 (0=domingo).`)
+  if (!Number.isInteger(m.deadlineHour) || m.deadlineHour < 0 || m.deadlineHour > 23)
+    throw new Error(`configs.match.deadlineHour inválido (${m.deadlineHour}). Debe ser 0..23.`)
+  if (!Number.isInteger(m.deadlineMinute) || m.deadlineMinute < 0 || m.deadlineMinute > 59)
+    throw new Error(`configs.match.deadlineMinute inválido (${m.deadlineMinute}). Debe ser 0..59.`)
 
-    if (m.defaultStartDays) {
-      if (!Array.isArray(m.defaultStartDays) || m.defaultStartDays.some(d => !Number.isInteger(d) || d < 0 || d > 6))
-        throw new Error('configs.match.defaultStartDays debe ser Array de enteros 0..6 (0=domingo).')
+  if (m.defaultStartDays) {
+    if (!Array.isArray(m.defaultStartDays) || m.defaultStartDays.some(d => !Number.isInteger(d) || d < 0 || d > 6))
+      throw new Error('configs.match.defaultStartDays debe ser Array de enteros 0..6 (0=domingo).')
+  }
+}
+
+// ------------------------------------------------------
+// Helpers: mapeo de días
+// Luxon: weekday = 1 (lunes) .. 7 (domingo)
+// Configs: 0=domingo .. 6=sábado
+// ------------------------------------------------------
+function luxonWeekdayToIndex(luxonWeekday) {
+  return luxonWeekday % 7 // domingo(7)->0, lunes(1)->1, ..., sábado(6)->6
+}
+
+// ------------------------------------------------------
+// getNextOccurrence
+// Devuelve la próxima ocurrencia futura del día/hora indicado.
+// ------------------------------------------------------
+function getNextOccurrence(day, hour = 0, minute = 0, now = new Date()) {
+  if (!Number.isInteger(day) || day < 0 || day > 6)
+    throw new Error("getNextOccurrence: 'day' debe ser 0..6 (0=domingo)")
+  const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid')
+  const todayIdx = luxonWeekdayToIndex(dtNow.weekday)
+
+  let daysToAdd = (day - todayIdx + 7) % 7
+  const targetSameDay = dtNow.set({ hour, minute, second: 0, millisecond: 0 })
+  if (daysToAdd === 0 && targetSameDay <= dtNow) {
+    daysToAdd = 7 // ya pasó hoy → próxima semana
+  }
+
+  const result = dtNow.plus({ days: daysToAdd }).set({ hour, minute, second: 0, millisecond: 0 })
+  return result.toJSDate()
+}
+
+// ------------------------------------------------------
+// getPreviousOccurrence
+// Última ocurrencia pasada (<= now) del día/hora indicado.
+// ------------------------------------------------------
+function getPreviousOccurrence(day, hour = 0, minute = 0, now = new Date()) {
+  if (!Number.isInteger(day) || day < 0 || day > 6)
+    throw new Error("getPreviousOccurrence: 'day' debe ser 0..6 (0=domingo)")
+  const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid')
+  const todayIdx = luxonWeekdayToIndex(dtNow.weekday)
+
+  let daysBack = (todayIdx - day + 7) % 7
+  let candidate = dtNow.minus({ days: daysBack }).set({ hour, minute, second: 0, millisecond: 0 })
+  if (candidate > dtNow) {
+    candidate = candidate.minus({ weeks: 1 })
+  }
+
+  return candidate.toJSDate()
+}
+
+// ------------------------------------------------------
+// pickClosestNextDay
+// Escoge la ocurrencia futura más cercana entre una lista de días.
+// ------------------------------------------------------
+function pickClosestNextDay(defaultDayList, hour = 0, minute = 0, now = new Date()) {
+  if (!Array.isArray(defaultDayList) || defaultDayList.length === 0)
+    throw new Error('pickClosestNextDay: defaultDayList debe ser array no vacío')
+
+  const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid')
+  let best = null
+  for (const d of defaultDayList) {
+    if (!Number.isInteger(d) || d < 0 || d > 6) continue
+    const candidateDate = DateTime.fromJSDate(getNextOccurrence(d, hour, minute, now)).setZone('Europe/Madrid')
+    const diffMs = candidateDate.toMillis() - dtNow.toMillis()
+    if (diffMs < 0) continue
+    if (!best || diffMs < best.diffMs) {
+      best = { day: d, date: candidateDate.toJSDate(), diffMs }
     }
   }
 
-  /**
-   * Helpers de mapeo:
-   * - Luxon: weekday = 1 (lunes) .. 7 (domingo)
-   * - Aquí usamos índice 0=domingo .. 6=sábado (como tus configs)
-   */
-  function luxonWeekdayToIndex(luxonWeekday) {
-    return luxonWeekday % 7 // domingo (7) -> 0, lunes (1)->1.. sábado(6)->6
+  if (!best) {
+    const fallbackDay = defaultDayList[0]
+    return { day: fallbackDay, date: getNextOccurrence(fallbackDay, hour, minute, now) }
   }
 
-  /**
-   * getNextOccurrence(day, hour, minute, now)
-   * - Devuelve la próxima ocurrencia FUTURA del weekday `day` (0=domingo..6=sábado)
-   *   Si hoy es el día objetivo y la hora objetivo aún no ha pasado -> devuelve hoy a esa hora.
-   *   Si ya pasó -> devuelve la misma día en la semana siguiente.
-   */
-  function getNextOccurrence(day, hour = 0, minute = 0, now = new Date()) {
-    if (!Number.isInteger(day) || day < 0 || day > 6) throw new Error("getNextOccurrence: 'day' debe ser 0..6 (0=domingo)")
-    const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid')
-    const todayIdx = luxonWeekdayToIndex(dtNow.weekday)
+  return { day: best.day, date: best.date }
+}
 
-    let daysToAdd = (day - todayIdx + 7) % 7
-
-    // si es el mismo día, comprueba la hora
-    const targetSameDay = dtNow.set({ hour, minute, second: 0, millisecond: 0 })
-    if (daysToAdd === 0 && targetSameDay <= dtNow) {
-      // ya ha pasado hoy -> next week
-      daysToAdd = 7
-    }
-
-    const result = dtNow.plus({ days: daysToAdd }).set({ hour, minute, second: 0, millisecond: 0 })
-    return result.toJSDate()
-  }
-
-  /**
-   * getPreviousOccurrence(day, hour, minute, now)
-   * - Devuelve la última ocurrencia PASADA (<= now) del weekday `day`.
-   *   Si hoy es el día objetivo y la hora objetivo es > now, devuelve la semana anterior.
-   */
-  function getPreviousOccurrence(day, hour = 0, minute = 0, now = new Date()) {
-    if (!Number.isInteger(day) || day < 0 || day > 6) throw new Error("getPreviousOccurrence: 'day' debe ser 0..6 (0=domingo)")
-    const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid')
-    const todayIdx = luxonWeekdayToIndex(dtNow.weekday)
-
-    let daysBack = (todayIdx - day + 7) % 7
-    let candidate = dtNow.minus({ days: daysBack }).set({ hour, minute, second: 0, millisecond: 0 })
-
-    // si candidate > now (ocurre en el futuro del mismo día), retroceder una semana
-    if (candidate > dtNow) {
-      candidate = candidate.minus({ weeks: 1 })
-    }
-
-    return candidate.toJSDate()
-  }
-
-  /**
-   * pickClosestNextDay(defaultDayList, hour, minute, now)
-   * - De la lista de dias permitidos, elige el que tenga la próxima ocurrencia más cercana en el tiempo.
-   * - Devuelve { day, date }
-   * - Esto evita usar random que introduce variabilidad indeseada.
-   */
-  function pickClosestNextDay(defaultDayList, hour = 0, minute = 0, now = new Date()) {
-    if (!Array.isArray(defaultDayList) || defaultDayList.length === 0) {
-      throw new Error('pickClosestNextDay: defaultDayList debe ser array no vacío')
-    }
-
-    const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid')
-    let best = null
-    for (const d of defaultDayList) {
-      if (!Number.isInteger(d) || d < 0 || d > 6) continue
-      const candidateDate = DateTime.fromJSDate(getNextOccurrence(d, hour, minute, now)).setZone('Europe/Madrid')
-      const diffMs = candidateDate.toMillis() - dtNow.toMillis()
-      if (diffMs < 0) continue // no debería ocurrir, pero por seguridad ignoramos negativos
-      if (!best || diffMs < best.diffMs) {
-        best = { day: d, date: candidateDate.toJSDate(), diffMs }
-      }
-    }
-
-    if (!best) {
-      // fallback: tomar la primera y usar getNextOccurrence (no debería pasar)
-      const fallbackDay = defaultDayList[0]
-      return { day: fallbackDay, date: getNextOccurrence(fallbackDay, hour, minute, now) }
-    }
-
-    return { day: best.day, date: best.date }
-  }
-
-  function getDate({ day, hour = 0, minute = 0 }, now = new Date()) {
+// ------------------------------------------------------
+// getDate
+// Próxima ocurrencia del día/hora indicado (útil para helpers)
+// ------------------------------------------------------
+function getDate({ day, hour = 0, minute = 0 }, now = new Date()) {
   if (!Number.isInteger(day) || day < 0 || day > 6)
     throw new Error("El parámetro 'day' debe ser un número entre 0 y 6 (0=domingo).")
   if (!Number.isInteger(hour) || hour < 0 || hour > 23)
@@ -118,72 +114,61 @@
     throw new Error("El parámetro 'minute' debe estar entre 0 y 59.")
 
   const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid')
-  const todayIdx = dtNow.weekday % 7 // Luxon: 1=lunes .. 7=domingo -> 0..6 con domingo=0
-
+  const todayIdx = luxonWeekdayToIndex(dtNow.weekday)
   let daysToAdd = (day - todayIdx + 7) % 7
-
-  // Si es el mismo día, comprobar la hora
   const sameDayTarget = dtNow.set({ hour, minute, second: 0, millisecond: 0 })
   if (daysToAdd === 0 && sameDayTarget <= dtNow) {
-    daysToAdd = 7 // ya pasó la hora de hoy → mover a la próxima semana
+    daysToAdd = 7
   }
 
   const result = dtNow.plus({ days: daysToAdd }).set({ hour, minute, second: 0, millisecond: 0 })
   return result.toJSDate()
 }
 
-  /**
-   * checkDeadline(match, now = new Date())
-   * - deadline: última ocurrencia pasada (<= now) del deadline configurado
-   * - defaultDate: próxima ocurrencia FUTURA del día elegido entre defaultStartDays (la más cercana)
-   *
-   * Devuelve { passed, deadline, defaultDate }
-   */
+// ------------------------------------------------------
+// checkDeadline
+// Devuelve { passed, deadline, defaultDate }
+// - deadline = ocurrencia de ESTA semana (lunes a domingo). Si ya pasó, la de la próxima.
+// - defaultDate = próxima ocurrencia futura entre defaultStartDays.
+// ------------------------------------------------------
 function checkDeadline(match, now = new Date()) {
   validateConfigs()
 
   if (match?.scheduledAt) {
-    // Si ya tiene fecha programada, no aplicamos deadline
     return { passed: false, deadline: match.scheduledAt, defaultDate: match.scheduledAt }
   }
 
-  const luxonNow = DateTime.fromJSDate(now).setZone('Europe/Madrid')
-
-  // Calcular deadline: última ocurrencia pasada (<= now) del día/hora/minuto configurados
-  const deadlineDate = getPreviousOccurrence(
-    configs.match.deadlineDay,
-    configs.match.deadlineHour ?? 0,
-    configs.match.deadlineMinute ?? 0,
-    now
-  )
-  const luxonDeadline = DateTime.fromJSDate(deadlineDate).setZone('Europe/Madrid')
-
-  // Calcular defaultDate: día aleatorio de defaultStartDays, dentro de la semana actual
-  const defaultDayList = configs.match.defaultStartDays
-  const randomIndex = Math.floor(Math.random() * defaultDayList.length)
-  const randomDay = defaultDayList[randomIndex]
-
-  // Hora (fija o aleatoria)
-  const hour = configs.match.defaultStartHour ?? Math.floor(Math.random() * 24)
-  const minute = 0
-
-  // Semana actual: domingo 00:00
   const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid')
-  const sunday = dtNow.startOf('week').minus({ days: 1 }) // domingo 00:00
+  const { deadlineDay, deadlineHour = 0, deadlineMinute = 0, defaultStartDays, defaultStartHour = 0 } = configs.match
 
-  // Fecha random dentro de la semana actual
-  const defaultDate = sunday.plus({ days: randomDay, hours: hour, minutes: minute }).toJSDate()
-  const luxonDefault = DateTime.fromJSDate(defaultDate).setZone('Europe/Madrid')
+  // Semana: lunes (weekday=1) a domingo (weekday=7)
+  const monday = dtNow.startOf('week') // lunes actual
+  let deadline = monday.plus({ days: ((deadlineDay + 6) % 7) }) // ajustar 0=domingo..6=sábado
+    .set({ hour: deadlineHour, minute: deadlineMinute, second: 0, millisecond: 0 })
 
-  const passed = luxonNow.toMillis() > luxonDeadline.toMillis()
+  // Si el deadline de esta semana ya pasó → siguiente semana
+  if (deadline < dtNow) {
+    deadline = deadline.plus({ weeks: 1 })
+  }
 
-  return { passed, deadline: deadlineDate, defaultDate }
+  // Próxima fecha de inicio por defecto
+  const closest = pickClosestNextDay(defaultStartDays, defaultStartHour, 0, now)
+  const passed = dtNow > deadline
+
+  return {
+    passed,
+    deadline: deadline.toJSDate(),
+    defaultDate: closest.date
+  }
 }
 
-  module.exports = {
-    getNextOccurrence,
-    getPreviousOccurrence,
-    pickClosestNextDay,
-    getDate,
-    checkDeadline
-  }
+// ------------------------------------------------------
+// Export
+// ------------------------------------------------------
+module.exports = {
+  getNextOccurrence,
+  getPreviousOccurrence,
+  pickClosestNextDay,
+  getDate,
+  checkDeadline
+}
