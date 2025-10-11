@@ -83,12 +83,15 @@ interaction.reply({
 
     const deleted = await Promise.allSettled([
       Match.deleteMany({}),
-      User.deleteMany({
-        $or: [
-          { brawlId: null },
-          { brawlId: { $exists: false } }
-        ]
-      }),
+User.deleteMany({
+  $or: [
+    { brawlId: null },
+    { brawlId: { $exists: false } },
+    { brawlId: '' },
+    { brawlId: 'undefined' },
+    { brawlId: 'null' }
+  ]
+}),
       Season.deleteMany({})
     ])
 

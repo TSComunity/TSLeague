@@ -346,8 +346,8 @@ const removeTeamFromDivision = async ({ client, teamName = null, teamCode = null
   const activeSeason = await Season.findOne({ status: 'active' })
   if (activeSeason) {
     const seasonDivision = activeSeason.divisions.find(d =>
-      d.divisionId.toString() === divisionId._id.toString()
-    )
+        (d.divisionId?._id.toString() || d.divisionId) === (divisionId?._id.toString() || divisionId)
+      )
     if (seasonDivision) {
       seasonDivision.teams = seasonDivision.teams.filter(
         t => t.teamId.toString() !== team._id.toString()

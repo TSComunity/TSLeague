@@ -75,29 +75,31 @@ function runInterval(tasks, intervalMs) {
   run()
 }
 
-runInterval(
-  [
-    () => processScheduledMatches({ client }),
-    () => monitorOnGoingMatches({ client })
-  ],
-  1000 * 60 * 5 // 5 min
-)
+client.once('clientReady', () => {
+  runInterval(
+    [
+      () => processScheduledMatches({ client }),
+      () => monitorOnGoingMatches({ client })
+    ],
+    1000 * 60 * 5 // 5 min
+  )
 
-runInterval(
-  [
-    () => updateRankingsEmbed({ client }),
-    () => updateDivisionsEmbed({ client }),
-    () => executeDueScheduledFunctions({ client }),
-    () => applyDefaultDates({ client })
-  ],
-  1000 * 60 * 30 // 30 min
-)
+  runInterval(
+    [
+      () => updateRankingsEmbed({ client }),
+      () => updateDivisionsEmbed({ client }),
+      () => executeDueScheduledFunctions({ client }),
+      () => applyDefaultDates({ client })
+    ],
+    1000 * 60 * 30 // 30 min
+  )
 
-runInterval(
-  [
-    () => updateUsersPingRole({ client }),
-    () => syncFreeAgents({ client }),
-    () => updateTeamsChannels({ client })
-  ],
-  1000 * 60 * 120 // 2 horas
-)
+  runInterval(
+    [
+      () => updateUsersPingRole({ client }),
+      () => syncFreeAgents({ client }),
+      () => updateTeamsChannels({ client })
+    ],
+    1000 * 60 * 120 // 2 horas
+  )
+})
