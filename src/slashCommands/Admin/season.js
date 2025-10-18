@@ -68,11 +68,17 @@ module.exports = {
           eventType: 'season'
         })
       } else if (subcomand === 'prueba') {
-        const addRound = require('../../services/round.js').addRound
-        await addRound({ client })
-interaction.reply({
-  content: `a`
-})
+const Match = require('../../models/Match');
+
+
+// Actualizar todos los sets con mapa antiguo a nuevo nombre
+    const match = await Match.findById('68ed505976372519b88c5e9e')
+        match.status = 'onGoing'
+        match.sets[match.sets.length - 1].winner = null
+        match.sets[match.sets.length - 1].starPlayerId = null
+        console.log('a')
+        await match.save()
+
 } else if (subcomand === 'prueba2') {
   try {
     // Importa los modelos arriba si no lo has hecho ya

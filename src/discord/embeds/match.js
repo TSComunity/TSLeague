@@ -237,8 +237,8 @@ const getOnGoingMatchEmbed = async ({ match }) => {
 
       let winnerText = `${emojis.winner} *No definido*`
       if (set.winner) {
-        if (set.winner.equals(teamAId._id)) winnerText = `${emojis.winner} ${teamAId.name}`
-        else if (set.winner.equals(teamBId._id)) winnerText = `${emojis.winner} ${teamBId.name}`
+        if (set.winner.equals(teamAId._id)) winnerText = `${emojis.winner} **${teamAId.name}**`
+        else if (set.winner.equals(teamBId._id)) winnerText = `${emojis.winner} **${teamBId.name}**`
       }
 
       let starPlayerText = `\n${emojis.starPlayer} *No definido*`
@@ -314,51 +314,35 @@ const getMatchResultsEmbed = ({ match, team = null }) => {
     accentColor = won ? 0x00FF00 : 0xFF0000; // verde si ganó, rojo si perdió
   }
 
-  // Texto según tipo de canal
+  // Texto principal
   let textContent;
   if (team) {
     const otherTeam = orderedTeams[1].team;
-    textContent = `## ${emojis.ended} Resultados de vuestro partido contra ${otherTeam?.name || "Equipo B"} — ${orderedTeams[0].score} - ${orderedTeams[1].score}\n`;
+    textContent = `## ${emojis.ended} Resultado de vuestro partido contra ${otherTeam?.name || "Equipo B"} — ${orderedTeams[0].score} - ${orderedTeams[1].score}\n`;
   } else {
     textContent = `## ${emojis.ended} ${orderedTeams[0].team?.name || "Equipo A"} vs ${orderedTeams[1].team?.name || "Equipo B"} — ${orderedTeams[0].score} - ${orderedTeams[1].score}\n`;
   }
-  if (match.starPlayerId) {
-    textContent += `### ${emojis.starPlayer} <@${match.starPlayerId.discordId}>\n`
+
+  // Star Player general
+
+
+  // Indicar ganador general
+  let winnerText;
+  if (match.scoreA === match.scoreB) {
+    winnerText = 'Empate';
+  } else if (match.scoreA > match.scoreB) {
+    winnerText = match.teamAId.name;
+  } else {
+    winnerText = match.teamBId.name;
   }
-  // Bloques de sets
-  const setsText = match.sets.map((set, i) => {
-    const mode = modesData.find(m => m.id === set.mode) || null;
-    const map = (() => {
-      for (const mode of modesData) {
-        const map = mode.maps.find(m => m.id === set.map);
-        if (map) return map;
-      }
-      return null;
-    })();
-
-    const modeEmoji = mode?.emoji || "🎮";
-    const mapName = map?.name || `Mapa ${i + 1}`;
-
-    let block = `### ${modeEmoji} ${mapName}`;
-
-    if (set.winner) {
-      if (set.winner.equals(match.teamAId._id)) block += `\n> ${emojis.winner} ${match.teamAId.name}`;
-      else if (set.winner.equals(match.teamBId._id)) block += `\n> ${emojis.winner} ${match.teamBId.name}`;
-    }
-
-    if (set.starPlayerId) {
-      block += `\n> ${emojis.starPlayer} <@${set.starPlayerId.discordId}>`;
-    }
-
-    return block;
-  }).join("\n\n");
-
+  textContent += `${emojis.winner} **${winnerText}**\n`;
+  if (match.starPlayerId) {
+    textContent += `${emojis.starPlayer} <@${match.starPlayerId.discordId}>`
+  }
   // Construcción del container
   const container = new ContainerBuilder()
     .setAccentColor(accentColor)
-    .setTextDisplayComponents(new TextDisplayBuilder().setContent(textContent))
-    .addSeparatorComponents(new SeparatorBuilder())
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## Sets\n${setsText}`))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(textContent))
     .addSeparatorComponents(new SeparatorBuilder());
 
   if (match.resultsImageURL) {

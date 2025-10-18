@@ -651,12 +651,12 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName, client 
   }
 
   // 🔹 generar imagen de resultados y guardar
-  const resultsImageURL = await generateMatchResultsImageURL({ match })
+  const resultsImageURL = await generateMatchResultsImageURL({ client, match })
   match.resultsImageURL = resultsImageURL
   await match.save()
   
   const season = await getActiveSeason()
-  const division = season.divisions.find(d => d.divisionId._id.toString() === match.divisionId.toString())
+  const division = season.divisions.find(d => d.divisionId._id.toString() === match.divisionId._id.toString())
   const teamASeason = division.teams.find(t => t.teamId._id.toString() === match.teamAId._id.toString())
   const teamBSeason = division.teams.find(t => t.teamId._id.toString() === match.teamBId._id.toString())
 
@@ -679,9 +679,9 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName, client 
   // Canal del partido
   if (matchChannel) {
     const embed = getMatchResultsEmbed({ match })
-    await matchChannel.send({ components: [embed], flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } })
+    const msg = await matchChannel.send({ components: [embed], flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } })
     await msg.pin().catch(() => null)
-    const infoMsg = matchChannel.messages.fetch(match.infoMessageId).catch(() => null)
+    const infoMsg = await matchChannel.messages.fetch(match.infoMessageId).catch(() => null)
     if (infoMsg) {
       infoMsg.edit({
         components: [await getMatchInfoEmbed({ match })],
@@ -693,11 +693,32 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName, client 
 
   // Canal de cada equipo
   for (const teamObj of [teamA, teamB]) {
-    if (!teamObj.channelId) continue
-    const teamChannel = await guild.channels.fetch(teamObj.channelId)
-    if (!teamChannel) continue
+    console.log(`[endMatch] Procesando equipo: ${teamObj.name} (${teamObj._id})`)
+
+    if (!teamObj.channelId) {
+      console.log(`[endMatch] ⚠️ No hay canal configurado para el equipo ${teamObj.name}`)
+      continue
+    }
+
+    const teamChannel = await guild.channels.fetch(teamObj.channelId).catch(() => null)
+    if (!teamChannel) {
+      console.log(`[endMatch] ⚠️ No se pudo obtener el canal ${teamObj.channelId} para el equipo ${teamObj.name}`)
+      continue
+    }
+
+    console.log(`[endMatch] ✅ Canal obtenido: ${teamChannel.name} (${teamChannel.id})`)
+
     const embed = getMatchResultsEmbed({ match, team: teamObj })
-    await teamChannel.send({ components: [embed], flags: MessageFlags.IsComponentsV2, allowedMentions: { parse: [] } })
+
+    await teamChannel.send({
+      components: [embed],
+      flags: MessageFlags.IsComponentsV2,
+      allowedMentions: { parse: [] }
+    }).then(() => {
+      console.log(`[endMatch] ✅ Mensaje enviado al canal de ${teamObj.name}`)
+    }).catch(err => {
+      console.error(`[endMatch] ❌ Error enviando mensaje al canal de ${teamObj.name}:`, err)
+    })
   }
 
   return match
@@ -897,114 +918,223 @@ async function processScheduledMatches({ client }) {
 }
 
 async function monitorOnGoingMatches({ client }) {
-  const matches = await Match.find({ status: 'onGoing' })
-    .populate({
-      path: 'teamAId teamBId',
-      populate: { path: 'members.userId' }
-    });
+  console.log('[monitorOnGoingMatches] Iniciando monitoreo de partidos en curso...');
 
-  for (const match of matches) {
-    const teamAMembers = match.teamAId.members.map(m => m.userId).filter(Boolean);
-    const teamBMembers = match.teamBId.members.map(m => m.userId).filter(Boolean);
+  let matches;
+  try {
+    matches = await Match.find({ status: 'onGoing' })
+      .populate({
+        path: 'teamAId',
+        populate: { path: 'members.userId' }
+      })
+      .populate({
+        path: 'teamBId',
+        populate: { path: 'members.userId' }
+      })
+      .populate('seasonId divisionId starPlayerId')
+      .populate({
+        path: 'sets.winner',
+        model: 'Team'
+      })
+      .populate({
+        path: 'sets.starPlayerId',
+        model: 'User'
+      })
+    console.log(`[monitorOnGoingMatches] Se encontraron ${matches.length} partidos en curso.`);
+  } catch (err) {
+    console.error('[monitorOnGoingMatches] ❌ Error buscando partidos en curso:', err);
+    return;
+  }
 
-    const teamABrawlIds = teamAMembers.map(u => u.brawlId).filter(Boolean);
-    const teamBBrawlIds = teamBMembers.map(u => u.brawlId).filter(Boolean);
-    const allPlayerIds = [...new Set([...teamABrawlIds, ...teamBBrawlIds])];
-    if (!allPlayerIds.length) continue;
+  for (let match of matches) {
+    console.log(`\n[monitorOnGoingMatches] Analizando match ${match._id} (${match.teamAId?.name} vs ${match.teamBId?.name})`);
 
-    const battleLogResults = await Promise.allSettled(
-      allPlayerIds.map(brawlId =>
-        fetch(`https://api.brawlstars.com/v1/players/${encodeURIComponent(brawlId)}/battlelog`, {
-          headers: { Authorization: `Bearer ${BRAWL_STARS_API_KEY}` }
-        }).then(r => r.ok ? r.json() : null).catch(() => null)
-      )
-    );
+    try {
+      const teamAMembers = match.teamAId?.members?.map(m => m.userId).filter(Boolean) || [];
+      const teamBMembers = match.teamBId?.members?.map(m => m.userId).filter(Boolean) || [];
 
-    const battleLogs = battleLogResults
-      .filter(r => r.status === 'fulfilled' && r.value)
-      .flatMap(r => r.value.items || []);
+      const cleanTag = tag => tag?.replace(/^#/, '').toUpperCase();
+      const teamABrawlIds = teamAMembers.map(u => cleanTag(u.brawlId)).filter(Boolean);
+      const teamBBrawlIds = teamBMembers.map(u => cleanTag(u.brawlId)).filter(Boolean);
+      const allPlayerIds = [...new Set([...teamABrawlIds, ...teamBBrawlIds])];
+      console.log(`[monitorOnGoingMatches] Jugadores totales detectados: ${allPlayerIds.length}`);
+      console.log(`[monitorOnGoingMatches] teamAIds: ${teamABrawlIds.join(', ')}`);
+      console.log(`[monitorOnGoingMatches] teamBIds: ${teamBBrawlIds.join(', ')}`);
 
-    let updated = false;
-
-    for (const battle of battleLogs) {
-      if (!battle.battle?.starPlayer) continue;
-
-      const battleTeams = (battle.battle.teams || []).flat();
-      const battleTags = battleTeams.map(p => p.tag);
-
-      const teamACount = teamABrawlIds.filter(tag => battleTags.includes(tag)).length;
-      const teamBCount = teamBBrawlIds.filter(tag => battleTags.includes(tag)).length;
-      if (teamACount < 2 || teamBCount < 2) continue;
-
-      // buscar sets pendientes
-      const possibleSets = match.sets.filter(s =>
-        s.map === battle.event.map &&
-        s.mode === battle.event.mode &&
-        !s.winner
-      );
-      if (!possibleSets.length) continue;
-
-      const targetSet = possibleSets[0];
-
-      // determinar ganador
-      let winner = null;
-      for (const tag of battleTags) {
-        if (teamABrawlIds.includes(tag)) {
-          if (battle.battle.result === 'victory') winner = match.teamAId._id;
-          if (battle.battle.result === 'defeat') winner = match.teamBId._id;
-          break;
-        }
-        if (teamBBrawlIds.includes(tag)) {
-          if (battle.battle.result === 'victory') winner = match.teamBId._id;
-          if (battle.battle.result === 'defeat') winner = match.teamAId._id;
-          break;
-        }
-      }
-      if (!winner) continue; // ⚠️ solo sets jugados
-
-      // star player
-      let starPlayerId = null;
-      const spTag = battle.battle.starPlayer.tag;
-      const starUser = [...teamAMembers, ...teamBMembers].find(u => u.brawlId === spTag);
-      if (starUser) starPlayerId = starUser._id;
-
-      targetSet.winner = winner;
-      targetSet.starPlayerId = starPlayerId;
-
-      updated = true;
-    }
-
-    if (updated) {
-      await match.save();
-
-      // terminar match si todos los sets tienen ganador
-      const allSetsCompleted = match.sets.every(s => s.winner);
-      if (allSetsCompleted) {
-        await endMatch({ matchIndex: match.matchIndex, client });
+      if (!allPlayerIds.length) {
+        console.warn(`[monitorOnGoingMatches] ⚠️ Match ${match._id} sin jugadores con brawlId, se omite.`);
         continue;
       }
 
-      // actualizar embed solo si se jugó algún set
-      if (match.onGoingMessageId && match.channelId) {
-        try {
-          const channel = await client.channels.fetch(match.channelId);
-          if (channel?.isTextBased()) {
-            const message = await channel.messages.fetch(match.onGoingMessageId).catch(() => null);
-            if (message) {
-              const embed = await getOnGoingMatchEmbed({ match });
-              await message.edit({
-                components: [embed],
-                flags: MessageFlags.IsComponentsV2,
-                allowedMentions: { parse: [] }
-              });
-            }
-          }
-        } catch (err) {
-          console.error(`Error actualizando onGoingMessageId para match ${match._id}:`, err);
-        }
+      const battleLogResults = await Promise.allSettled(
+        allPlayerIds.map(brawlId =>
+          fetch(`https://api.brawlstars.com/v1/players/%23${encodeURIComponent(brawlId)}/battlelog`, {
+            headers: { Authorization: `Bearer ${BRAWL_STARS_API_KEY}` }
+          })
+            .then(r => (r.ok ? r.json() : null))
+            .catch(e => {
+              console.error(`[monitorOnGoingMatches] ❌ Error al obtener battlelog de ${brawlId}:`, e);
+              return null;
+            })
+        )
+      );
+
+      const fulfilled = battleLogResults.filter(r => r.status === 'fulfilled' && r.value);
+      console.log(`[monitorOnGoingMatches] Battlelogs obtenidos correctamente: ${fulfilled.length}/${allPlayerIds.length}`);
+
+      const battleLogs = fulfilled.flatMap(r => r.value.items || []);
+      if (!battleLogs.length) {
+        console.log(`[monitorOnGoingMatches] Sin partidas registradas en battlelogs recientes para match ${match._id}.`);
+        continue;
       }
+
+      console.log(`[monitorOnGoingMatches] Se analizarán ${battleLogs.length} partidas recientes.`);
+
+      let updated = false;
+
+      for (const battle of battleLogs) {
+        const battleTime = new Date(battle.battleTime);
+        console.log(`\n[monitorOnGoingMatches] Analizando battle: ${battle.event.mode} - ${battle.event.map} (${battle.battle.result}) @ ${battleTime.toLocaleString()}`);
+
+        if (!battle.battle?.starPlayer) {
+          console.log('[monitorOnGoingMatches] battle sin starPlayer, se omite.');
+          continue;
+        }
+
+        const battleTeams = (battle.battle.teams || []).flat();
+        const battleTags = battleTeams.map(p => cleanTag(p.tag));
+        console.log(`[monitorOnGoingMatches] Tags en esta partida: ${battleTags.join(', ')}`);
+
+        const teamACount = teamABrawlIds.filter(tag => battleTags.includes(tag)).length;
+        const teamBCount = teamBBrawlIds.filter(tag => battleTags.includes(tag)).length;
+        console.log(`[monitorOnGoingMatches] Coincidencias: teamA=${teamACount}, teamB=${teamBCount}`);
+
+        if (teamACount < 2 || teamBCount < 2) {
+          console.log('[monitorOnGoingMatches] ⚠️ No hay suficientes jugadores de ambos equipos, se omite.');
+          continue;
+        }
+
+        console.log('[monitorOnGoingMatches] Sets actuales del partido:');
+        for (const s of match.sets) {
+          console.log(`  - ${s.mode} | ${s.map} | Ganador: ${s.winner ? '✅' : '❌'}`);
+        }
+
+        const normalize = str => str?.toLowerCase().trim();
+        const possibleSets = match.sets.filter(s =>
+          normalize(s.map) === normalize(battle.event.map) &&
+          normalize(s.mode) === normalize(battle.event.mode) &&
+          !s.winner
+        );
+
+        console.log(`[monitorOnGoingMatches] Sets coincidentes: ${possibleSets.length}`);
+        if (!possibleSets.length) continue;
+
+        const targetSet = possibleSets[0];
+        let winner = null;
+
+        console.log('[monitorOnGoingMatches] Determinando ganador...');
+        for (const tag of battleTags) {
+          if (teamABrawlIds.includes(tag)) {
+            console.log(`[monitorOnGoingMatches] Tag ${tag} pertenece al equipo A (${match.teamAId.name}) con resultado ${battle.battle.result}`);
+            if (battle.battle.result === 'victory') winner = match.teamAId._id;
+            if (battle.battle.result === 'defeat') winner = match.teamBId._id;
+            break;
+          }
+          if (teamBBrawlIds.includes(tag)) {
+            console.log(`[monitorOnGoingMatches] Tag ${tag} pertenece al equipo B (${match.teamBId.name}) con resultado ${battle.battle.result}`);
+            if (battle.battle.result === 'victory') winner = match.teamBId._id;
+            if (battle.battle.result === 'defeat') winner = match.teamAId._id;
+            break;
+          }
+        }
+
+        if (!winner) {
+          console.log('[monitorOnGoingMatches] ❌ No se pudo determinar un ganador válido (probablemente draw o datos inconsistentes).');
+          continue;
+        }
+
+        const spTag = cleanTag(battle.battle.starPlayer.tag);
+        const starUser = [...teamAMembers, ...teamBMembers].find(u => cleanTag(u.brawlId) === spTag);
+        const starPlayerId = starUser ? starUser._id : null;
+
+        console.log(`[monitorOnGoingMatches] ✅ Set detectado para match ${match._id}`);
+        console.log(`  → Mapa: ${battle.event.map}`);
+        console.log(`  → Modo: ${battle.event.mode}`);
+        console.log(`  → Ganador: ${winner}`);
+        console.log(`  → StarPlayer: ${spTag} (${starUser ? 'encontrado' : 'no encontrado'})`);
+
+        targetSet.winner = winner;
+        targetSet.starPlayerId = starPlayerId;
+        updated = true;
+      }
+
+      if (updated) {
+        console.log(`[monitorOnGoingMatches] Guardando cambios del match ${match._id}...`);
+        await match.save()
+        match = await Match.findById(match._id)
+        .populate({
+          path: 'teamAId',
+          populate: { path: 'members.userId' }
+        })
+        .populate({
+          path: 'teamBId',
+          populate: { path: 'members.userId' }
+        })
+        .populate('seasonId divisionId starPlayerId')
+        .populate({
+          path: 'sets.winner',
+          model: 'Team'
+        })
+        .populate({
+          path: 'sets.starPlayerId',
+          model: 'User'
+        })
+
+        const allSetsCompleted = match.sets.every(s => s.winner);
+
+        if (match.onGoingMessageId && match.channelId) {
+          console.log(`[monitorOnGoingMatches] Actualizando mensaje en canal ${match.channelId}...`);
+          try {
+            const channel = await client.channels.fetch(match.channelId);
+            if (channel?.isTextBased()) {
+              const message = await channel.messages.fetch(match.onGoingMessageId).catch(() => null);
+              if (message) {
+                const embed = await getOnGoingMatchEmbed({ match });
+                await message.edit({
+                  components: [embed],
+                  flags: MessageFlags.IsComponentsV2,
+                  allowedMentions: { parse: [] }
+                });
+                if (allSetsCompleted) {
+                  console.log(`[monitorOnGoingMatches] 🎉 Todos los sets completados, finalizando match ${match._id}.`);
+                  await endMatch({ matchIndex: match.matchIndex, client });
+                  continue;
+                }
+                const setsPlayed = match.sets.filter(s => s.winner).length;
+                const totalSets = match.sets.length;
+                await message.reply({
+                  content: `${emojis.accept} Set ${setsPlayed}/${totalSets} registrado.\n${emojis.winner} ${match.sets[setsPlayed - 1].winner.equals(match.teamAId._id) ? match.teamAId.name : match.teamBId.name}\n${emojis.starPlayer}${match.sets[setsPlayed - 1].starPlayerId ? match.sets[setsPlayed - 1].starPlayerId.name : 'N/A'}`,
+                  allowedMentions: { parse: [] }
+                })
+                console.log(`[monitorOnGoingMatches] ✅ Mensaje de partido ${match._id} actualizado correctamente.`);
+              } else {
+                console.warn(`[monitorOnGoingMatches] ⚠️ No se encontró el mensaje del partido ${match._id}.`);
+              }
+            }
+          } catch (err) {
+            console.error(`[monitorOnGoingMatches] ❌ Error actualizando mensaje para match ${match._id}:`, err);
+          }
+        }
+      } else {
+        console.log(`[monitorOnGoingMatches] ⚠️ Ningún set jugado detectado para match ${match._id}.`);
+      }
+
+    } catch (err) {
+      console.error(`[monitorOnGoingMatches] ❌ Error general procesando match ${match._id}:`, err);
     }
   }
+
+  console.log('[monitorOnGoingMatches] Monitoreo completado.\n');
 }
 
 module.exports = {

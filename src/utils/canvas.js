@@ -157,13 +157,11 @@ async function generateMatchPreviewImageURL({ divisionDoc, roundIndex, teamADoc,
  * @param {Object} match Match poblado con teamAId y teamBId
  * @returns {Promise<string>} URL pública de la imagen subida
  */
-async function generateMatchResultsImageURL({ match }) {
-  // Rutas absolutas de los assets
+async function generateMatchResultsImageURL({ client, match }) {
   const background = path.resolve(__dirname, '../assets/matchResults.webp')
   const crownIcon = path.resolve(__dirname, '../assets/winner.webp')
   const mvpIcon = path.resolve(__dirname, '../assets/starPlayer.webp')
 
-  // Diseño según tu diseñador
   const design = {
     texto_jugadores: {
       azul: [
@@ -188,77 +186,108 @@ async function generateMatchResultsImageURL({ match }) {
   const teamA = match.teamAId
   const teamB = match.teamBId
 
-  // Dibujar nombres de jugadores
-  teamA.players.forEach((player, i) => {
-    texts.push({
-      text: player,
-      x: design.texto_jugadores.azul[i].x,
-      y: design.texto_jugadores.azul[i].y,
-      font: `${design.texto_jugadores.tamaño_fuente}px ${design.texto_jugadores.fuente}`,
-      color: design.texto_jugadores.color,
-      align: 'left',
-      baseline: 'top'
-    })
-  })
+  // Dibujar nombres y avatares de jugadores
+  for (let i = 0; i < teamA.members.length; i++) {
+    const member = teamA.members[i]
+    if (!member?.userId) continue
+    const user = await client.users.fetch(member.userId.discordId).catch(() => null)
+    if (!user) continue
 
-  teamB.players.forEach((player, i) => {
     texts.push({
-      text: player,
-      x: design.texto_jugadores.rojo[i].x,
-      y: design.texto_jugadores.rojo[i].y,
+      text: user.username,
+      x: design.texto_jugadores.azul[i]?.x || 130,
+      y: design.texto_jugadores.azul[i]?.y || 620,
       font: `${design.texto_jugadores.tamaño_fuente}px ${design.texto_jugadores.fuente}`,
       color: design.texto_jugadores.color,
       align: 'left',
       baseline: 'top'
     })
-  })
+
+    images.push({
+      src: user.displayAvatarURL({ extension: 'png', size: 128 }),
+      x: (design.texto_jugadores.azul[i]?.x || 130) - 60,
+      y: design.texto_jugadores.azul[i]?.y || 620,
+      width: 50,
+      height: 50
+    })
+  }
+
+  for (let i = 0; i < teamB.members.length; i++) {
+    const member = teamB.members[i]
+    if (!member?.userId) continue
+    const user = await client.users.fetch(member.userId.discordId).catch(() => null)
+    if (!user) continue
+
+    texts.push({
+      text: user.username,
+      x: design.texto_jugadores.rojo[i]?.x || 1070,
+      y: design.texto_jugadores.rojo[i]?.y || 620,
+      font: `${design.texto_jugadores.tamaño_fuente}px ${design.texto_jugadores.fuente}`,
+      color: design.texto_jugadores.color,
+      align: 'left',
+      baseline: 'top'
+    })
+
+    images.push({
+      src: user.displayAvatarURL({ extension: 'png', size: 128 }),
+      x: (design.texto_jugadores.rojo[i]?.x || 1070) - 60,
+      y: design.texto_jugadores.rojo[i]?.y || 620,
+      width: 50,
+      height: 50
+    })
+  }
 
   // Dibujar MVP
-  if (match.starPlayer) {
-    await match.populate('starPlayer') // Para tener el nombre
-    const mvpName = match.starPlayer.name
+  if (match.starPlayerId) {
+    await match.populate('starPlayerId')
+    const starMember = [...teamA.members, ...teamB.members].find(m =>
+      m.userId._id.equals(match.starPlayerId._id)
+    )
 
-    // Buscar en qué equipo está
-    let pos
-    let idx = teamA.players.indexOf(mvpName)
-    if (idx !== -1) pos = design.texto_jugadores.azul[idx]
-    else {
-      idx = teamB.players.indexOf(mvpName)
-      if (idx !== -1) pos = design.texto_jugadores.rojo[idx]
+    if (starMember) {
+      const user = await client.users.fetch(starMember.userId.discordId).catch(() => null)
+      if (user) {
+        let pos
+        const idxA = teamA.members.findIndex(m => m.userId._id.equals(starMember.userId._id))
+        const idxB = teamB.members.findIndex(m => m.userId._id.equals(starMember.userId._id))
+        if (idxA !== -1) pos = design.texto_jugadores.azul[idxA]
+        else if (idxB !== -1) pos = design.texto_jugadores.rojo[idxB]
+
+        if (pos) {
+          images.push({
+            src: mvpIcon,
+            x: pos.x - 60,
+            y: pos.y,
+            width: 50,
+            height: 50
+          })
+        } else {
+          console.warn('[generateMatchResultsImageURL] ⚠️ Posición del MVP no encontrada.')
+        }
+      }
     }
+  }
 
+  // Dibujar corona sobre el equipo ganador
+  let winnerSide = null
+  if (match.scoreA > match.scoreB) winnerSide = 'azul'
+  else if (match.scoreB > match.scoreA) winnerSide = 'rojo'
+
+  if (winnerSide) {
+    const pos = winnerSide === 'azul' ? design.texto_jugadores.azul[0] : design.texto_jugadores.rojo[0]
     if (pos) {
       images.push({
-        src: mvpIcon,
-        x: pos.x - 60, // al lado del nombre, ajustable
-        y: pos.y,
-        width: 50,
-        height: 50
+        src: crownIcon,
+        x: pos.x,
+        y: pos.y - 60,
+        width: 100,
+        height: 60
       })
     }
   }
 
-  // Dibujar corona sobre el equipo ganador (lado azul)
-  if (match.scoreA > match.scoreB || match.scoreB > match.scoreA) {
-    images.push({
-      src: crownIcon,
-      x: design.texto_jugadores.azul[0].x, // encima del primer jugador del equipo ganador
-      y: design.texto_jugadores.azul[0].y - 60,
-      width: 100,
-      height: 60
-    })
-  }
+  const resultsImageURL = await generateCustomImage({ background, texts, images, width: 1500, height: 800 })
 
-  // Generar imagen
-  const resultsImageURL = await generateCustomImage({
-    background,
-    texts,
-    images,
-    width: 1500,
-    height: 800
-  })
-
-  // Guardar URL en el match
   match.resultsImageURL = resultsImageURL
   await match.save()
 
