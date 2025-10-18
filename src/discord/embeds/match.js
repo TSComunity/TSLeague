@@ -70,7 +70,7 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
       ? [teamAId.name, scoreA, scoreB]
       : [teamBId.name, scoreB, scoreA]
 
-    infoText += `${emojis.ended} **${winnerFirst[0]}** ${winnerFirst[1]} - ${winnerFirst[2]}\n`
+    infoText += `${emojis.winner} **${winnerFirst[0]}** (${winnerFirst[1]} - ${winnerFirst[2]})\n`
     if (starPlayerId) infoText += `${emojis.starPlayer} <@${starPlayerId.discordId}>\n`
   } else if (status === 'cancelled') {
     infoText += `${emojis.canceled} Cancelado${reason ? `\n> ${reason}` : ''}`
@@ -102,8 +102,8 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
           else if (set.winner.equals(teamBId._id)) winnerText = `> ${emojis.winner} ${teamBId.name}\n`
 
           let starPlayerText = set.starPlayerId
-            ? `> ${emojis.starPlayer} <@${set.starPlayerId.discordId}>`
-            : `> ${emojis.starPlayer} *No definido*`
+            ? `> ${emojis.starPlayer} <@${set.starPlayerId.discordId}>\n`
+            : `> ${emojis.starPlayer} *No definido*\n`
           infoText += `${winnerText}${starPlayerText}`
         }
       }
@@ -112,13 +112,13 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
         // Igual que ongoing pero mostrando todo
         let winnerText = ""
         if (set.winner) {
-          if (set.winner.equals(teamAId._id)) winnerText = `${emojis.winner} ${teamAId.name}`
-          else if (set.winner.equals(teamBId._id)) winnerText = `${emojis.winner} ${teamBId.name}`
+          if (set.winner.equals(teamAId._id)) winnerText = `> ${emojis.winner} ${teamAId.name}`
+          else if (set.winner.equals(teamBId._id)) winnerText = `> ${emojis.winner} ${teamBId.name}`
         }
 
         let starPlayerText = set.starPlayerId
-          ? `\n${emojis.starPlayer} <@${set.starPlayerId.discordId}>`
-          : ""
+          ? `\n${emojis.starPlayer} <@${set.starPlayerId.discordId}>\n`
+          : `> ${emojis.starPlayer} *No definido*\n`
 
         infoText += `${modeEmoji} ${mapName}\n${winnerText}${starPlayerText}`
       }
