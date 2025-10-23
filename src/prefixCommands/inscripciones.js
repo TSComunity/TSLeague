@@ -1,16 +1,17 @@
 const {
-  ButtonBuilder,
-  ButtonStyle,
   ContainerBuilder,
   TextDisplayBuilder,
   SeparatorBuilder,
   ActionRowBuilder,
-  MessageFlags,
-  MediaGalleryBuilder,
-  MediaGalleryItemBuilder
-} = require('discord.js')
+  MessageFlags
+} = require('discord.js');
 
-const { getTeamCreateButton, getTeamShowButton, getTeamJoinButton, getTeamLookingFotButton } = require('../discord/buttons/team.js')
+const {
+  getTeamCreateButton,
+  getTeamShowButton,
+  getTeamJoinButton,
+  getTeamLookingFotButton
+} = require('../discord/buttons/team.js');
 
 module.exports = {
   name: 'inscribir',
@@ -18,91 +19,44 @@ module.exports = {
   args: false,
   run: async (message, client, args) => {
 
-const text1 = new TextDisplayBuilder().setContent(
-`### Registro de equipos
+    const separator = new SeparatorBuilder();
 
-Desde este panel puedes gestionar todo lo relacionado con los equipos de la liga:  
-crear uno nuevo, unirte a uno ya existente o ver tu equipo actual.
+    const text = new TextDisplayBuilder().setContent(
+`### Registro
 
-Antes de gestionar o unirse a un equipo, es necesario vincular tu cuenta de Brawl Stars.  
-Este paso nos permite acceder a tus estadísticas en tiempo real y ofrecer información precisa tanto a tu equipo como al resto de participantes de la liga.`
-)
+Para crear, unirse o gestionar equipos, o activar el estado de agente libre (Free Agent), es obligatorio estar verificado con la ID de su cuenta de Brawl Stars. Si no se está verificado, al pulsar cualquier botón de equipo el bot abrirá un formulario para introducir la ID de la cuenta (ejemplo: \`#2PGRGJUPR\`).
 
-const text2 = new TextDisplayBuilder().setContent(
-  `### Crear Equipo
+Desde este panel se pueden realizar las siguientes acciones:
+- **Crear Equipo**: 
+> Abre un formulario donde se puede introducir el nombre y la URL de un icono para crear un equipo.
+- **Unirse a Equipo**: 
+> Abre un formulario donde se puede introducir el código de invitación del equipo para unirse al mismo (disponible solo para líder y sub-líder).
+- **Mostrar Equipo**: 
+> Muestra la información del equipo. Si el usuario es líder o sub-líder, permite gestionar el equipo; si no, solo permite ver los datos públicos y salir del equipo.
+- **Buscar Equipo** (Agente Libre):
+> Activa o desactiva el estado de agente libre, lo que permite que los miembros de equipos identifiquen fácilmente a los jugadores que buscan equipo.`
+    );
 
-Pulsa el botón **"Crear equipo"** para iniciar el proceso. Se te pedirá:
-
-- Un nombre para el equipo  
-- Un enlace al icono (imagen que lo represente)
-
-Una vez creado, el equipo recibirá un **código de invitación único**, este sirve para invitar a nuevos miembros al equipo.  
-Este código solo será visible para el líder y los sublíderes.`
-)
-
-
-const text3 = new TextDisplayBuilder().setContent(
-  `### Ver Equipo
-
-Al pulsar **"Ver equipo"**, podrás consultar la información de tu equipo.  
-Dependiendo de tu rol, verás diferentes opciones:
-
-**Miembros del equipo:**  
-- Visualizar los integrantes y datos publicos del equipo
-- Salir del equipo
-
-**Líderes y sublíderes:**  
-- Cambiar el nombre 
-- Cambiar el icono  
-- Cambiar el color  
-- Gestionar miembros (asignar roles o expulsar)  
-- Regenerar el código de invitación
-
-El acceso a estas opciones está restringido según el rol para garantizar una gestión organizada.`
-)
-
-
-const text4 = new TextDisplayBuilder().setContent(
-  `### Unirse a un Equipo
-
-Para unirte a un equipo existente, necesitarás el **código de invitación del equipo**.  
-Este código lo proporcionan el líder o los sublíderes del mismo.  
-
-Introduce el código en el formulario y pasarás a formar parte del equipo al instante.`
-)
-
-    
-    const separator = new SeparatorBuilder()
-
-    const actionRow = new ActionRowBuilder().addComponents(
+    const actionRow1 = new ActionRowBuilder().addComponents(
       getTeamCreateButton(),
       getTeamJoinButton()
-    )
-    const row2 = new ActionRowBuilder().addComponents(
+    );
+
+    const actionRow2 = new ActionRowBuilder().addComponents(
       getTeamShowButton(),
       getTeamLookingFotButton()
-    )
-    const image = new MediaGalleryItemBuilder()
-      .setURL("https://media.discordapp.net/attachments/1366297762496249906/1374654925295845446/TS_LEAGUE.png?ex=682ed6aa&is=682d852a&hm=c15d97f6f7fd0f756ab034df54af062f821d0a4425b4695d793a7655220ebd92&=&format=webp&quality=lossless&width=1872&height=433")
-      .setDescription("tsleague")
-
-    const mediaGallery = new MediaGalleryBuilder()
-      .setId(1)
-      .addItems([image])
+    );
 
     const container = new ContainerBuilder()
-      .addMediaGalleryComponents([mediaGallery])
       .addSeparatorComponents(separator)
-      .addTextDisplayComponents(text1)
+      .addTextDisplayComponents(text)
       .addSeparatorComponents(separator)
-      .addTextDisplayComponents(text2, text3, text4)
-      .addSeparatorComponents(separator)
-      .setAccentColor(0x1bfc62)
-      .addActionRowComponents(actionRow, row2)
+      .setAccentColor(0x9B59B6) // color cambiado
+      .addActionRowComponents(actionRow1, actionRow2);
 
     await message.channel.send({
       components: [container],
       flags: MessageFlags.IsComponentsV2
-    })
+    });
   }
-}
+};
