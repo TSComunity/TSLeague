@@ -14,10 +14,13 @@ const {
 } = require('../discord/buttons/team.js');
 
 module.exports = {
-  name: 'inscribir',
+  name: 'ins',
   aliases: ['ins'],
   args: false,
   run: async (message, client, args) => {
+    if (message.author.id !== '838441772794511411') {
+      return message.reply('No tienes permisos para usar este comando.')
+    }
 
     const separator = new SeparatorBuilder();
 

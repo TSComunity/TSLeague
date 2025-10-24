@@ -2,9 +2,12 @@ const { EmbedBuilder, PermissionsBitField, ChannelType, ActionRowBuilder, Button
 const emojis = require('../configs/emojis.json')
 
 module.exports = {
-    name: "pipipi",
+    name: "infoMsg",
     args: false,
     run: async(message, client, args) => {
+      if (message.author.id !== '838441772794511411') {
+        return message.reply('No tienes permisos para usar este comando.')
+      }
       const embeds = [
     new EmbedBuilder()
         .setColor(16733525)
