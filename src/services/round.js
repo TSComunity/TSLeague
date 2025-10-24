@@ -7,8 +7,9 @@ const { sendAnnouncement } = require('../discord/send/general.js')
 const { getRoundAddedEmbed } = require('../discord/embeds/round.js')
 const { getDivisionEndedEmbed, getDivisionRoundAddedEmbed } = require('../discord/embeds/division.js')
 
-const { season, round, roles } = require('../configs/league.js')
-const { maxRounds } = season
+const { season: seasonConfig, round, roles, guild } = require('../configs/league.js')
+const { maxRounds } = seasonConfig
+const emojis = require('../configs/emojis.json')
 const { startDay, startHour } = round
 
 const addRound = async ({ client }) => {
@@ -158,14 +159,46 @@ const addRound = async ({ client }) => {
     }
   }
 
-  // Programar la función para la siguiente ronda
-  await addScheduledFunction({
-    functionName: 'addRound',
-    day: startDay,
-    hour: startHour
-  })
+  // Actualizar scheduled event asociado a la temporada (si existe)
+  // 🔄 Actualizar evento programado asociado a la temporada
+  try {
+    if (client && guild && guild.id && season?.scheduledEventId) {
+      const guildObj = await client.guilds.fetch(guild.id);
+      if (!guildObj) return;
 
-  return season
-}
+      const ev = await guildObj.scheduledEvents.fetch(season.scheduledEventId).catch(() => null);
+      if (!ev) return;
 
-module.exports = { addRound }
+      // Cálculos actualizados
+      const latestRoundIndex = Math.max(0, ...season.divisions.map(d => d.rounds?.length || 0));
+      const roundNumberPadded = String(latestRoundIndex).padStart(2, '0');
+
+
+      const eventName = `TS League — T${season.seasonIndex} · J${roundNumberPadded}`;
+        const description = [
+          `${emojis.season} Temporada ${season.name}`,
+          `${emojis.round} Jornada: ${roundNumberPadded}`,
+          `${emojis.match} Partidos: ${
+            season.divisions.reduce((acc, d) => acc + d.rounds.reduce((a, r) => a + r.matches.length, 0), 0)
+          }`
+        ].join('\n');
+
+      await ev.edit({
+        name: eventName,
+        description
+      });
+    }
+  } catch (err) {
+    console.error('Error actualizando scheduledEvent de la temporada:', err);
+  }
+
+   await addScheduledFunction({
+     functionName: 'addRound',
+     day: startDay,
+     hour: startHour
+   })
+
+   return season
+ }
+
+ module.exports = { addRound }

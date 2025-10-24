@@ -18,6 +18,8 @@ const { round, roles, division } = require('../configs/league.js')
 const { startDay, startHour } = round
 const { maxTeams } = division
 const emojis = require('../configs/emojis.json')
+const { GuildScheduledEventEntityType, GuildScheduledEventPrivacyLevel } = require('discord.js')
+const { guild } = require('../configs/league.js')
 
 const calculatePromotionRelegation = async ({ client, season, updateDb = true } = {}) => {
   if (!season || !Array.isArray(season.divisions)) {
@@ -339,6 +341,43 @@ if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta
       hour: startHour
   })
 
+  // Crear un scheduled event en Discord para la temporada con info útil
+  if (client && guild && guild.id) {
+    try {
+      const guildObj = await client.guilds.fetch(guild.id)
+      if (guildObj) {
+        const maxRounds = Math.max(0, ...season.divisions.map(d => d.rounds?.length || 0));
+        const roundNumberPadded = String(maxRounds).padStart(2, '0');
+
+        const eventName = `TS League — T${season.seasonIndex} · J${roundNumberPadded}`;
+        const description = [
+          `${emojis.season} Temporada ${season.name}`,
+          `${emojis.round} Jornada: ${roundNumberPadded}`,
+          `${emojis.match} Partidos: ${
+            season.divisions.reduce((acc, d) => acc + d.rounds.reduce((a, r) => a + r.matches.length, 0), 0)
+          }`
+        ].join('\n');
+
+        const ev = await guildObj.scheduledEvents.create({
+          name: eventName,
+          scheduledStartTime: season.startDate || new Date(),
+          privacyLevel: GuildScheduledEventPrivacyLevel.Public, // Public si quieres que cualquiera vea el evento
+          entityType: GuildScheduledEventEntityType.External,
+          entityMetadata: { location: 'TS League — Discord' },
+          description,
+          image: null
+        });
+
+        if (ev?.id) {
+          season.scheduledEventId = ev.id;
+          await season.save();
+        }
+      }
+    } catch (err) {
+      console.error('Error creando scheduledEvent para la temporada:', err)
+    }
+  }
+
   return season
 }
 
@@ -376,6 +415,23 @@ const endSeason = async ({ client }) => {
       winner: divisionData.winner
     })
     await sendAnnouncement({ client, components: [container], isComponentsV2: true })
+  }
+
+  // Eliminar scheduled event asociado (si existe)
+  if (client && season.scheduledEventId && guild && guild.id) {
+    try {
+      const guildObj = await client.guilds.fetch(guild.id)
+      if (guildObj) {
+        const ev = await guildObj.scheduledEvents.fetch(season.scheduledEventId).catch(() => null)
+        if (ev) {
+          await ev.delete()
+        }
+      }
+    } catch (err) {
+      console.error('Error eliminando scheduledEvent de la temporada:', err)
+    }
+    // Borrar el id del evento en la temporada
+    season.scheduledEventId = null
   }
 
   await season.save()

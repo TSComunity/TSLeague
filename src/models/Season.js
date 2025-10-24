@@ -7,6 +7,8 @@ const SeasonSchema = new Schema({
   endDate: { type: Date },
   status: { type: String, enum: ['active', 'ended'], default: 'active' },
 
+  scheduledEventId: { type: String },
+
   divisions: [
     {
       divisionId: { type: Types.ObjectId, ref: 'Division', required: true },
