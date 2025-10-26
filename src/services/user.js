@@ -1,3 +1,4 @@
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js')
 const Team = require('../models/Team.js')
 const User = require('../models/User.js')
 
@@ -236,10 +237,16 @@ async function syncFreeAgents({ client }) {
     }
 
     const embed = await getUserStatsEmbed({ client, user, data, isFreeAgent: true })
-
+    const contactButton = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setLabel('Contactar')
+        .setStyle(ButtonStyle.Link)
+        .setURL(`https://discord.com/channels/@me/${user.discordId}`)
+    )
+    
     // Si no existe su mensaje → crear
     if (!user.freeAgentMessageId) {
-      const msg = await channel.send({ embeds: [embed] })
+      const msg = await channel.send({ embeds: [embed], components: [contactButton] })
       user.freeAgentMessageId = msg.id
       await user.save()
     } else {
@@ -247,10 +254,10 @@ async function syncFreeAgents({ client }) {
       try {
         const msg = await channel.messages.fetch(user.freeAgentMessageId).catch(() => null)
         if (msg) {
-          await msg.edit({ embeds: [embed] })
+          await msg.edit({ embeds: [embed], components: [contactButton] })
         } else {
           // Si no existe el mensaje en Discord pero sí en BD → recrear
-          const newMsg = await channel.send({ embeds: [embed] })
+          const newMsg = await channel.send({ embeds: [embed], components: [contactButton] })
           user.freeAgentMessageId = newMsg.id
           await user.save()
         }
