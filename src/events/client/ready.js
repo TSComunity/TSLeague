@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const { MONGODB_URL } = require('../../configs/configs.js')
 const wait = require('node:timers/promises').setTimeout;
 var colors = require('colors');
+const emojis = require('../../configs/emojis.json');
 
 module.exports = {
     name: "clientReady",
@@ -28,9 +29,8 @@ module.exports = {
         });
 
         const activities = [
-            'Actividad que quieras',
-            'Actividad2',
-            // 'Otra actividad opcional',
+            `${emojis.league} #TSLeague`,
+            `${emojis.match} Gestionando Partidos`,
         ];
 
         setInterval(() => {

@@ -12,7 +12,7 @@ module.exports = {
       const brawlId = interaction.fields.getTextInputValue('userBrawlIdInput').trim()
       const discordId = interaction.user.id
 
-      const user = await verifyUser({ discordId, brawlId })
+      const user = await verifyUser({ discordId, brawlId, client: interaction.client })
 
       return interaction.reply({
         ephemeral: true,

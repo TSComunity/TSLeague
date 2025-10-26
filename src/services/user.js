@@ -1,6 +1,7 @@
 const Team = require('../models/Team.js')
 const User = require('../models/User.js')
 
+const { sendLog } = require('../discord/send/staff.js')
 const { getUserBrawlData } = require('../utils/user.js')
 const { getUserStatsEmbed } = require('../discord/embeds/user.js')
 const { roles, guild: configGuild, channels } = require('../configs/league.js')
@@ -18,7 +19,7 @@ const checkUserIsVerified = async ({ discordId }) => {
   return isVerified
 }
 
-const verifyUser = async ({ discordId, brawlId }) => {
+const verifyUser = async ({ discordId, brawlId, client }) => {
   if (!discordId || !brawlId)
     throw new Error('Faltan datos: discordId o brawlId')
 
@@ -40,6 +41,14 @@ const verifyUser = async ({ discordId, brawlId }) => {
     user.isVerified = true
     await user.save()
   }
+
+  await sendLog({
+    content: `El usuario se ha verificado con el tag **${formattedBrawlId}**.`,
+    client,
+    type: 'success',
+    userId: discordId,
+    eventType: 'team'
+  })
 
   return user
 }
