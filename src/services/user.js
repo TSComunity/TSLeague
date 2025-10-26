@@ -241,7 +241,7 @@ async function syncFreeAgents({ client }) {
       new ButtonBuilder()
         .setLabel('Contactar')
         .setStyle(ButtonStyle.Link)
-        .setURL(`https://discord.com/channels/@me/${user.discordId}`)
+        .setURL(`https://discord.com/users/${user.discordId}`)
     )
     
     // Si no existe su mensaje → crear
