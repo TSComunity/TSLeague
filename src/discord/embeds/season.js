@@ -3,22 +3,22 @@ const emojis = require('../../configs/emojis.json')
 const { getCurrentRoundNumber } = require('../../utils/round.js')
 
 const getSeasonStartedEmbed = ({ season }) => {
-  const { name, seasonIndex, divisions, startDate } = season
+const { name, seasonIndex, divisions, startDate } = season
 
-  // Contar total de equipos
-  const totalTeams = divisions.reduce((acc, d) => acc + d.teams.length, 0)
+// Contar total de equipos
+const totalTeams = divisions.reduce((acc, d) => acc + d.teams.length, 0)
 
-  // Construir descripción formal y por párrafos
-  const description = 
-`## Temporada ${name} — Edición ${seasonIndex} Comenzada\n\n` +
-`La temporada ha comenzado oficialmente, marcando el inicio de un nuevo ciclo competitivo. ` +
-`En esta edición participarán las siguientes divisiones:\n` +
-`${divisions.map(d => `> ${d.divisionId.emoji} ${d.divisionId.name}`).join('\n')}\n\n` +
-`Se han registrado un total de **${totalTeams} equipos**.\n\n`
+// Construir descripción formal y por párrafos
+const description = 
+`## Temporada ${name} — Edición ${seasonIndex} Comenzada\n` +
+`La temporada ha comenzado con **${totalTeams}** equipos registrados.\n\n` +
+`### Divisiones participantes:\n` +
+`${divisions.map(d => `> ${d.divisionId.emoji} ${d.divisionId.name}`).join('\n')}`
 
-  return new EmbedBuilder()
+return new EmbedBuilder()
     .setColor('Green')
     .setDescription(description)
+    .setThumbnail('attachment://tsLeague.webp');
 }
 
 
@@ -43,6 +43,7 @@ const getSeasonEndedEmbed = ({ season }) => {
 
     return new EmbedBuilder()
         .setColor('Blue')
+        .setThumbnail('attachment://tsLeague.webp')
         .setDescription(`## ${emojis.season} Temporada ${name} — Edición ${seasonIndex} Finalizada`)
         .addFields(
             { name: `Jornadas`, value: `${emojis.round} \`${totalRounds}\``, inline: true },

@@ -91,14 +91,14 @@ const getTeamStatsEmbed = ({ team }) => {
     .addFields(
 
       { name: "Partidos Jugados", value: `${emojis.match} \`${matchesPlayed}\``, inline: true },
-      { name: "Partidos Ganados", value: `\`${team.stats.matchesWon}\` \`(${matchesWinrate}%)\``, inline: true },
-      { name: "Partidos Perdidos", value: `\`${team.stats.matchesLost}\` \`(${matchesLoserate}%)\``, inline: true },
+      { name: "Partidos Ganados", value: `${emojis.match} \`${team.stats.matchesWon}\` \`(${matchesWinrate}%)\``, inline: true },
+      { name: "Partidos Perdidos", value: `${emojis.match} \`${team.stats.matchesLost}\` \`(${matchesLoserate}%)\``, inline: true },
 
       { name: "Sets Jugados", value: `${emojis.match} \`${setsPlayed}\``, inline: true },
-      { name: "Sets Ganados", value: `\`${team.stats.setsWon}\` \`(${setsWinrate}%)\``, inline: true },
-      { name: "Sets Perdidos", value: `\`${team.stats.setsLost}\` \`(${setsLoserate}%)\``, inline: true },
+      { name: "Sets Ganados", value: `${emojis.match} \`${team.stats.setsWon}\` \`(${setsWinrate}%)\``, inline: true },
+      { name: "Sets Perdidos", value: `${emojis.match} \`${team.stats.setsLost}\` \`(${setsLoserate}%)\``, inline: true },
 
-      { name: 'Ligas Ganadas', value: `${emojis.season} \`${team.stats.leaguesWon}\``, inline: true}
+      { name: 'Ligas Ganadas', value: `${emojis.league} \`${team.stats.leaguesWon}\``, inline: true}
     )
 }
 

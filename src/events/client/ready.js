@@ -29,8 +29,8 @@ module.exports = {
         });
 
         const activities = [
-            `${emojis.league} #TSLeague`,
-            `${emojis.match} Gestionando Partidos`,
+            `🚀 #TSLeague`,
+            `📌 Gestionando Partidos`,
         ];
 
         setInterval(() => {

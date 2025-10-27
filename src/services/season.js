@@ -1,3 +1,4 @@
+const fs = require('node:fs')
 const Season = require('../models/Season.js')
 const Division = require('../models/Division.js')
 const Team = require('../models/Team.js')
@@ -332,7 +333,8 @@ if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta
   await sendAnnouncement({
     client,
     content: `<@&${roles.ping.id}>`,
-    embeds: [getSeasonStartedEmbed({ season })]
+    embeds: [getSeasonStartedEmbed({ season })],
+    files: ['./assets/tsLeague.webp']
   })
 
   await addScheduledFunction({
@@ -348,6 +350,10 @@ if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta
       if (guildObj) {
         const maxRounds = Math.max(0, ...season.divisions.map(d => d.rounds?.length || 0));
         const roundNumberPadded = String(maxRounds).padStart(2, '0');
+
+        const imagePath = './assets/tsLeagueBanner.webp';
+        const imageBuffer = fs.readFileSync(imagePath);
+        const imageBase64 = `data:image/webp;base64,${imageBuffer.toString('base64')}`;
 
         const eventName = `TS League — T${season.seasonIndex} · J${roundNumberPadded}`;
         const description = [
@@ -365,7 +371,7 @@ if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta
           entityType: GuildScheduledEventEntityType.External,
           entityMetadata: { location: 'TS League — Discord' },
           description,
-          image: null
+          image: imageBase64
         });
 
         if (ev?.id) {
@@ -401,7 +407,8 @@ const endSeason = async ({ client }) => {
   await sendAnnouncement({
     client,
     content: `<@&${roles.ping.id}>`,
-    embeds: [getSeasonEndedEmbed({ season })]
+    embeds: [getSeasonEndedEmbed({ season })],
+    files: ['./assets/tsLeague.webp']
   })
 
   // Envía embed por división
