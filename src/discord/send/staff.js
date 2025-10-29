@@ -1,18 +1,19 @@
 const { EmbedBuilder } = require('discord.js');
 const { channels, guild } = require('../../configs/league.js');
 const { logs } = channels;
+const emojis = require('../../configs/emojis.json')
 
 const EMOJI_MAP = {
-  season: { emoji: '📅', footer: 'Evento de Temporada' },
-  division: { emoji: '🏆', footer: 'Evento de División' },
-  team: { emoji: '👥', footer: 'Evento de Equipo' },
-  points: { emoji: '⭐', footer: 'Evento de Puntos' },
-  round: { emoji: '🔄', footer: 'Evento de Ronda' },
-  join: { emoji: '➕', footer: 'Unión a Equipo' },
-  leave: { emoji: '➖', footer: 'Salida de Equipo' },
-  promote: { emoji: '⬆️', footer: 'Ascenso de Miembro' },
-  error: { emoji: '❌', footer: 'Error del Sistema' },
-  default: { emoji: 'ℹ️', footer: 'Log del Sistema' }
+  season: { emoji: emojis.season, footer: 'Evento de Temporada' },
+  division: { emoji: emojis.division, footer: 'Evento de División' },
+  team: { emoji: emojis.team, footer: 'Evento de Equipo' },
+  points: { emoji: emojis.points, footer: 'Evento de Puntos' },
+  round: { emoji: emojis.round, footer: 'Evento de Ronda' },
+  join: { emoji: emojis.team, footer: 'Unión a Equipo' },
+  leave: { emoji: emojis.team, footer: 'Salida de Equipo' },
+  promote: { emoji: emojis.member, footer: 'Ascenso de Miembro' },
+  error: { emoji: emojis.error, footer: 'Error del Sistema' },
+  default: { emoji: emojis.league, footer: 'Log del Sistema' }
 };
 
 const COLOR_MAP = {
