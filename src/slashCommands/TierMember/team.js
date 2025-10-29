@@ -11,6 +11,9 @@ const {
     removePointsFromTeam
 } = require('../../services/team.js')
 
+const { findTeam } = require('../../utils/team.js')
+
+const { getTeamInfoEmbed } = require('../../discord/embeds/team.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../discord/embeds/management.js')
 const { sendLog } = require('../../discord/send/staff.js')
 
@@ -150,6 +153,16 @@ module.exports = {
               { name: '4', value: '4' },
               { name: '5', value: '5' }
             ))
+    )
+
+    .addSubcommand(sub =>
+      sub
+        .setName('ver')
+        .setDescription('Ver los datos de un equipo')
+        .addStringOption(opt =>
+          opt.setName('nombre-equipo').setDescription('Nombre del equipo').setRequired(true))
+        .addBooleanOption(opt =>
+          opt.setName('mostrar-codigo').setDescription('Mostrar codigo del equipo (confidencial)').setRequired(false))
     ),
 
   async execute(interaction, client) {
@@ -303,6 +316,12 @@ module.exports = {
           userId: interaction.user.id,
           eventType: 'points'
         })
+      } else if (sub = 'ver') {
+        const teamName = interaction.options.getString('nombre-equipo')
+        const perms = interaction.options.getBoolean('mostrar-codigo') || false
+        const team = await findTeam({ teamName })
+        const embed = getTeamInfoEmbed({ team, perms })
+        await interaction.reply({ embeds: [embed] })
       }
 
     } catch (error) {

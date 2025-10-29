@@ -4,6 +4,7 @@ const { updateTeam, checkTeamUserHasPerms } = require('../../../services/team.js
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
+const { sendLog } = require('../../../discord/send/staff.js')
 
 const {
     getTeamLeftButton,
@@ -27,6 +28,14 @@ module.exports = {
       const team = await updateTeam({ discordId, color: selectedColor })
 
       const color = colors.find(c => c.value === selectedColor)
+
+      await sendLog({
+        content: `Cambió el color del equipo **${team.name}** a \`${color.emoji} ${color.label}\`.`,
+        client: interaction.client,
+        type: 'success',
+        userId: discordId,
+        eventType: 'team'
+      })
       
       const perms = await checkTeamUserHasPerms({ discordId })
 

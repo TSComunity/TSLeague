@@ -45,9 +45,9 @@ module.exports = {
       const team = await updateTeam({ discordId, iconURL })
 
       await sendLog({
-        content: `El usuario <@${discordId}> ha cambiado el icono del equipo **${team.name}** a: ${iconURL}`,
+        content: `Cambió el icono del equipo **${team.name}**.`,
         client: interaction.client,
-        type: 'info',
+        type: 'success',
         userId: discordId,
         eventType: 'team'
       })

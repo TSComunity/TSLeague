@@ -2,6 +2,7 @@ const { ActionRowBuilder } = require('discord.js');
 const { removeMemberFromTeam, checkTeamUserHasPerms } = require('../../../services/team.js');
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js');
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js');
+const { sendLog } = require('../../../discord/send/staff.js');
 const {
   getTeamLeftButton,
   getTeamChangeNameButton,
@@ -39,6 +40,14 @@ module.exports = {
 
       // Ejecutar la expulsión
       const team = await removeMemberFromTeam({ client, discordId });
+
+      await sendLog({
+        content: `Expulsó a <@${discordId}> del equipo **${team.name}**.`,
+        client: interaction.client,
+        type: 'warning',
+        userId: interaction.user.id,
+        eventType: 'leave'
+      });
 
       // Editar la respuesta inicial con el embed actualizado
       await interaction.editReply({

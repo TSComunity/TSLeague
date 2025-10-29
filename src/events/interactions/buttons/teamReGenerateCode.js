@@ -2,6 +2,7 @@ const { updateTeamCode, checkTeamUserHasPerms } = require('../../../services/tea
 
 const { getTeamInfoEmbed, getAddMemberInfoEmbed } = require('../../../discord/embeds/team.js')
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
+const { sendLog } = require('../../../discord/send/staff.js')
 
 module.exports = {
   customId: 'teamReGenerateCode',
@@ -20,6 +21,14 @@ module.exports = {
         }
 
       const team = await updateTeamCode({ discordId: interaction.user.id })
+
+      await sendLog({
+        content: `Regeneró el código de invitación del equipo.`,
+        client: interaction.client,
+        type: 'info',
+        userId: discordId,
+        eventType: 'team'
+      })
 
       if (currentEmbed.fields.length === 0) {
         await interaction.update({

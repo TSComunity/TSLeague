@@ -4,6 +4,7 @@ const { changeMemberRole, checkTeamUserHasPerms } = require('../../../services/t
 
 const { getErrorEmbed, getSuccesEmbed } = require('../../../discord/embeds/management.js')
 const { getTeamInfoEmbed } = require('../../../discord/embeds/team.js')
+const { sendLog } = require('../../../discord/send/staff.js')
 
 const emojis = require('../../../configs/emojis.json')
 
@@ -51,6 +52,14 @@ module.exports = {
       
 
       const team = await changeMemberRole({ discordId, newRole, client: interaction.client })
+
+      await sendLog({
+        content: `Cambió el rol de <@${discordId}> a ${rol}.`,
+        client: interaction.client,
+        type: 'success',
+        userId: interaction.user.id,
+        eventType: 'promote'
+      })
 
       await interaction.update({
         embeds: [getTeamInfoEmbed({ team })],
