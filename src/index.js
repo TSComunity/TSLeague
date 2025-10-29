@@ -9,15 +9,27 @@ const { loadPrefix } = require('./handlers/handlerComandosPrefix.js')
 const { TOKEN } = require('./configs/configs.js')
 
 const wait = require('node:timers/promises').setTimeout
+const { sendLog } = require('./discord/send/staff.js');
 
 process.on('unhandledRejection', async (reason, promise) => {
-console.log('Unhandled Rejection error at:', promise, 'reason', reason)
+  console.error('Unhandled Rejection:', reason)
+  if (client?.isReady()) {
+    await sendLog({ client, error: reason })
+  }
 })
-process.on('uncaughtException', (err) => {
-  console.log('Uncaught Exception', err)
+
+process.on('uncaughtException', async (err) => {
+  console.error('Uncaught Exception:', err)
+  if (client?.isReady()) {
+    await sendLog({ client, error: err })
+  }
 })
-process.on('uncaughtExceptionMonitor', (err, origin) => {
-  console.log('Uncaught Exception Monitor', err, origin)
+
+process.on('uncaughtExceptionMonitor', async (err, origin) => {
+  console.error('Uncaught Exception Monitor:', err, origin)
+  if (client?.isReady()) {
+    await sendLog({ client, error: err })
+  }
 })
 
 const client = new Client({
@@ -65,9 +77,14 @@ const { updateTeamsChannels } = require('./services/team.js')
 function runInterval(tasks, intervalMs) {
   const run = async () => {
     try {
-      await Promise.allSettled(tasks.map(fn => fn()))
+      const results = await Promise.allSettled(tasks.map(fn => fn()));
+      for (const result of results) {
+        if (result.status === 'rejected') {
+          await sendLog({ client, error: result.reason })
+        }
+      }
     } catch (err) {
-      console.error(err)
+      await sendLog({ client, error: err })
     } finally {
       setTimeout(run, intervalMs)
     }

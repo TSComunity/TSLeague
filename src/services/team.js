@@ -134,11 +134,16 @@ const updateTeamsChannels = async ({ client }) => {
     }
     if (!eligible) continue
 
-    const categoryId = team.divisionId
-      ? divisionMap[team.divisionId.toString()]
-      : config.categories.teams.withOutDivision.id
+    if (team.channelId) {
+      const ch = await guild.channels.fetch(team.channelId).catch(() => null)
+      if (ch) await applyTeamPermissions(guild, ch, team)
+    } else {
+      const categoryId = team.divisionId
+        ? divisionMap[team.divisionId.toString()]
+        : config.categories.teams.withOutDivision.id
 
-    await createTeamChannel({ client, team, categoryId })
+      await createTeamChannel({ client, team, categoryId })
+    }
   }
 }
 
