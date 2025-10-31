@@ -103,29 +103,3 @@ module.exports = {
     await message.channel.send({ embeds: embeds2, components: [buttons] });
   },
 };
-icamente el rol <@&1393563891044450434> para avisos importantes de la liga. Este rol es gestionado directamente por el bot, por lo que aunque se intente quitar manualmente, el bot lo volverá a asignar, garantizando que todos los participantes reciban siempre las comunicaciones relevantes.\n\nLos usuarios que no participan en la liga también pueden recibir este rol en <id:customize> si desean mantenerse informados sobre novedades importantes."),
-    new EmbedBuilder()
-        .setColor(3066993)
-        .setDescription("### Soporte y Ayuda\n\nLos miembros de un equipo pueden utilizar el canal del equipo para cualquier duda, incidencia o consulta. Este canal es exclusivo y directo, lo que permite al staff gestionar todas las situaciones de manera organizada y mantener la información centralizada.\n\nLos usuarios que aún no tienen equipo pueden emplear el canal <#1163179831203221644> para consultas generales. Aunque esta vía no es tan exclusiva, garantiza que todos los usuarios puedan comunicarse con el staff y recibir soporte de manera eficiente.\n\nEl staff dispone de comandos que permiten utilizar las funcionalidades del bot de forma manual, asegurando que cualquier incidencia se pueda resolver directamente dentro de los canales correspondientes.\n\nLos usuarios pueden reportar problemas o errores directamente por los mismos canales de comunicación. Para cuestiones más técnicas o errores de código del bot, también pueden hacerlo [aquí](https://github.com/TSComunity/TSLeague/issues), como una alternativa adicional para situaciones que no se puedan gestionar únicamente dentro de los canales."),
-];
-const buttons = new ActionRowBuilder()
-  .addComponents(
-    new ButtonBuilder()
-      .setLabel('Registrarse')
-      .setStyle(ButtonStyle.Link)
-      .setURL('https://discord.com/channels/1093864130030612521/1393526853288853515'), // Cambia al enlace real
-    new ButtonBuilder()
-      .setLabel('Repo')
-      .setStyle(ButtonStyle.Link)
-      .setURL('https://github.com/TSComunity/TSLeague'),
-    // Opcional
-    // new ButtonBuilder()
-    //   .setLabel('Errores')
-    //   .setStyle(ButtonStyle.Link)
-    //   .setURL('https://github.com/TSComunity/TSLeague/issues')
-  );
-
-        await message.channel.send({ embeds: embeds})
-        await message.channel.send({ embeds: embeds2, components: [buttons]})
-    }
- };
