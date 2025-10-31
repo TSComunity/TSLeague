@@ -316,7 +316,7 @@ module.exports = {
           userId: interaction.user.id,
           eventType: 'points'
         })
-      } else if (sub = 'ver') {
+      } else if (sub === 'ver') {
         const teamName = interaction.options.getString('nombre-equipo')
         const perms = interaction.options.getBoolean('mostrar-codigo') || false
         const team = await findTeam({ teamName })
