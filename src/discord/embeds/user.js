@@ -54,8 +54,8 @@ async function getUserStatsEmbed({ client, user, data, isFreeAgent = false }) {
     { name: "Sets Ganados", value: safe(`${emojis.match} \`${setsWon}\` \`(${setsWinrate}%)\``), inline: true },
     { name: "Sets Perdidos", value: safe(`${emojis.match} \`${setsLost}\` \`(${setsLoserate}%)\``), inline: true },
     { name: "Ligas Ganadas", value: safe(`${emojis.league} \`${leaguesWon}\``), inline: true },
-    { name: "\u200B", value: "\u200B", inline: true },
-    { name: "\u200B", value: "\u200B", inline: true }
+    // { name: "\u200B", value: "\u200B", inline: true },
+    // { name: "\u200B", value: "\u200B", inline: true }
   )
 
   // --- Campos: Brawl ---
@@ -65,7 +65,7 @@ async function getUserStatsEmbed({ client, user, data, isFreeAgent = false }) {
     { name: "Victorias 3vs3", value: safe(`${emojis.wins3vs3} \`${data?.["3vs3Victories"] || 0}\``), inline: true },
     { name: "Nivel de XP", value: safe(`${emojis.XPLevel} \`${data?.expLevel || "No disponible"}\``), inline: true },
     { name: "Club", value: safe(`${emojis.club} ${data?.club?.name || "Sin club"}`), inline: true },
-    { name: "\u200B", value: "\u200B", inline: true }
+    // { name: "\u200B", value: "\u200B", inline: true }
   )
 
   if (isFreeAgent) embed.setTimestamp()
