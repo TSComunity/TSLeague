@@ -416,6 +416,14 @@ const addMemberToTeam = async ({ client, teamName = null, teamCode = null, disco
     await createTeamChannel({ client, team, categoryId });
   }
 
+  if (team.channelId) {
+    const guild = await client.guilds.fetch(config.guild.id);
+    const channel = await guild.channels.fetch(team.channelId).catch(() => null);
+    if (channel) {
+      await applyTeamPermissions(guild, channel, team);
+    }
+  }
+  
   const matches = await Match.find({
     $or: [{ teamAId: team._id }, { teamBId: team._id }],
     channelId: { $exists: true, $ne: null }
@@ -501,6 +509,15 @@ const removeMemberFromTeam = async ({ teamName = null, teamCode = null, discordI
   }
 
   await team.save()
+
+  if (team.channelId && !team.isDeleted) {
+    const guild = await client.guilds.fetch(config.guild.id)
+    const channel = await guild.channels.fetch(team.channelId).catch(() => null)
+    if (channel) {
+      await applyTeamPermissions(guild, channel, team)
+    }
+  }
+  
   const matches = await Match.find({
     $or: [{ teamAId: team._id }, { teamBId: team._id }],
     channelId: { $exists: true, $ne: null }
