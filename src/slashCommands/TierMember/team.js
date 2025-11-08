@@ -247,7 +247,7 @@ module.exports = {
         const discordId = user.id
         const team = await removeMemberFromTeam({ client, discordId })
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message:`Miembro <@${discordId}> expulsado de **${teamName}**.` })]
+          embeds: [getSuccesEmbed({ message:`Miembro <@${discordId}> expulsado de **${team.name}**.` })]
         })
         await sendLog({
           content: `El usuario <@${discordId}> ha sido expulsado del equipo **${team.name}**.`,
@@ -270,7 +270,7 @@ module.exports = {
           throw new Error('No se ha proporcionado un rol valido.')
         }
         await interaction.reply({
-          embeds: [getSuccesEmbed({ message:`Rol del usuario <@${discordId}> actualizado en el equipo **${teamName}** a \`${role}\`.` })]
+          embeds: [getSuccesEmbed({ message:`Rol del usuario <@${discordId}> actualizado en el equipo **${team.name}** a \`${role}\`.` })]
         })
         await sendLog({
           content: `El usuario <@${discordId}> tiene ahora el rol de ${role} en el equipo **${team.name}**.`,
