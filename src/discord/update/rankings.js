@@ -152,7 +152,7 @@ const updateRankingsEmbed = async ({ client }) => {
   }
 }
 
-function buildDivisionContainers({ division, teams, chunkSize = 9 }) {
+function buildDivisionContainers({ division, teams, chunkSize = 6 }) {
   const teamChunks = chunkArray(teams, chunkSize)
   const containers = []
   const safeColor = division && division.color ? division.color.replace('#', '') : '2f3136'
@@ -198,10 +198,15 @@ function buildDivisionContainers({ division, teams, chunkSize = 9 }) {
         return emojis.team
       })()
 
+      const matchesPlayed = team.stats.matchesWon + team.stats.matchesLost
+      const matchesWinrate = matchesPlayed > 0
+      ? ((team.stats.matchesWon / matchesPlayed) * 100).toFixed(1)
+      : 0
+
       const sectionComponent = new SectionBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
-            `### ${resultEmoji} ${rank}. ${name}\n${emojis.points} Puntos: ${points}`
+            `### ${resultEmoji} ${rank}. ${name}\n${emojis.points} Puntos: ${points}\n${emojis.match} Victorias: ${team.stats.matchesWon} \`(${matchesWinrate}%)\``
           )
         )
         .setThumbnailAccessory(thumbnailComponent)
