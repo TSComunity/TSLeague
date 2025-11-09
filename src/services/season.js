@@ -334,7 +334,7 @@ if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta
     client,
     content: `<@&${roles.ping.id}>`,
     embeds: [getSeasonStartedEmbed({ season })],
-    files: ['./assets/tsLeague.webp']
+    files: ['./src/assets/tsLeague.webp']
   })
 
   await addScheduledFunction({
@@ -408,7 +408,7 @@ const endSeason = async ({ client }) => {
     client,
     content: `<@&${roles.ping.id}>`,
     embeds: [getSeasonEndedEmbed({ season })],
-    files: ['./assets/tsLeague.webp']
+    files: ['./src/assets/tsLeague.webp']
   })
 
   // Envía embed por división
