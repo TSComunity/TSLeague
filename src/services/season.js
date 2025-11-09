@@ -330,19 +330,6 @@ if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta
   await season.save()
   await season.populate('divisions.divisionId')
 
-  await sendAnnouncement({
-    client,
-    content: `<@&${roles.ping.id}>`,
-    embeds: [getSeasonStartedEmbed({ season })],
-    files: ['./src/assets/tsLeague.webp']
-  })
-
-  await addScheduledFunction({
-      functionName: 'addRound',
-      day: startDay,
-      hour: startHour
-  })
-
   // Crear un scheduled event en Discord para la temporada con info útil
   if (client && guild && guild.id) {
     try {
@@ -351,7 +338,7 @@ if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta
         const maxRounds = Math.max(0, ...season.divisions.map(d => d.rounds?.length || 0));
         const roundNumberPadded = String(maxRounds).padStart(2, '0');
 
-        const imagePath = './assets/tsLeagueBanner.webp';
+        const imagePath = '../assets/tsLeagueBanner.webp';
         const imageBuffer = fs.readFileSync(imagePath);
         const imageBase64 = `data:image/webp;base64,${imageBuffer.toString('base64')}`;
 
@@ -381,8 +368,22 @@ if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta
       }
     } catch (err) {
       console.error('Error creando scheduledEvent para la temporada:', err)
+      return
     }
   }
+
+  await sendAnnouncement({
+    client,
+    content: `<@&${roles.ping.id}>`,
+    embeds: [getSeasonStartedEmbed({ season })],
+    files: ['./src/assets/tsLeague.webp']
+  })
+
+  await addScheduledFunction({
+      functionName: 'addRound',
+      day: startDay,
+      hour: startHour
+  })
 
   return season
 }
