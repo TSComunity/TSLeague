@@ -1,4 +1,5 @@
 const fs = require('node:fs')
+const path = require('node:path')
 const Season = require('../models/Season.js')
 const Division = require('../models/Division.js')
 const Team = require('../models/Team.js')
@@ -338,7 +339,7 @@ if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta
         const maxRounds = Math.max(0, ...season.divisions.map(d => d.rounds?.length || 0));
         const roundNumberPadded = String(maxRounds).padStart(2, '0');
 
-        const imagePath = '../assets/tsLeagueBanner.webp';
+        const imagePath = path.join(__dirname, '../assets/tsLeagueBanner.webp');
         const imageBuffer = fs.readFileSync(imagePath);
         const imageBase64 = `data:image/webp;base64,${imageBuffer.toString('base64')}`;
 
