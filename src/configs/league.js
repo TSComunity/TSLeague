@@ -45,6 +45,9 @@ module.exports = {
     "register": {
       "id": '1393526853288853515'
     },
+    "stage": {
+      "id": '1437501083164475458'
+    },
     "permissions": {
       "member": [
         "ViewChannel",

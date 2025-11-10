@@ -354,10 +354,10 @@ if (existsIndex) throw new Error(`El seasonIndex ${nextIndex} ya existe. Intenta
 
         const ev = await guildObj.scheduledEvents.create({
           name: eventName,
-          scheduledStartTime: season.startDate || new Date(),
+          scheduledStartTime: new Date(Date.now() + 5 * 1000),
           privacyLevel: GuildScheduledEventPrivacyLevel.GuildOnly, // Public si quieres que cualquiera vea el evento
-          entityType: GuildScheduledEventEntityType.External,
-          entityMetadata: { location: 'TS League — Discord' },
+          entityType: GuildScheduledEventEntityType.StageInstance,
+          channel: configs.channels.stage.id,
           description,
           image: imageBase64
         });
