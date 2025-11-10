@@ -97,7 +97,7 @@ const updateRankingsEmbed = async ({ client }) => {
         }
       })
 
-    const containers = await buildDivisionContainers({ division: division.divisionId, teams })
+    const containers = await buildDivisionContainers({ division: division.divisionId, season, teams })
     containersByDivision.push(containers)
   }
 
@@ -154,7 +154,7 @@ const updateRankingsEmbed = async ({ client }) => {
   }
 }
 
-async function buildDivisionContainers({ division, teams, chunkSize = 6 }) {
+async function buildDivisionContainers({ division, teams, season, chunkSize = 6 }) {
   const teamChunks = chunkArray(teams, chunkSize)
   const containers = []
   const safeColor = division && division.color ? division.color.replace('#', '') : '2f3136'

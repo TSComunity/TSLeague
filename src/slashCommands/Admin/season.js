@@ -6,7 +6,8 @@ const Season = require('../../models/Season.js');
 const fs = require('fs');
 const path = require('path');
 const { GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType } = require('discord.js');
-const { emojis, configs } = require('../../config.js'); // ajusta a tus configs
+const emojis = require('../../configs/emojis.json');
+const configs = require('../../configs/league.js')
 
 module.exports = {
   data: new SlashCommandBuilder()
