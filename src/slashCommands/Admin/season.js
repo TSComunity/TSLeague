@@ -166,7 +166,7 @@ module.exports = {
         }
 
         await interaction.reply({ embeds: [getSuccesEmbed({ message: `Scheduled Event creado: **${eventName}**` })] });
-      } else if (subcommand === 'agreglar-sets') {
+      } else if (subcomand === 'agreglar-sets') {
         const season = await Season.findOne({ status: 'active' });
         if (!season) return interaction.reply({ embeds: [getErrorEmbed({ error: 'No hay temporada activa.' })] });
 
