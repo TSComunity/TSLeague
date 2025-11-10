@@ -28,7 +28,7 @@ const MatchSchema = new Schema({
   sets: [
     { 
       map: { type: String, required: true },
-      mode: { type: String, reqQuired: true },
+      mode: { type: String, required: true },
       winner: { type: Types.ObjectId, ref: "Team" },
       starPlayerId: { type: Types.ObjectId, ref: 'User' }
     }

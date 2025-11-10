@@ -30,6 +30,12 @@ const SeasonSchema = new Schema({
         {
           roundIndex: { type: Number, required: true }, // ej: 1 = primer finde
 
+          sets: [
+            {
+              map: { type: String },
+              mode: { type: String },
+            }
+          ],
           matches: [
             {
               matchId: { type: Types.ObjectId, ref: 'Match' }

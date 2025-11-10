@@ -44,6 +44,11 @@ module.exports = {
       sub
         .setName('crear-evento')
         .setDescription('Crea o sobreescribe el scheduled event de la temporada actual')
+    )
+    .addSubcommand(sub =>
+      sub
+        .setName('agreglar-sets')
+        .setDescription('Agrega sets aleatorios a la última ronda de cada división que no los tenga (uso de emergencia)')
     ),
 
   async execute(interaction, client) {
@@ -161,6 +166,36 @@ module.exports = {
         }
 
         await interaction.reply({ embeds: [getSuccesEmbed({ message: `Scheduled Event creado: **${eventName}**` })] });
+      } else if (subcommand === 'agreglar-sets') {
+        const season = await Season.findOne({ status: 'active' });
+        if (!season) return interaction.reply({ embeds: [getErrorEmbed({ error: 'No hay temporada activa.' })] });
+
+        let divisionsUpdated = 0;
+        for (const division of season.divisions) {
+          const lastRound = division.rounds[division.rounds.length - 1];
+          if (lastRound && (!lastRound.sets || lastRound.sets.length === 0)) {
+            lastRound.sets = [
+              {
+                mode: 'bounty',
+                map: 'Layer Cake'
+              },
+              {
+                mode: 'gemGrab',
+                map: 'Crystal Arcade'
+              },
+              {
+                mode: 'knockout',
+                map: 'Goldarm Gulch'
+              }
+            ]
+            divisionsUpdated++;
+          }
+        }
+        await season.save();
+        
+        await interaction.reply({
+          embeds: [getSuccesEmbed({ message: `Sets agregados a la última ronda de **${divisionsUpdated}** divisiones.` })]
+        });
       }
 
     } catch (err) {

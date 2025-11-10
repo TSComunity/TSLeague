@@ -2,6 +2,7 @@ const Team = require('../models/Team.js')
 const { generateMatchmaking } = require('./matchmaking.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
 const { calculatePromotionRelegation, endSeason } = require('./season.js')
+const { generateRandomSets } = require('./sets.js')
 const { getActiveSeason } = require('../utils/season.js')
 const { sendAnnouncement } = require('../discord/send/general.js')
 const { getRoundAddedEmbed } = require('../discord/embeds/round.js')
@@ -52,14 +53,16 @@ const addRound = async ({ client }) => {
     const matchesDocs = rounds.flatMap(r => r.matches.map(m => m.matchId))
     const teamsDocs = teams.map(t => t.teamId);
 
-    // Generar emparejamientos
+    const setsForThisRound = await generateRandomSets()
+
     const matchmakingResult = await generateMatchmaking({
       client,
       matchesDocs,
       teamsDocs,
       season,
       division,
-      nextRoundIndex
+      nextRoundIndex,
+      setsForThisRound
     })
 
     newMatchesDocs = matchmakingResult.newMatchesDocs || []
@@ -76,7 +79,8 @@ const addRound = async ({ client }) => {
     const newRound = {
       roundIndex: nextRoundIndex,
       matches: newMatchesDocs.map((match) => ({ matchId: match._id })),
-      resting: newRestingTeamsDocs.map((team) => ({ teamId: team.teamId }))
+      resting: newRestingTeamsDocs.map((team) => ({ teamId: team.teamId })),
+      sets: setsForThisRound
     }
 
     division.rounds.push(newRound)

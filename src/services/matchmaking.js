@@ -142,7 +142,8 @@ const generateMatchmaking = async ({
   teamsDocs,
   season,
   division,
-  nextRoundIndex
+  nextRoundIndex,
+  setsForThisRound
 }) => {
   // Filtrar equipos válidos (no nulos, con ID)
   const validTeams = Array.isArray(teamsDocs) ? teamsDocs.filter(teamDoc => teamDoc && teamDoc._id) : []
@@ -201,7 +202,6 @@ const generateMatchmaking = async ({
 
     if (teamBId) {
       // Emparejamiento válido encontrado
-      const sets = await generateRandomSets()
       const teamADoc = validTeams.find(t => t._id.toString() === teamAId)
       const teamBDoc = validTeams.find(t => t._id.toString() === teamBId)
 
@@ -212,7 +212,7 @@ const generateMatchmaking = async ({
         roundIndex: nextRoundIndex,
         teamADoc,
         teamBDoc,
-        sets
+        sets: setsForThisRound
       })
 
       newMatchesDocs.push(createdMatch)

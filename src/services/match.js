@@ -1084,7 +1084,6 @@ async function monitorOnGoingMatches({ client }) {
       throw new Error('Error monitoreando partidos.')
     }
   }
-
 }
 
 module.exports = {
