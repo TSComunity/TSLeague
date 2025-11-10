@@ -235,7 +235,7 @@ async function buildDivisionContainers({ division, teams, season, chunkSize = 6 
       const sectionComponent = new SectionBuilder()
         .addTextDisplayComponents(
           new TextDisplayBuilder().setContent(
-            `### ${resultEmoji} ${rank}. ${name}\n${emojis.points} Puntos: ${points}\n${emojis.match} Victorias: ${team.stats.matchesWon} \`(${matchesWinrate}%)\``
+            `### ${resultEmoji} ${rank}. ${name}\n${emojis.points} Puntos: ${points}\n${emojis.match} Victorias: ${matchesWon} \`(${matchesWinrate}%)\``
           )
         )
         .setThumbnailAccessory(thumbnailComponent)

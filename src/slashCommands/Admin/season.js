@@ -91,19 +91,7 @@ module.exports = {
       }
 
       else if (subcomand === 'solve') {
-        const OWNER_ID = '838441772794511411'; 
-        if (interaction.user.id !== OWNER_ID) {
-          await interaction.reply({
-            embeds: [getErrorEmbed({ error: '🚪 Get out. No tienes permiso para usar este comando.' })],
-            ephemeral: true
-          });
-          return;
-        }
-        const deleted = await Season.deleteMany({});
-        await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `✅ Se eliminaron **${deleted.deletedCount}** temporadas.` })],
-          ephemeral: true,
-        });
+  return
       }
 
       // ---------- NUEVOS ----------
@@ -113,8 +101,7 @@ module.exports = {
 
         await interaction.reply({
           embeds: [getSuccesEmbed({
-            message: 'Datos de la temporada activa',
-            description: '```json\n' + JSON.stringify(season, null, 2) + '\n```'
+            message: '```json\n' + JSON.stringify(season, null, 2) + '\n```'
           })]
         });
       }
