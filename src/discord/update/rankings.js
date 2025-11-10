@@ -7,6 +7,8 @@ const {
   MessageFlags
 } = require('discord.js')
 
+const Match = require('../../models/Match.js')
+
 const config = require('../../configs/league.js')
 const emojis = require('../../configs/emojis.json')
 
@@ -95,7 +97,7 @@ const updateRankingsEmbed = async ({ client }) => {
         }
       })
 
-    const containers = buildDivisionContainers({ division: division.divisionId, teams })
+    const containers = await buildDivisionContainers({ division: division.divisionId, teams })
     containersByDivision.push(containers)
   }
 
@@ -152,7 +154,7 @@ const updateRankingsEmbed = async ({ client }) => {
   }
 }
 
-function buildDivisionContainers({ division, teams, chunkSize = 6 }) {
+async function buildDivisionContainers({ division, teams, chunkSize = 6 }) {
   const teamChunks = chunkArray(teams, chunkSize)
   const containers = []
   const safeColor = division && division.color ? division.color.replace('#', '') : '2f3136'
@@ -198,10 +200,37 @@ function buildDivisionContainers({ division, teams, chunkSize = 6 }) {
         return emojis.team
       })()
 
-      const matchesPlayed = team.stats.matchesWon + team.stats.matchesLost
+      async function getMatchesPlayedInSeason(teamId, seasonId) {
+        return await Match.countDocuments({
+          seasonId,
+          status: 'played',
+          $or: [{ teamAId: teamId }, { teamBId: teamId }]
+        })
+      }
+
+      async function getMatchesWonInSeason(teamId, seasonId) {
+        const matches = await Match.find({
+          seasonId,
+          status: 'played',
+          $or: [{ teamAId: teamId }, { teamBId: teamId }]
+        }).select('teamAId teamBId scoreA scoreB')
+
+        let wins = 0
+        for (const match of matches) {
+          const isTeamA = String(match.teamAId) === String(teamId)
+          const teamScore = isTeamA ? match.scoreA : match.scoreB
+          const rivalScore = isTeamA ? match.scoreB : match.scoreA
+          if (teamScore > rivalScore) wins++
+        }
+
+        return wins
+      }
+
+      const matchesPlayed = await getMatchesPlayedInSeason(team.teamId, season._id)
+      const matchesWon = await getMatchesWonInSeason(team.teamId, season._id)
       const matchesWinrate = matchesPlayed > 0
-      ? ((team.stats.matchesWon / matchesPlayed) * 100).toFixed(1)
-      : 0
+        ? ((matchesWon / matchesPlayed) * 100).toFixed(1)
+        : 0
 
       const sectionComponent = new SectionBuilder()
         .addTextDisplayComponents(
