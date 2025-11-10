@@ -137,6 +137,10 @@ const updateTeamsChannels = async ({ client }) => {
   if (team.channelId) {
     const ch = await guild.channels.fetch(team.channelId).catch(() => null)
     if (ch) {
+
+      if (ch.name !== `${config.team.channels.prefix}${team.name.toLowerCase().replace(/ /g, '-')}`) {
+        await ch.setName(team.name).catch(console.error)
+      }
       // Obtener categoría correcta según división
       const categoryId = team.divisionId
         ? divisionMap[team.divisionId.toString()]
