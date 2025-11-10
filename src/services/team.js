@@ -134,16 +134,30 @@ const updateTeamsChannels = async ({ client }) => {
     }
     if (!eligible) continue
 
-    if (team.channelId) {
-      const ch = await guild.channels.fetch(team.channelId).catch(() => null)
-      if (ch) await applyTeamPermissions(guild, ch, team)
-    } else {
+  if (team.channelId) {
+    const ch = await guild.channels.fetch(team.channelId).catch(() => null)
+    if (ch) {
+      // Obtener categoría correcta según división
       const categoryId = team.divisionId
         ? divisionMap[team.divisionId.toString()]
         : config.categories.teams.withOutDivision.id
 
-      await createTeamChannel({ client, team, categoryId })
+      // Mover el canal si no está en la categoría correcta
+      if (ch.parentId !== categoryId) {
+        await ch.setParent(categoryId, { lockPermissions: false }).catch(err => console.error('Error moviendo canal:', err))
+      }
+
+      // Aplicar permisos
+      await applyTeamPermissions(guild, ch, team)
     }
+  } else {
+    // Crear canal si no existe
+    const categoryId = team.divisionId
+      ? divisionMap[team.divisionId.toString()]
+      : config.categories.teams.withOutDivision.id
+
+    await createTeamChannel({ client, team, categoryId })
+  }
   }
 }
 

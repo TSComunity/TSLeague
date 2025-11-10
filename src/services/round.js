@@ -19,6 +19,8 @@ const addRound = async ({ client }) => {
   const divisionsSkipped = []
   const divisionsWithNewRounds = []
 
+  const setsForThisRound = await generateRandomSets()
+
   // Procesar todas las divisiones
   for (const division of season.divisions) {
     const { divisionId, status, teams, rounds } = division
@@ -52,8 +54,6 @@ const addRound = async ({ client }) => {
 
     const matchesDocs = rounds.flatMap(r => r.matches.map(m => m.matchId))
     const teamsDocs = teams.map(t => t.teamId);
-
-    const setsForThisRound = await generateRandomSets()
 
     const matchmakingResult = await generateMatchmaking({
       client,
