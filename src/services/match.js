@@ -283,7 +283,7 @@ const createMatchChannel = async ({ match, client }) => {
       name: expectedName,
       type: ChannelType.GuildText,
       parent: categoryId,
-      topic: `Partido entre **${teamA.name}** y **${teamB.name}** — Jornada ${matchToUpd.roundIndex + 1}`,
+      topic: `Partido entre **${teamA.name}** y **${teamB.name}** — Jornada ${matchToUpd.roundIndex}`,
       permissionOverwrites
     })
 
