@@ -132,8 +132,9 @@ module.exports = {
 
   if (!match) return interaction.reply({ embeds: [getErrorEmbed({ error: 'Partido no encontrado.' })] });
 
-  match.sets[0].winner = match.teamAId._id
-  match.sets[1].winner = match.teamAId._id
+  match.sets[0].winner = match.teamBId._id
+  match.sets[1].winner = match.teamBId._id
+  match.status = 'played'
   await match.save();
 
   await interaction.reply({ embeds: [getSuccesEmbed({ message: `Sets actualizados correctamente para el partido 5.` })] });
