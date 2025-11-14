@@ -136,7 +136,7 @@ module.exports = {
   match.sets[1].winner = match.teamAId._id
   await match.save();
 
-  await interaction.reply({ embeds: [getSuccesEmbed({ message: `Sets actualizados correctamente para el partido ${matchIndex}.` })] });
+  await interaction.reply({ embeds: [getSuccesEmbed({ message: `Sets actualizados correctamente para el partido 5.` })] });
 }
     } catch (err) {
       console.error(err);
