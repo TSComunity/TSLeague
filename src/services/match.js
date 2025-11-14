@@ -1048,7 +1048,13 @@ async function monitorOnGoingMatches({ client }) {
           model: 'User'
         })
 
-        const allSetsCompleted = match.sets.every(s => s.winner);
+        const teamAWins = match.sets.filter(s => s.winner && s.winner.equals(match.teamAId._id)).length;
+        const teamBWins = match.sets.filter(s => s.winner && s.winner.equals(match.teamBId._id)).length;
+
+        const totalSets = match.sets.length;
+        const setsToWin = Math.floor(totalSets / 2) + 1;
+
+        const matchHasWinner = teamAWins >= setsToWin || teamBWins >= setsToWin;
 
         if (match.onGoingMessageId && match.channelId) {
           try {
@@ -1062,7 +1068,7 @@ async function monitorOnGoingMatches({ client }) {
                   flags: MessageFlags.IsComponentsV2,
                   allowedMentions: { parse: [] }
                 });
-                if (allSetsCompleted) {
+                if (matchHasWinner) {
                   await endMatch({ matchIndex: match.matchIndex, client });
                   continue;
                 }
