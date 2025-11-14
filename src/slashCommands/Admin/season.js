@@ -134,7 +134,7 @@ module.exports = {
 
   match.sets[0].winner = match.teamBId._id
   match.sets[1].winner = match.teamBId._id
-  match.status = 'played'
+  match.status = 'scheduled'
   await match.save();
 
   await interaction.reply({ embeds: [getSuccesEmbed({ message: `Sets actualizados correctamente para el partido 5.` })] });
