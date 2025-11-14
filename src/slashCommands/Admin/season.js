@@ -9,6 +9,7 @@ const { GuildScheduledEventPrivacyLevel, GuildScheduledEventEntityType } = requi
 const emojis = require('../../configs/emojis.json');
 const configs = require('../../configs/league.js')
 const Match = require('../../models/Match.js');
+const ScheduledFunction = require('../../models/ScheduledFunction.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -67,13 +68,9 @@ module.exports = {
 
       // ---------- NUEVOS ----------
       else if (subcomand === 'datos') {
-        const season = await Season.findOne({ status: 'active' }).populate('divisions.divisionId').lean();
-        if (!season) return interaction.reply({ embeds: [getErrorEmbed({ error: 'No hay temporada activa.' })] });
-
+        const scheduledEvents = ScheduledFunction.find({})
         await interaction.reply({
-          embeds: [getSuccesEmbed({
-            message: '```json\n' + JSON.stringify(season, null, 2) + '\n```'
-          })]
+          message: '```json\n' + JSON.stringify(scheduledEvents, null, 2) + '\n```'
         });
       }
 
