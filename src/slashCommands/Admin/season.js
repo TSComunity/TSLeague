@@ -124,7 +124,7 @@ module.exports = {
         const maxRounds = Math.max(0, ...season.divisions.map(d => d.rounds?.length || 0));
         const roundNumberPadded = String(maxRounds).padStart(2, '0');
 
-        const imagePath = path.join(__dirname, '../assets/tsLeagueBanner.webp');
+        const imagePath = path.join(__dirname, '../../assets/tsLeagueBanner.webp');
         const imageBuffer = fs.readFileSync(imagePath);
         const imageBase64 = `data:image/webp;base64,${imageBuffer.toString('base64')}`;
 
