@@ -70,7 +70,7 @@ module.exports = {
       else if (subcomand === 'datos') {
         const scheduledEvents = await ScheduledFunction.find({}).lean()
         await interaction.reply({
-          message: '```json\n' + JSON.stringify(scheduledEvents, null, 2) + '\n```'
+          content: '```json\n' + JSON.stringify(scheduledEvents, null, 2) + '\n```'
         });
       }
 
