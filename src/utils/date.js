@@ -79,26 +79,28 @@ function getPreviousOccurrence(day, hour = 0, minute = 0, now = new Date()) {
 // ------------------------------------------------------
 function pickClosestNextDay(defaultDayList, hour = 0, minute = 0, now = new Date()) {
   if (!Array.isArray(defaultDayList) || defaultDayList.length === 0)
-    throw new Error('pickClosestNextDay: defaultDayList debe ser array no vacío')
+    throw new Error('pickClosestNextDay: defaultDayList debe ser array no vacío');
 
-  const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid')
-  let best = null
+  const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid');
+  const candidates = [];
+
   for (const d of defaultDayList) {
-    if (!Number.isInteger(d) || d < 0 || d > 6) continue
-    const candidateDate = DateTime.fromJSDate(getNextOccurrence(d, hour, minute, now)).setZone('Europe/Madrid')
-    const diffMs = candidateDate.toMillis() - dtNow.toMillis()
-    if (diffMs < 0) continue
-    if (!best || diffMs < best.diffMs) {
-      best = { day: d, date: candidateDate.toJSDate(), diffMs }
+    if (!Number.isInteger(d) || d < 0 || d > 6) continue;
+    const candidateDate = DateTime.fromJSDate(getNextOccurrence(d, hour, minute, now)).setZone('Europe/Madrid');
+    if (candidateDate >= dtNow) {
+      candidates.push(candidateDate.toJSDate());
     }
   }
 
-  if (!best) {
-    const fallbackDay = defaultDayList[0]
-    return { day: fallbackDay, date: getNextOccurrence(fallbackDay, hour, minute, now) }
+  if (candidates.length === 0) {
+    // Si no hay candidatos en el futuro, usar el primero como fallback
+    const fallbackDay = defaultDayList[0];
+    return { day: fallbackDay, date: getNextOccurrence(fallbackDay, hour, minute, now) };
   }
 
-  return { day: best.day, date: best.date }
+  // Elegir uno al azar
+  const randomIndex = Math.floor(Math.random() * candidates.length);
+  return { day: candidates[randomIndex].getDay(), date: candidates[randomIndex] };
 }
 
 // ------------------------------------------------------
@@ -132,32 +134,40 @@ function getDate({ day, hour = 0, minute = 0 }, now = new Date()) {
 // - defaultDate = próxima ocurrencia futura entre defaultStartDays.
 // ------------------------------------------------------
 function checkDeadline(match, now = new Date()) {
-  validateConfigs()
+  validateConfigs();
 
   if (match?.scheduledAt) {
-    return { passed: false, deadline: match.scheduledAt, defaultDate: match.scheduledAt }
+    return {
+      passed: false,
+      deadline: match.scheduledAt,
+      defaultDate: match.scheduledAt
+    };
   }
 
-  const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid')
-  const { deadlineDay, deadlineHour = 0, deadlineMinute = 0, defaultStartDays, defaultStartHour = 0 } = configs.match
+  const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid');
+  const { deadlineDay, deadlineHour = 0, deadlineMinute = 0, defaultStartDays, defaultStartHour = 0 } = configs.match;
 
-  // domingo=0 ... sábado=6 → coherente con tus configs
-  const todayLuxon = dtNow.weekday % 7  // convierte 1–7 → 0–6
+  // Lunes de esta semana (weekday=1)
+  const monday = dtNow.set({ weekday: 1 }).startOf('day');
 
-  let diff = deadlineDay - todayLuxon
-  if (diff < 0) diff += 7 // siguiente semana si ya pasó
+  // Deadline de la semana actual
+  // deadlineDay: 0=domingo ... 6=sábado
+  // Como Luxon lunes=1 ... domingo=7, hacemos:
+  const luxonDay = (deadlineDay === 0 ? 7 : deadlineDay); // domingo=7
+  let deadline = monday.plus({ days: luxonDay - 1 })
+    .set({ hour: deadlineHour, minute: deadlineMinute, second: 0, millisecond: 0 });
 
-  let deadline = dtNow.plus({ days: diff })
-    .set({ hour: deadlineHour, minute: deadlineMinute, second: 0, millisecond: 0 })
+  // Si ya pasó, passed=true, pero nunca sumar semana
+  const passed = dtNow > deadline;
 
-  const closest = pickClosestNextDay(defaultStartDays, defaultStartHour, 0, now)
-  const passed = dtNow > deadline
+  // Próxima fecha por defecto según tus días/hora configurados
+  const closest = pickClosestNextDay(defaultStartDays, defaultStartHour, 0, now);
 
   return {
     passed,
     deadline: deadline.toJSDate(),
     defaultDate: closest.date
-  }
+  };
 }
 
 // ------------------------------------------------------
