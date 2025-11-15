@@ -142,7 +142,7 @@ function checkDeadline(match, now = new Date()) {
   const { deadlineDay, deadlineHour = 0, deadlineMinute = 0, defaultStartDays, defaultStartHour = 0 } = configs.match
 
   // Semana: lunes (weekday=1) a domingo (weekday=7)
-  const monday = dtNow.startOf('week') // lunes actual
+  let monday = dtNow.set({ weekday: 1 }).startOf("day");
   let deadline = monday.plus({ days: ((deadlineDay + 6) % 7) }) // ajustar 0=domingo..6=sábado
     .set({ hour: deadlineHour, minute: deadlineMinute, second: 0, millisecond: 0 })
 
