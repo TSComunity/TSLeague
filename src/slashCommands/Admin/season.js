@@ -124,7 +124,7 @@ module.exports = {
       // }
 
       else if (subcomand === 'agreglar-sets') {
-  const match = await Match.findOne({ matchIndex: 2 })
+  const match = await Match.findOne({ matchIndex: 6 })
     .populate('teamAId teamBId sets.starPlayerId');
 
   if (!match) return interaction.reply({ embeds: [getErrorEmbed({ error: 'Partido no encontrado.' })] });
