@@ -143,12 +143,16 @@ function checkDeadline(match, now = new Date()) {
 
   // Semana: lunes (weekday=1) a domingo (weekday=7)
   let monday = dtNow.set({ weekday: 1 }).startOf("day");
-  let deadline = monday.plus({ days: ((deadlineDay + 6) % 7) }) // ajustar 0=domingo..6=sábado
-    .set({ hour: deadlineHour, minute: deadlineMinute, second: 0, millisecond: 0 })
+  let deadline = monday.plus({ days: deadlineDay })
 
   // Si el deadline de esta semana ya pasó → siguiente semana
   if (deadline < dtNow) {
-    deadline = deadline.plus({ weeks: 1 })
+    deadline = monday.plus({ days: deadlineDay }).set({
+      hour: deadlineHour,
+      minute: deadlineMinute,
+      second: 0,
+      millisecond: 0
+    })
   }
 
   // Próxima fecha de inicio por defecto
