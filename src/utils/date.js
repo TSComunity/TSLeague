@@ -139,23 +139,28 @@ function checkDeadline(match, now = new Date()) {
   }
 
   const dtNow = DateTime.fromJSDate(now).setZone('Europe/Madrid')
-  const { deadlineDay, deadlineHour = 0, deadlineMinute = 0, defaultStartDays, defaultStartHour = 0 } = configs.match
 
-  // Semana: lunes (weekday=1) a domingo (weekday=7)
-  let monday = dtNow.set({ weekday: 1 }).startOf("day");
-  let deadline = monday.plus({ days: deadlineDay })
+  const {
+    deadlineDay,          // 0 = domingo ... 6 = sábado
+    deadlineHour = 0,
+    deadlineMinute = 0,
+    defaultStartDays,
+    defaultStartHour = 0
+  } = configs.match
 
-  // Si el deadline de esta semana ya pasó → siguiente semana
+  // Convertir 0–6 → weekday Luxon (1 = lunes ... 7 = domingo)
+  const weekdayLuxon = deadlineDay === 0 ? 7 : deadlineDay
+
+  // Deadline esta semana
+  let deadline = dtNow
+    .set({ weekday: weekdayLuxon })
+    .set({ hour: deadlineHour, minute: deadlineMinute, second: 0, millisecond: 0 })
+
+  // Si ya pasó, ir a la próxima semana
   if (deadline < dtNow) {
-    deadline = monday.plus({ days: deadlineDay }).set({
-      hour: deadlineHour,
-      minute: deadlineMinute,
-      second: 0,
-      millisecond: 0
-    })
+    deadline = deadline.plus({ weeks: 1 })
   }
 
-  // Próxima fecha de inicio por defecto
   const closest = pickClosestNextDay(defaultStartDays, defaultStartHour, 0, now)
   const passed = dtNow > deadline
 
