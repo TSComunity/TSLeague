@@ -124,13 +124,13 @@ module.exports = {
       // }
 
       else if (subcomand === 'agreglar-sets') {
-  const match = await Match.findOne({ matchIndex: 5 })
+  const match = await Match.findOne({ matchIndex: 2 })
     .populate('teamAId teamBId sets.starPlayerId');
 
   if (!match) return interaction.reply({ embeds: [getErrorEmbed({ error: 'Partido no encontrado.' })] });
 
-  match.sets[0].winner = match.teamBId._id
-  match.sets[1].winner = match.teamBId._id
+  match.sets[0].winner = match.teamAId._id
+  match.sets[1].winner = match.teamAId._id
   match.status = 'scheduled'
   await match.save();
 
