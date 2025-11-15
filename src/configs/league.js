@@ -112,7 +112,7 @@ module.exports = {
   "match": {
     "defaultSetsLength": 3,
     "defaultStartDays": [
-      5, 6, 0
+      6, 0
     ],
     "defaultStartHour": 19,
     "deadlineDay": 5,
