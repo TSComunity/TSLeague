@@ -98,7 +98,7 @@ client.once('clientReady', () => {
       () => processScheduledMatches({ client }),
       () => monitorOnGoingMatches({ client })
     ],
-    1000 * 60 * 5 // 5 min
+    1000 * 60 // 1 min
   )
 
   runInterval(

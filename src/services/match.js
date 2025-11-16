@@ -782,12 +782,6 @@ const applyDefaultDates = async ({ client }) => {
     try {
       const { passed, deadline, defaultDate } = checkDeadline(match, now)
 
-  console.log("[DEBUG] checkDeadline:", {
-    match: match._id,
-    passed,
-    deadline,
-    defaultDate
-  })
       // Si no ha pasado el plazo, saltamos
       if (!passed || !defaultDate) continue
 
