@@ -1,7 +1,5 @@
-const { EmbedBuilder } = require("discord.js");
-const { DateTime } = require("luxon");
-const { checkDeadline } = require("../services/match.js"); // ajusta la ruta
-const configs = require("../configs/configs.js"); // si necesitas configs
+const { EmbedBuilder } = require("discord.js")
+const { checkDeadline } = require("../utlis/date.js")
 
 module.exports = {
   name: "checkDeadline",
