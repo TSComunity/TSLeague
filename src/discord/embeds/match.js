@@ -80,7 +80,7 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
 // ...
   // Resumen de sets según estado
   if (sets?.length > 0) {
-    infoText += `\n### Sets\n`
+    infoText += `### Sets\n`
 
     sets.forEach((set, i) => {
       const mode = getModeData(set.mode)
@@ -117,7 +117,7 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
         }
 
         let starPlayerText = set.starPlayerId
-          ? `\n${emojis.starPlayer} <@${set.starPlayerId.discordId}>\n`
+          ? `\n> ${emojis.starPlayer} <@${set.starPlayerId.discordId}>\n`
           : `> ${emojis.starPlayer} *No definido*\n`
 
         infoText += `${modeEmoji} ${mapName}\n${winnerText}${starPlayerText}`
@@ -278,7 +278,6 @@ const getMatchResultsEmbed = ({ match, team = null }) => {
   let orderedTeams;
 
   if (team) {
-    // Canal de un equipo: equipo del canal primero
     if (team._id.toString() === match.teamAId._id.toString()) {
       orderedTeams = [
         { team: match.teamAId, score: match.scoreA },
@@ -291,7 +290,6 @@ const getMatchResultsEmbed = ({ match, team = null }) => {
       ];
     }
   } else {
-    // Canal general: ganador arriba
     if (match.scoreA >= match.scoreB) {
       orderedTeams = [
         { team: match.teamAId, score: match.scoreA },
@@ -305,28 +303,18 @@ const getMatchResultsEmbed = ({ match, team = null }) => {
     }
   }
 
-  // Color según resultado para el equipo principal
-  let accentColor = 0x1E90FF; // azul por defecto
+  let accentColor = 0x1E90FF;
   if (team) {
     const won =
       (team._id.toString() === match.teamAId._id.toString() && match.scoreA > match.scoreB) ||
       (team._id.toString() === match.teamBId._id.toString() && match.scoreB > match.scoreA);
-    accentColor = won ? 0x00FF00 : 0xFF0000; // verde si ganó, rojo si perdió
+    accentColor = won ? 0x00FF00 : 0xFF0000;
   }
 
-  // Texto principal
-  let textContent;
-  if (team) {
-    const otherTeam = orderedTeams[1].team;
-    textContent = `## ${emojis.ended} Resultado de vuestro partido contra ${otherTeam?.name || "Equipo B"} — ${orderedTeams[0].score} - ${orderedTeams[1].score}\n`;
-  } else {
-    textContent = `## ${emojis.ended} ${orderedTeams[0].team?.name || "Equipo A"} vs ${orderedTeams[1].team?.name || "Equipo B"} — ${orderedTeams[0].score} - ${orderedTeams[1].score}\n`;
-  }
+  const scoreLine = team
+    ? `## ${emojis.ended} Resultado de vuestro partido contra ${orderedTeams[1].team?.name || "Equipo B"} — ${orderedTeams[0].score} - ${orderedTeams[1].score}`
+    : `## ${emojis.ended} ${orderedTeams[0].team?.name || "Equipo A"} vs ${orderedTeams[1].team?.name || "Equipo B"} — ${orderedTeams[0].score} - ${orderedTeams[1].score}`;
 
-  // Star Player general
-
-
-  // Indicar ganador general
   let winnerText;
   if (match.scoreA === match.scoreB) {
     winnerText = 'Empate';
@@ -335,14 +323,17 @@ const getMatchResultsEmbed = ({ match, team = null }) => {
   } else {
     winnerText = match.teamBId.name;
   }
-  textContent += `${emojis.winner} **${winnerText}**\n`;
+
+  let statsText = `${emojis.winner} **${winnerText}** (${match.scoreA} - ${match.scoreB})`;
   if (match.starPlayerId) {
-    textContent += `${emojis.starPlayer} <@${match.starPlayerId.discordId}>`
+    statsText += `\n${emojis.starPlayer} <@${match.starPlayerId.discordId}>`;
   }
-  // Construcción del container
+
   const container = new ContainerBuilder()
     .setAccentColor(accentColor)
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(textContent))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(scoreLine))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(statsText))
     .addSeparatorComponents(new SeparatorBuilder());
 
   if (match.resultsImageURL) {

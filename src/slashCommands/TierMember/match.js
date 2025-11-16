@@ -50,13 +50,42 @@ module.exports = {
             opt.setName('motivo').setDescription('Motivo del cancelamiento').setRequired(true))
     )
 
-    // /partido terminar
-    .addSubcommand(sub =>
-      sub
-        .setName('terminar')
-        .setDescription('Termina un partido')
-        .addIntegerOption(opt =>
-            opt.setName('indice-partido').setDescription('El indice unico del partido').setRequired(true))
+    // /partido establecer-ganador
+.addSubcommand(sub =>
+  sub
+    .setName('establecer-ganador')
+    .setDescription('Registra los sets del partido y termina el partido')
+    .addIntegerOption(opt =>
+      opt.setName('indice-partido')
+         .setDescription('Índice único del partido')
+         .setRequired(true))
+    // Set 1
+    .addStringOption(opt =>
+      opt.setName('ganador-1')
+         .setDescription('Nombre del equipo ganador del set 1')
+         .setRequired(true))
+    .addUserOption(opt =>
+      opt.setName('mvp-1')
+         .setDescription('Jugador estrella del set 1')
+         .setRequired(true))
+    // Set 2
+    .addStringOption(opt =>
+      opt.setName('ganador-2')
+         .setDescription('Nombre del equipo ganador del set 2')
+         .setRequired(true))
+    .addUserOption(opt =>
+      opt.setName('mvp-2')
+         .setDescription('Jugador estrella del set 2')
+         .setRequired(true))
+    // Set 3 opcional
+    .addStringOption(opt =>
+      opt.setName('ganador-3')
+         .setDescription('Nombre del equipo ganador del set 3 (opcional)')
+         .setRequired(false))
+    .addUserOption(opt =>
+      opt.setName('mvp-3')
+         .setDescription('Jugador estrella del set 3 (opcional)')
+         .setRequired(false))
     )
 
     // /partido cambiar-horario
@@ -159,14 +188,50 @@ module.exports = {
           embeds: [getSuccesEmbed({ message: `Cancelado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.` })]
         })
 
-      } else if (sub === 'terminar') {
-        const matchIndex = interaction.options.getInteger('indice-partido')
+      } else if (sub === 'establecer-ganador') {
+        await interaction.deferReply({ ephemeral: false });
 
-        const match = await endMatch({ client, matchIndex })
-        await interaction.reply({
-          embeds: [getSuccesEmbed({ message: `Terminado el partido entre **${match.teamAId.name}** y **${match.teamBId.name}**.` })]
-        })
+        const matchIndex = interaction.options.getInteger('indice-partido');
+        const match = await findMatch({ matchIndex });
+        if (!match) throw new Error('No existe un partido con ese índice.');
 
+        // Procesar sets 1 a 3
+        for (let i = 1; i <= 3; i++) {
+          const winnerName = interaction.options.getString(`ganador-${i}`);
+          const mvpUser = interaction.options.getUser(`mvp-${i}`);
+
+          if (!winnerName) break; // Sets opcionales terminan aquí
+
+          // Verificar que el nombre corresponde a equipo del partido
+          let winnerTeam;
+          if (winnerName.toLowerCase() === match.teamAId.name.toLowerCase()) winnerTeam = match.teamAId;
+          else if (winnerName.toLowerCase() === match.teamBId.name.toLowerCase()) winnerTeam = match.teamBId;
+          else throw new Error(`Set ${i}: el equipo "${winnerName}" no coincide con ninguno de los equipos del partido.`);
+
+          // Si el set ya existe, solo actualizamos ganador y MVP
+          if (match.sets[i - 1]) {
+            match.sets[i - 1].winner = winnerTeam._id;
+            match.sets[i - 1].starPlayerId = mvpUser ? mvpUser.id : null;
+          } else {
+            // Si no existe, lo creamos (map y mode se pueden poner como opcional o predeterminado)
+            match.sets.push({
+              map: `Set ${i}`,
+              mode: 'Desconocido',
+              winner: winnerTeam._id,
+              starPlayerId: mvpUser ? mvpUser.id : null
+            });
+          }
+        }
+
+        await match.save();
+
+        const finalMatch = await endMatch({ client, matchIndex });
+
+        await interaction.followUp({
+          embeds: [getSuccesEmbed({
+            message: `Partido finalizado. Ganador: **${finalMatch.scoreA > finalMatch.scoreB ? match.teamAId.name : match.teamBId.name}** (${finalMatch.scoreA} - ${finalMatch.scoreB})`
+          })]
+        });
       } else if (sub === 'cambiar-horario') {
         const matchIndex = interaction.options.getInteger('indice-partido')
         const day = interaction.options.getInteger('dia')
