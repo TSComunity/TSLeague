@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require("discord.js")
-const { checkDeadline } = require("../utlis/date.js")
+const { checkDeadline } = require("../utils/date.js")
 
 module.exports = {
   name: "checkDeadline",
