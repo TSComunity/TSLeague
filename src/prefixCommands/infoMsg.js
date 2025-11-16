@@ -16,10 +16,6 @@ module.exports = {
    * @param {import("discord.js").Client} client
    */
   run: async (message, client, args) => {
-    // Permiso restringido al autor específico
-    if (message.author.id !== "838441772794511411") {
-      return message.reply("No tienes permisos para usar este comando.");
-    }
 
     // Embeds principales
     const embeds = [
@@ -98,8 +94,16 @@ module.exports = {
         .setURL("https://github.com/TSComunity/TSLeague")
     );
 
-    // Envío final
-    await message.channel.send({ embeds });
-    await message.channel.send({ embeds: embeds2, components: [buttons] });
+    try {
+      if (message.author.id !== "838441772794511411") {
+        return message.reply("No tienes permisos para usar este comando.");
+      }
+
+      await message.channel.send({ embeds });
+      await message.channel.send({ embeds: embeds2, components: [buttons] });
+    } catch (err) {
+      console.error("Error en infoMsg:", err);
+      message.channel.send("Ha ocurrido un error al ejecutar el comando.");
+    }
   },
 };
