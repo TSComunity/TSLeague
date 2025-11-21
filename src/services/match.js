@@ -1001,21 +1001,21 @@ async function monitorOnGoingMatches({ client }) {
         const targetSet = possibleSets[0];
         let winner = null;
 
-        for (const tag of battleTags) {
-          if (teamABrawlIds.includes(tag)) {
-            if (battle.battle.result === 'victory') winner = match.teamAId._id;
-            if (battle.battle.result === 'defeat') winner = match.teamBId._id;
-            break;
-          }
-          if (teamBBrawlIds.includes(tag)) {
-            if (battle.battle.result === 'victory') winner = match.teamBId._id;
-            if (battle.battle.result === 'defeat') winner = match.teamAId._id;
-            break;
-          }
+        const validBattleTags = battleTeams.flat().map(p => cleanTag(p.tag))
+          .filter(tag => teamABrawlIds.includes(tag) || teamBBrawlIds.includes(tag))
+
+        if (battle.battle.result === 'victory') {
+          winner = validBattleTags.some(tag => teamABrawlIds.includes(tag))
+            ? match.teamAId._id
+            : match.teamBId._id
+        } else if (battle.battle.result === 'defeat') {
+          winner = validBattleTags.some(tag => teamABrawlIds.includes(tag))
+            ? match.teamBId._id
+            : match.teamAId._id
         }
 
         if (!winner) {
-          continue;
+          continue
         }
 
         const spTag = cleanTag(battle.battle.starPlayer.tag);

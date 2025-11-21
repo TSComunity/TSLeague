@@ -227,7 +227,7 @@ module.exports = {
 
         const finalMatch = await endMatch({ client, matchIndex });
 
-        await interaction.followUp({
+        await interaction.editReply({
           embeds: [getSuccesEmbed({
             message: `Partido finalizado. Ganador: **${finalMatch.scoreA > finalMatch.scoreB ? match.teamAId.name : match.teamBId.name}** (${finalMatch.scoreA} - ${finalMatch.scoreB})`
           })]
