@@ -62,7 +62,7 @@ const getMatchInfoEmbed = async ({ match, showButtons = false }) => {
   let infoText = ''
 
   if (status === 'scheduled') {
-    infoText += `${emojis.schedule} ${scheduledAt ? `<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}> (<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}:R>)` : "*Por definir*"}`
+    infoText += `${emojis.schedule} ${scheduledAt ? `<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}> (<t:${Math.floor(new Date(scheduledAt).getTime()/1000)}:R>)\n` : "*Por definir*\n"}`
   } else if (status === 'onGoing') {
     infoText += `${emojis.onGoing} Partido en curso\n`
   } else if (status === 'played') {
@@ -312,8 +312,8 @@ const getMatchResultsEmbed = ({ match, team = null }) => {
   }
 
   const scoreLine = team
-    ? `## ${emojis.ended} Resultado de vuestro partido contra ${orderedTeams[1].team?.name || "Equipo B"} — ${orderedTeams[0].score} - ${orderedTeams[1].score}`
-    : `## ${emojis.ended} ${orderedTeams[0].team?.name || "Equipo A"} vs ${orderedTeams[1].team?.name || "Equipo B"} — ${orderedTeams[0].score} - ${orderedTeams[1].score}`;
+    ? `## ${emojis.ended} Resultado de vuestro partido contra ${orderedTeams[1].team?.name || "Equipo B"}`
+    : `## ${emojis.ended} ${orderedTeams[0].team?.name || "Equipo A"} vs ${orderedTeams[1].team?.name || "Equipo B"}`;
 
   let winnerText;
   if (match.scoreA === match.scoreB) {

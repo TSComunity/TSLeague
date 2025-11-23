@@ -6,7 +6,7 @@ const gameModes = require('../configs/gameModes.json')
 const configs = require('../configs/league.js')
 
 /**
- * Selecciona sets aleatorios (modo + mapa) que aún no se han jugado en la temporada activa.
+ * Selecciona sets aleatorios (modo + mapa) que aún no se han jugado en la jornada anterior.
  * Usa los pesos de modos y mapas definidos en el JSON.
  * @returns {Object} sets - los sets elegidos.
  */
@@ -14,17 +14,20 @@ const generateRandomSets = async () => {
   const defaultSetsLength = configs.match.defaultSetsLength
   const season = await getActiveSeason()
 
-  // Mapas ya usados
+  // Mapas ya usados EN LA JORNADA ANTERIOR
   const playedMapIds = new Set()
   for (const division of season.divisions) {
-    const round = division.rounds[division.rounds.length - 1]
-    if (round && round.sets && Array.isArray(round.sets)) {
-      for (const set of round.sets) {
-        if (set?.map) playedMapIds.add(set.map)
+    const rounds = division.rounds
+    // Solo miramos el penúltimo round (jornada anterior)
+    if (rounds.length >= 2) {
+      const previousRound = rounds[rounds.length - 1]
+      if (previousRound && previousRound.sets && Array.isArray(previousRound.sets)) {
+        for (const set of previousRound.sets) {
+          if (set?.map) playedMapIds.add(set.map)
+        }
       }
     }
   }
-
 
   // Crear lista de modos con pesos (sin repetir modo)
   const availableModes = gameModes
@@ -55,17 +58,20 @@ const generateRandomSets = async () => {
   const sets = []
   for (let i = 0; i < defaultSetsLength; i++) {
     const mode = selectedModes[i]
-    const availableMaps = mode.maps.filter(map => !playedMapIds.has(map.id))
+    
+    // Primero intentar con mapas no jugados en la jornada anterior
+    let availableMaps = mode.maps.filter(map => !playedMapIds.has(map.id))
+    
+    // Si no hay mapas disponibles (todos se jugaron), usar todos los mapas del modo
+    if (availableMaps.length === 0) {
+      availableMaps = mode.maps
+    }
 
     const weightedMaps = []
     for (const map of availableMaps) {
       for (let j = 0; j < map.weight; j++) {
         weightedMaps.push(map)
       }
-    }
-
-    if (weightedMaps.length === 0) {
-      throw new Error(`No hay mapas disponibles para el modo ${mode.id}`)
     }
 
     const map = weightedMaps[Math.floor(Math.random() * weightedMaps.length)]

@@ -1075,7 +1075,7 @@ async function monitorOnGoingMatches({ client }) {
                 const setsPlayed = match.sets.filter(s => s.winner).length;
                 const totalSets = match.sets.length;
                 await message.reply({
-                  content: `### ${emojis.accept} Set ${setsPlayed}/${totalSets} registrado.\n${emojis.winner} ${match.sets[setsPlayed - 1].winner.equals(match.teamAId._id) ? match.teamAId.name : match.teamBId.name}\n${emojis.starPlayer} ${match.sets[setsPlayed - 1].starPlayerId ? `<@${match.sets[setsPlayed - 1].starPlayerId.discordId}>` : 'N/A'}`,
+                  content: `### ${emojis.accept} Set ${setsPlayed}/${totalSets} registrado.\n${emojis.winner} **${match.sets[setsPlayed - 1].winner.equals(match.teamAId._id) ? match.teamAId.name : match.teamBId.name}**\n${emojis.starPlayer} ${match.sets[setsPlayed - 1].starPlayerId ? `<@${match.sets[setsPlayed - 1].starPlayerId.discordId}>` : 'N/A'}`,
                   allowedMentions: { parse: [] }
                 })
               }
