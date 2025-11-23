@@ -13,15 +13,15 @@ async function getUserStatsEmbed({ client, user, data, isFreeAgent = false }) {
   const matchesWon = Number(user.leagueStats?.matchesWon || 0)
   const matchesLost = Number(user.leagueStats?.matchesLost || 0)
   const matchesPlayed = matchesWon + matchesLost
-  const matchesWinrate = matchesPlayed > 0 ? ((matchesWon / matchesPlayed) * 100).toFixed(1) : 0
-  const matchesLoserate = matchesPlayed > 0 ? ((matchesLost / matchesPlayed) * 100).toFixed(1) : 0
+  const matchesWinrate = matchesPlayed > 0 ? ((matchesWon / matchesPlayed) * 100) : 0
+  const matchesLoserate = matchesPlayed > 0 ? ((matchesLost / matchesPlayed) * 100) : 0
   const matchStarPlayer = Number(user.leagueStats?.matchStarPlayer || 0)
 
   const setsWon = Number(user.leagueStats?.setsWon || 0)
   const setsLost = Number(user.leagueStats?.setsLost || 0)
   const setsPlayed = setsWon + setsLost
-  const setsWinrate = setsPlayed > 0 ? ((setsWon / setsPlayed) * 100).toFixed(1) : 0
-  const setsLoserate = setsPlayed > 0 ? ((setsLost / setsPlayed) * 100).toFixed(1) : 0
+  const setsWinrate = setsPlayed > 0 ? ((setsWon / setsPlayed) * 100) : 0
+  const setsLoserate = setsPlayed > 0 ? ((setsLost / setsPlayed) * 100) : 0
   const setStarPlayer = Number(user.leagueStats?.setStarPlayer || 0)
 
   const leaguesWon = Number(user.leagueStats?.leaguesWon || 0)

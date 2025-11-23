@@ -1,4 +1,5 @@
 const Team = require('../models/Team.js')
+const ScheduledFunction = require('../models/ScheduledFunction.js')
 const { generateMatchmaking } = require('./matchmaking.js')
 const { addScheduledFunction } = require('./scheduledFunction.js')
 const { calculatePromotionRelegation, endSeason } = require('./season.js')
@@ -12,6 +13,44 @@ const { season: seasonConfig, round, roles, guild } = require('../configs/league
 const { maxRounds } = seasonConfig
 const emojis = require('../configs/emojis.json')
 const { startDay, startHour } = round
+
+const skipRound = async () => {
+  const season = await getActiveSeason()
+  
+  if (!season || season.status !== 'active') {
+    throw new Error('No hay una temporada activa.')
+  }
+
+  // Encontrar el número de jornada actual (la más alta)
+  const currentRoundIndex = Math.max(
+    0, 
+    ...season.divisions.map(d => d.rounds?.length || 0)
+  )
+
+  if (currentRoundIndex === 0) {
+    throw new Error('No hay ninguna jornada para skipear.')
+  }
+
+  // Obtener la función programada actual
+  const currentScheduled = await ScheduledFunction.findOne({ functionName: 'addRound' })
+  
+  if (!currentScheduled) {
+    throw new Error('No hay ninguna función de addRound programada.')
+  }
+
+  // Calcular nueva fecha: 7 días después
+  const newScheduledDate = new Date(currentScheduled.scheduledFor)
+  newScheduledDate.setDate(newScheduledDate.getDate() + 7)
+
+  // Actualizar la fecha directamente
+  currentScheduled.scheduledFor = newScheduledDate
+  await currentScheduled.save()
+
+  return {
+    skippedRound: currentRoundIndex,
+    newScheduledDate: newScheduledDate
+  }
+}
 
 const addRound = async ({ client }) => {
   let season = await getActiveSeason()

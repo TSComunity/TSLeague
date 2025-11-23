@@ -229,7 +229,7 @@ async function buildDivisionContainers({ division, teams, season, chunkSize = 6 
       const matchesPlayed = await getMatchesPlayedInSeason(team.teamId, season._id)
       const matchesWon = await getMatchesWonInSeason(team.teamId, season._id)
       const matchesWinrate = matchesPlayed > 0
-        ? ((matchesWon / matchesPlayed) * 100).toFixed(1)
+        ? ((matchesWon / matchesPlayed) * 100)
         : 0
 
       const sectionComponent = new SectionBuilder()
