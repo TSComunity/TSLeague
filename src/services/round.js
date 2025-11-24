@@ -47,7 +47,7 @@ const skipRound = async () => {
   await currentScheduled.save()
 
   return {
-    skippedRound: currentRoundIndex,
+    skippedRound: currentRoundIndex + 1,
     newScheduledDate: newScheduledDate
   }
 }
