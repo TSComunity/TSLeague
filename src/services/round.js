@@ -244,4 +244,4 @@ const addRound = async ({ client }) => {
    return season
  }
 
- module.exports = { addRound }
+ module.exports = { addRound, skipRound }
