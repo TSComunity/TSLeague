@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Match Sets</title>
+</head>
+<body>
+  <section id="capture" class="bg-blue-500 p-4 inline-block">
+    <div class="text-white text-2xl font-bold mb-2">TS</div>
+
+    <div id="sets" class="flex flex-row gap-4 h-auto"></div>
+
+    <script>
+      const maps = [
+        { name: "Map1 - Showdown", imageURL: "https://cdn.brawlify.com/maps/regular/15000083.png" },
+        { name: "Map2 - Bounty", imageURL: "https://cdn.brawlify.com/maps/regular/15000084.png" },
+        { name: "Map3 - Gem Grab", imageURL: "https://cdn.brawlify.com/maps/regular/15000085.png" }
+      ]
+
+      const container = document.getElementById("sets")
+
+      container.innerHTML = maps.map((m, index) => `
+        <article class="flex-1 bg-blue-600 rounded-lg overflow-hidden flex flex-col items-center justify-center w-auto h-full">
+          <img class="w-full h-full object-cover" src="${m.imageURL}" alt="Mapa del set ${index + 1}">
+          <p class="text-white mt-2">${m.name}</p>
+        </article>
+      `).join("")
+    </script>
+
+  </section>
+</body>
+</html>

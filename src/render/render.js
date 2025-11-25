@@ -17,7 +17,11 @@ async function renderTemplate(templateName, data) {
   const page = await browser.newPage()
   await page.setContent(html, { waitUntil: 'networkidle0' })
 
-  const buffer = await page.screenshot({ type: 'png' })
+  const element = await page.$(`#capture`)
+
+if (!element) throw new Error(`No se encontró el elemento con id "capture"`)
+
+  const buffer = await element.screenshot({ type: 'png' })
   await browser.close()
   return buffer
 }
