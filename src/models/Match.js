@@ -17,6 +17,7 @@ const MatchSchema = new Schema({
   scoreB: { type: Number, default: 0 },
 
   scheduledAt: { type: Date },
+  winner: { type: Types.ObjectId, ref: "Team" },
 
   status: {
     type: String,

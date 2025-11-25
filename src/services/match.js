@@ -613,9 +613,11 @@ const endMatch = async ({ matchIndex, seasonIndex, teamAName, teamBName, client 
   if (setsWonA > setsWonB) {
     await updateStats(teamA, true, setsWonA, setsWonB)
     await updateStats(teamB, false, setsWonB, setsWonA)
+    match.winner = teamA._id
   } else if (setsWonB > setsWonA) {
     await updateStats(teamA, false, setsWonA, setsWonB)
     await updateStats(teamB, true, setsWonB, setsWonA)
+    match.winner = teamB._id
   } else {
     await updateStats(teamA, false, setsWonA, setsWonB)
     await updateStats(teamB, false, setsWonB, setsWonA)

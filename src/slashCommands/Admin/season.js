@@ -124,15 +124,39 @@ module.exports = {
       // }
 
       else if (subcomand === 'agreglar-sets') {
-  const match = await Match.findOne({ matchIndex: 4 })
+  const match = await Match.findOne({ matchIndex: 7 })
     .populate('teamAId teamBId sets.starPlayerId');
 
   if (!match) return interaction.reply({ embeds: [getErrorEmbed({ error: 'Partido no encontrado.' })] });
 
-  match.sets[0].winner = match.teamAId._id
-  match.sets[1].winner = match.teamAId._id
-  match.status = 'scheduled'
+  match.sets[0].winner = match.teamBId._id
+  match.sets[1].winner = match.teamBId._id
+  match.scoreA = 0
+  match.scoreB = 2
   await match.save();
+
+  const match2 = await Match.findOne({ matchIndex: 8 })
+    .populate('teamAId teamBId sets.starPlayerId');
+
+  if (!match2) return interaction.reply({ embeds: [getErrorEmbed({ error: 'Partido no encontrado.' })] });
+
+  match2.sets[0].winner = match2.teamBId._id
+  match2.sets[1].winner = match2.teamBId._id
+  match2.scoreA = 0
+  match2.scoreB = 2
+  await match2.save();
+
+  const match3 = await Match.findOne({ matchIndex: 11 })
+    .populate('teamAId teamBId sets.starPlayerId');
+
+  if (!match3) return interaction.reply({ embeds: [getErrorEmbed({ error: 'Partido no encontrado.' })] });
+
+  match3.sets[0].winner = match3.teamBId._id
+  match3.sets[1].winner = match3.teamAId._id
+  match3.sets[2].winner = match3.teamAId._id
+  match3.scoreA = 1
+  match3.scoreB = 2
+  await match3.save();
 
   await interaction.reply({ embeds: [getSuccesEmbed({ message: `Sets actualizados correctamente para el partido 5.` })] });
 }
