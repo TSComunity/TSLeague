@@ -69,20 +69,20 @@ const getTeamsSummaryEmbed = ({ divisionsCount, teamsInDivisionsCount, teamsCoun
 
 const getTeamStatsEmbed = ({ team }) => {
     const matchesPlayed = team.stats.matchesWon + team.stats.matchesLost
-    const matchesWinrate = matchesPlayed > 0
+    const matchesWinrate = (matchesPlayed > 0
     ? ((team.stats.matchesWon / matchesPlayed) * 100)
-    : 0
-    const matchesLoserate = matchesPlayed > 0
+    : 0).toFixed(0)
+    const matchesLoserate = (matchesPlayed > 0
     ? ((team.stats.matchesLost / matchesPlayed) * 100)
-    : 0
+    : 0).toFixed(0)
 
     const setsPlayed = team.stats.setsWon + team.stats.setsLost
-    const setsWinrate = setsPlayed > 0
+    const setsWinrate = (setsPlayed > 0
     ? ((team.stats.setsWon / setsPlayed) * 100)
-    : 0
-    const setsLoserate = setsPlayed > 0
+    : 0).toFixed(0)
+    const setsLoserate = (setsPlayed > 0
     ? ((team.stats.setsLost / setsPlayed) * 100)
-    : 0
+    : 0).toFixed(0)
 
   return new EmbedBuilder()
     .setColor(team.color || 'Blue')
